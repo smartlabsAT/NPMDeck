@@ -1,8 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { CircularProgress, Box } from '@mui/material'
+import ProtectedRoute from './components/ProtectedRoute'
+import Layout from './components/Layout'
 
 // Lazy load pages
+const Login = lazy(() => import('./pages/Login'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const ProxyHosts = lazy(() => import('./pages/ProxyHosts'))
 const RedirectionHosts = lazy(() => import('./pages/RedirectionHosts'))
@@ -26,27 +29,49 @@ export const AppRouter = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Dashboard */}
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
         
-        {/* Hosts Management */}
-        <Route path="/hosts/proxy" element={<ProxyHosts />} />
-        <Route path="/hosts/redirection" element={<RedirectionHosts />} />
-        <Route path="/hosts/404" element={<DeadHosts />} />
-        <Route path="/hosts/streams" element={<Streams />} />
-        
-        {/* Security */}
-        <Route path="/security/access-lists" element={<AccessLists />} />
-        <Route path="/security/certificates" element={<Certificates />} />
-        
-        {/* Administration */}
-        <Route path="/admin/users" element={<Users />} />
-        <Route path="/admin/audit-log" element={<AuditLog />} />
-        <Route path="/admin/settings" element={<Settings />} />
-        
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
+        {/* Protected routes */}
+        <Route element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }>
+          {/* Dashboard */}
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
+          
+          {/* Hosts Management */}
+          <Route path="/hosts/proxy" element={<ProxyHosts />} />
+          <Route path="/hosts/redirection" element={<RedirectionHosts />} />
+          <Route path="/hosts/404" element={<DeadHosts />} />
+          <Route path="/hosts/streams" element={<Streams />} />
+          
+          {/* Security */}
+          <Route path="/security/access-lists" element={<AccessLists />} />
+          <Route path="/security/certificates" element={<Certificates />} />
+          
+          {/* Administration - Admin only */}
+          <Route path="/admin/users" element={
+            <ProtectedRoute requiredRole="admin">
+              <Users />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/audit-log" element={
+            <ProtectedRoute requiredRole="admin">
+              <AuditLog />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/settings" element={
+            <ProtectedRoute requiredRole="admin">
+              <Settings />
+            </ProtectedRoute>
+          } />
+          
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Routes>
     </Suspense>
   )
