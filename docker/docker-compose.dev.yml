@@ -1,6 +1,52 @@
 # WARNING: This is a DEVELOPMENT docker-compose file, it should not be used for production.
 services:
 
+  # Simple NPM service - use this for easier development
+  simple:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm2dev.simple
+    restart: unless-stopped
+    ports:
+      - ${PORT_HTTP:-4070}:80
+      - ${PORT_ADMIN:-4071}:81
+      - ${PORT_HTTPS:-4072}:443
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
+      DISABLE_IPV6: 'true'
+    volumes:
+      - npm_simple_data:/data
+      - le_simple_data:/etc/letsencrypt
+      # Mount source code for development
+      - ../backend:/app
+      - ../frontend:/app/frontend
+      - ../frontend-new:/app/frontend-new
+      - ../global:/app/global
+    networks:
+      - nginx_proxy_manager
+    healthcheck:
+      test: ["CMD", "/usr/bin/check-health"]
+      interval: 10s
+      timeout: 3s
+
+  # Frontend development container with Vite
+  frontend-new:
+    image: node:20-alpine
+    container_name: npm2dev.frontend-new
+    restart: unless-stopped
+    ports:
+      - ${PORT_VITE:-4073}:5173
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ../frontend-new:/app
+      - frontend_new_node_modules:/app/node_modules
+    networks:
+      - nginx_proxy_manager
+    depends_on:
+      - simple
+
   fullstack:
     image: npm2dev:core
     container_name: npm2dev.core
@@ -256,6 +302,12 @@ volumes:
     name: npm2dev_core_data
   le_data:
     name: npm2dev_le_data
+  npm_simple_data:
+    name: npm2dev_simple_data
+  le_simple_data:
+    name: npm2dev_simple_le_data
+  frontend_new_node_modules:
+    name: npm2dev_frontend_new_node_modules
   db_data:
     name: npm2dev_db_data
   pdns_mysql:
