@@ -12,6 +12,7 @@
     "start:dev": "npm run dev",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit",
     "docker:build": "docker build -t npmDeck:latest .",
     "docker:run": "docker run -p 3000:3000 npmDeck:latest"
   },
@@ -36,6 +37,7 @@
     "zustand": "^4.4.0"
   },
   "devDependencies": {
+    "@types/node": "^24.1.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",

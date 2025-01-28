@@ -1,4 +1,5 @@
 import api from './config'
+import { Owner } from '../types/common'
 
 export interface AccessList {
   id: number
@@ -10,7 +11,7 @@ export interface AccessList {
   satisfy_any: boolean
   pass_auth: boolean
   // Relations
-  owner?: any
+  owner?: Owner
   items?: AccessListItem[]
   clients?: AccessListClient[]
 }

@@ -274,7 +274,7 @@ const Dashboard = () => {
                     <PermissionButton
                       key={index}
                       resource={action.resource}
-                      action="create"
+                      permissionAction="create"
                       variant="outlined"
                       size="small"
                       onClick={() => navigate(action.path)}

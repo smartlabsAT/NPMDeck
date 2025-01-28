@@ -15,12 +15,10 @@ import {
   Tabs,
   Tab,
   CircularProgress,
-  Divider,
   Button,
   Badge,
 } from '@mui/material'
 import {
-  Close as CloseIcon,
   Edit as EditIcon,
   Language as LanguageIcon,
   TrendingFlat as RedirectIcon,
@@ -34,7 +32,6 @@ import {
   Info as InfoIcon,
   Link as LinkIcon,
   SwapHoriz as ProxyIcon,
-  Download as DownloadIcon,
 } from '@mui/icons-material'
 import { RedirectionHost } from '../api/redirectionHosts'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'

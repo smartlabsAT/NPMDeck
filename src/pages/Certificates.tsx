@@ -444,7 +444,7 @@ const Certificates = () => {
         <>
           <PermissionButton
             resource="certificates"
-            action="create"
+            permissionAction="create"
             variant="contained"
             color="primary"
             startIcon={<AddIcon />}
@@ -698,7 +698,7 @@ const Certificates = () => {
                             </Tooltip>
                           <PermissionIconButton
                             resource="certificates"
-                            action="edit"
+                            permissionAction="edit"
                             size="small"
                             tooltipTitle="Edit"
                             onClick={(e) => {
@@ -711,7 +711,7 @@ const Certificates = () => {
                           </PermissionIconButton>
                           <PermissionIconButton
                             resource="certificates"
-                            action="delete"
+                            permissionAction="delete"
                             size="small"
                             tooltipTitle="Delete"
                             onClick={(e) => {
@@ -805,7 +805,7 @@ const Certificates = () => {
                         </Tooltip>
                         <PermissionIconButton
                           resource="certificates"
-                          action="edit"
+                          permissionAction="edit"
                           size="small"
                           tooltipTitle="Edit"
                           onClick={() => handleEdit(cert)}
@@ -815,7 +815,7 @@ const Certificates = () => {
                         </PermissionIconButton>
                         <PermissionIconButton
                           resource="certificates"
-                          action="delete"
+                          permissionAction="delete"
                           size="small"
                           tooltipTitle="Delete"
                           onClick={() => handleDelete(cert)}

@@ -280,7 +280,7 @@ export default function Streams() {
           />
           <PermissionButton
             resource="streams"
-            action="create"
+            permissionAction="create"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleCreateStream}
@@ -430,7 +430,7 @@ export default function Streams() {
                       </Tooltip>
                       <PermissionIconButton
                         resource="streams"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle={stream.enabled ? 'Disable' : 'Enable'}
                         onClick={(e) => {
@@ -443,7 +443,7 @@ export default function Streams() {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="streams"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle="Edit"
                         onClick={(e) => {
@@ -455,7 +455,7 @@ export default function Streams() {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="streams"
-                        action="delete"
+                        permissionAction="delete"
                         size="small"
                         tooltipTitle="Delete"
                         onClick={(e) => {

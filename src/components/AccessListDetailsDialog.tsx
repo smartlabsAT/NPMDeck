@@ -14,14 +14,11 @@ import {
   ListItemIcon,
 } from '@mui/material'
 import {
-  Close as CloseIcon,
-  Lock as LockIcon,
   ContentCopy as CopyIcon,
   Person as PersonIcon,
   Edit as EditIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
-  Download as DownloadIcon,
   NetworkCheck as NetworkIcon,
   VerifiedUser as AuthIcon,
   Security,

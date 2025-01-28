@@ -14,18 +14,14 @@ import {
   Paper,
   Tabs,
   Tab,
-  CircularProgress,
-  ListItemIcon,
 } from '@mui/material'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  Close as CloseIcon,
   Lock as LockIcon,
   Warning as WarningIcon,
   CheckCircle as CheckIcon,
   ContentCopy as CopyIcon,
   Language as LanguageIcon,
-  Security as SecurityIcon,
   Person as PersonIcon,
   Edit as EditIcon,
   Block as BlockIcon,
@@ -33,7 +29,6 @@ import {
   Http as HttpIcon,
   Info as InfoIcon,
   Settings as SettingsIcon,
-  Download as DownloadIcon,
 } from '@mui/icons-material'
 import { DeadHost } from '../api/deadHosts'
 // import ExportDialog from './ExportDialog'

@@ -3,10 +3,10 @@ import { IconButton, IconButtonProps, Tooltip } from '@mui/material'
 import { useAuthStore } from '../stores/authStore'
 import { Resource, PermissionLevel } from '../types/permissions'
 
-interface PermissionIconButtonProps extends IconButtonProps {
+interface PermissionIconButtonProps extends Omit<IconButtonProps, 'action'> {
   resource: Resource
   level?: PermissionLevel
-  action?: 'view' | 'create' | 'edit' | 'delete'
+  permissionAction?: 'view' | 'create' | 'edit' | 'delete'
   hideWhenUnauthorized?: boolean
   tooltipWhenDisabled?: string
   tooltipTitle?: string
@@ -15,7 +15,7 @@ interface PermissionIconButtonProps extends IconButtonProps {
 const PermissionIconButton: React.FC<PermissionIconButtonProps> = ({
   resource,
   level,
-  action,
+  permissionAction,
   hideWhenUnauthorized = false,
   tooltipWhenDisabled = 'Keine Berechtigung',
   tooltipTitle,
@@ -26,8 +26,8 @@ const PermissionIconButton: React.FC<PermissionIconButtonProps> = ({
   const { hasPermission, canAccess } = useAuthStore()
 
   // Use either level-based or action-based permission check
-  const hasRequiredPermission = action
-    ? canAccess(resource, action)
+  const hasRequiredPermission = permissionAction
+    ? canAccess(resource, permissionAction)
     : hasPermission(resource, level || 'manage')
 
   if (!hasRequiredPermission && hideWhenUnauthorized) {

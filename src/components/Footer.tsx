@@ -1,4 +1,3 @@
-import React from 'react'
 import { Box, Typography, Link, Container } from '@mui/material'
 import { GitHub as GitHubIcon } from '@mui/icons-material'
 
@@ -15,8 +14,7 @@ const Footer = () => {
             ? theme.palette.grey[100]
             : theme.palette.grey[900],
         borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-        width: '100%',
-      }}
+        width: '100%' }}
     >
       <Container maxWidth={false}>
         <Box
@@ -26,8 +24,7 @@ const Footer = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: { xs: 1, sm: 2 },
-            textAlign: 'center',
-          }}
+            textAlign: 'center' }}
         >
           <Typography variant="body2" color="text.secondary">
             🚀 Material Dashboard for{' '}
@@ -63,8 +60,7 @@ const Footer = () => {
             sx={{
               display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
-              gap: 0.5,
-            }}
+              gap: 0.5 }}
           >
             <Link
               href="https://github.com/NginxProxyManager/nginx-proxy-manager"
@@ -76,9 +72,7 @@ const Footer = () => {
                 alignItems: 'center',
                 gap: 0.5,
                 '&:hover': {
-                  color: 'primary.main',
-                },
-              }}
+                  color: 'primary.main' } }}
             >
               <GitHubIcon fontSize="small" />
               <Typography variant="body2">GitHub</Typography>

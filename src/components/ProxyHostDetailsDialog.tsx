@@ -22,40 +22,34 @@ import {
 } from '@mui/material'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  Close as CloseIcon,
   Lock as LockIcon,
   Warning as WarningIcon,
   CheckCircle as CheckIcon,
   ContentCopy as CopyIcon,
   Language as LanguageIcon,
   Security as SecurityIcon,
-  Schedule as ScheduleIcon,
   Person as PersonIcon,
   ExpandLess,
   ExpandMore,
   Edit as EditIcon,
   SwapHoriz as SwapHorizIcon,
-  Language as ProxyIcon,
   Block as BlockIcon,
   Speed as SpeedIcon,
   Wifi as WebSocketIcon,
   Https as HttpsIcon,
   Http as HttpIcon,
   Info as InfoIcon,
-  Terminal as LogIcon,
   Settings as SettingsIcon,
   Link as LinkIcon,
   NetworkCheck as NetworkCheckIcon,
   Cancel as CancelIcon,
   TrendingFlat as RedirectIcon,
-  Download as DownloadIcon,
 } from '@mui/icons-material'
 import { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { AccessList, accessListsApi } from '../api/accessLists'
 // import ExportDialog from './ExportDialog'
 import PermissionButton from './PermissionButton'
-import PermissionGate from './PermissionGate'
 import { usePermissions } from '../hooks/usePermissions'
 import AdaptiveContainer from './AdaptiveContainer'
 
@@ -95,7 +89,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
 }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isAdmin } = usePermissions()
+  const { } = usePermissions()
   const [activeTab, setActiveTab] = useState(0)
   const [copiedText, setCopiedText] = useState<string>('')
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -244,7 +238,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
           {onEdit && (
             <PermissionButton
               resource="proxy_hosts"
-              action="edit"
+              permissionAction="edit"
               variant="contained"
               startIcon={<EditIcon />}
               onClick={() => onEdit(host!)}

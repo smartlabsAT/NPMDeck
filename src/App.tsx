@@ -3,7 +3,6 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { routes } from './routes'
 import { AuthInitializer } from './components/AuthInitializer'
 import { ThemeProvider } from './contexts/ThemeContext'
-import { GlobalSearchProvider } from './contexts/GlobalSearchContext'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,7 +15,6 @@ const queryClient = new QueryClient({
 
 const router = createBrowserRouter(routes, {
   future: {
-    v7_startTransition: true,
     v7_relativeSplatPath: true,
   },
 })

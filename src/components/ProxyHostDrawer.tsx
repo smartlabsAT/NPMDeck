@@ -4,7 +4,6 @@ import {
   Typography,
   TextField,
   Button,
-  IconButton,
   Divider,
   FormControl,
   FormLabel,
@@ -24,15 +23,11 @@ import {
   Autocomplete,
 } from '@mui/material'
 import {
-  Close as CloseIcon,
   Add as AddIcon,
-  Delete as DeleteIcon,
   Security as SecurityIcon,
   Lock as LockIcon,
-  Language as LanguageIcon,
   Info as InfoIcon,
   Code as CodeIcon,
-  LocationOn as LocationIcon,
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
   SwapHoriz as SwapHorizIcon,
@@ -456,7 +451,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
                   <Autocomplete
                     fullWidth
                     value={selectedCertificate}
-                    onChange={(event, newValue) => {
+                    onChange={(_, newValue) => {
                       setSelectedCertificate(newValue)
                       setCertificateId(newValue?.id || 0)
                     }}

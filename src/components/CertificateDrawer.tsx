@@ -10,23 +10,14 @@ import {
   Select,
   MenuItem,
   InputLabel,
-  Chip,
-  IconButton,
   Alert,
   CircularProgress,
-  Divider,
   FormHelperText,
-  Input,
   Stack,
   Paper,
 } from '@mui/material'
 import {
-  Close as CloseIcon,
-  Add as AddIcon,
-  CloudUpload as UploadIcon,
   CheckCircle as CheckIcon,
-  Cancel as CancelIcon,
-  Lock as LockIcon,
   Description as FileIcon,
   Key as KeyIcon,
   AccountTree as ChainIcon,
@@ -165,7 +156,7 @@ const CertificateDrawer: React.FC<CertificateDrawerProps> = ({
     
     // Check for wildcard domains without DNS challenge
     if (provider === 'letsencrypt' && !dnsChallenge) {
-      const hasWildcard = domains.some(d => d.includes('*'))
+      const hasWildcard = domainNames.some((d: string) => d.includes('*'))
       if (hasWildcard) {
         setError('Wildcard domains require DNS challenge to be enabled')
         return
@@ -276,7 +267,6 @@ const CertificateDrawer: React.FC<CertificateDrawerProps> = ({
   // Validate file content helper
   const validateFileContent = async (file: File, type: 'certificate' | 'key'): Promise<boolean> => {
     const text = await file.text()
-    const preview = text.substring(0, 100)
     
     if (type === 'certificate') {
       if (!text.includes('-----BEGIN CERTIFICATE-----')) {

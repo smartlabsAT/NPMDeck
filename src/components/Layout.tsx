@@ -3,7 +3,6 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   AppBar,
   Box,
-  Container,
   Drawer,
   IconButton,
   List,
@@ -43,7 +42,6 @@ import {
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
-import PermissionGate from './PermissionGate'
 import Footer from './Footer'
 import ThemeToggle from './ThemeToggle'
 import SearchBar from './SearchBar'
@@ -51,12 +49,21 @@ import Logo from './Logo'
 
 const drawerWidth = 240
 
+interface MenuItem {
+  text: string
+  icon: React.ReactElement
+  path?: string
+  open?: boolean
+  onClick?: () => void
+  children?: MenuItem[]
+}
+
 const Layout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [isPending, startTransition] = useTransition()
   const { user, logout, tokenStack, popFromStack } = useAuthStore()
-  const { canView, isAdmin, getVisibleResources } = usePermissions()
+  const { canView, isAdmin } = usePermissions()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [hostsOpen, setHostsOpen] = useState(true)
@@ -89,17 +96,17 @@ const Layout = () => {
   }
 
   // Build menu items based on permissions
-  const hostsChildren = [
+  const hostsChildren: MenuItem[] = [
     canView('proxy_hosts') && { text: 'Proxy Hosts', icon: <SwapHoriz sx={{ color: '#5eba00' }} />, path: '/hosts/proxy' },
     canView('redirection_hosts') && { text: 'Redirection Hosts', icon: <TrendingFlat sx={{ color: '#f1c40f' }} />, path: '/hosts/redirection' },
     canView('dead_hosts') && { text: '404 Hosts', icon: <Block sx={{ color: '#cd201f' }} />, path: '/hosts/404' },
     canView('streams') && { text: 'Streams', icon: <Stream sx={{ color: '#467fcf' }} />, path: '/hosts/streams' }
-  ].filter(Boolean)
+  ].filter(Boolean) as MenuItem[]
 
-  const securityChildren = [
+  const securityChildren: MenuItem[] = [
     canView('access_lists') && { text: 'Access Lists', icon: <Security sx={{ color: '#2bcbba' }} />, path: '/security/access-lists' },
     canView('certificates') && { text: 'SSL Certificates', icon: <VpnKey sx={{ color: '#467fcf' }} />, path: '/security/certificates' }
-  ].filter(Boolean)
+  ].filter(Boolean) as MenuItem[]
 
   const menuItems = [
     {
@@ -126,7 +133,7 @@ const Layout = () => {
       icon: <ImportExportIcon />,
       path: '/tools/import-export'
     } */
-  ].filter(Boolean)
+  ].filter(Boolean) as MenuItem[]
 
   const adminItems = [
     {
@@ -197,7 +204,7 @@ const Layout = () => {
                         }
                       }}
                       selected={location.pathname === child.path}
-                      onClick={() => handleNavigate(child.path)}
+                      onClick={() => child.path && handleNavigate(child.path)}
                     >
                       <ListItemIcon sx={{ minWidth: 40 }}>{child.icon}</ListItemIcon>
                       <ListItemText 
@@ -237,7 +244,7 @@ const Layout = () => {
                       <ListItemButton
                         key={child.text}
                         sx={{ pl: 4 }}
-                        onClick={() => handleNavigate(child.path)}
+                        onClick={() => child.path && handleNavigate(child.path)}
                       >
                         <ListItemIcon>{child.icon}</ListItemIcon>
                         <ListItemText primary={child.text} />
@@ -276,7 +283,7 @@ const Layout = () => {
             sx={{
               width: 32,
               height: 32,
-              bgcolor: user?.is_admin ? 'primary.main' : 'secondary.main'
+              bgcolor: isAdmin ? 'primary.main' : 'secondary.main'
             }}
           >
             {user?.name.charAt(0).toUpperCase()}

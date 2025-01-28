@@ -417,7 +417,7 @@ const ProxyHosts = () => {
         />
         <PermissionButton
           resource="proxy_hosts"
-          action="create"
+          permissionAction="create"
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
@@ -715,7 +715,7 @@ const ProxyHosts = () => {
                         <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
                           <PermissionIconButton
                             resource="proxy_hosts"
-                            action="edit"
+                            permissionAction="edit"
                             size="small"
                             tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
                             onClick={(e) => {
@@ -728,7 +728,7 @@ const ProxyHosts = () => {
                           </PermissionIconButton>
                           <PermissionIconButton
                             resource="proxy_hosts"
-                            action="edit"
+                            permissionAction="edit"
                             size="small"
                             tooltipTitle="Edit"
                             onClick={(e) => {
@@ -741,7 +741,7 @@ const ProxyHosts = () => {
                           </PermissionIconButton>
                           <PermissionIconButton
                             resource="proxy_hosts"
-                            action="delete"
+                            permissionAction="delete"
                             size="small"
                             tooltipTitle="Delete"
                             onClick={(e) => {
@@ -879,7 +879,7 @@ const ProxyHosts = () => {
                     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
                       <PermissionIconButton
                         resource="proxy_hosts"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
                         onClick={() => handleToggleEnabled(host)}
@@ -889,7 +889,7 @@ const ProxyHosts = () => {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="proxy_hosts"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle="Edit"
                         onClick={() => handleEdit(host)}
@@ -899,7 +899,7 @@ const ProxyHosts = () => {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="proxy_hosts"
-                        action="delete"
+                        permissionAction="delete"
                         size="small"
                         tooltipTitle="Delete"
                         onClick={() => handleDelete(host)}

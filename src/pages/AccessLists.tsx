@@ -275,7 +275,7 @@ export default function AccessLists() {
           />
           <PermissionButton
             resource="access_lists"
-            action="create"
+            permissionAction="create"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleCreateAccessList}
@@ -419,7 +419,7 @@ export default function AccessLists() {
                       </Tooltip>
                       <PermissionIconButton
                         resource="access_lists"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle="Edit"
                         onClick={(e) => {
@@ -431,7 +431,7 @@ export default function AccessLists() {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="access_lists"
-                        action="delete"
+                        permissionAction="delete"
                         size="small"
                         onClick={(e) => {
                           e.stopPropagation()

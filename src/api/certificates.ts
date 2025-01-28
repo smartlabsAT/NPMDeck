@@ -1,4 +1,5 @@
 import api from './config'
+import { Owner } from '../types/common'
 
 export interface Certificate {
   id: number
@@ -19,7 +20,7 @@ export interface Certificate {
     certificate_id?: string
   }
   // Relations
-  owner?: any
+  owner?: Owner
 }
 
 export interface CreateCertificate {

@@ -19,9 +19,6 @@ import {
 } from '@mui/material'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  Close as CloseIcon,
-  Lock as LockIcon,
-  Warning as WarningIcon,
   CheckCircle as CheckIcon,
   ContentCopy as CopyIcon,
   Fingerprint as FingerprintIcon,
@@ -39,7 +36,6 @@ import {
   Info as InfoIcon,
   WebAsset as HostsIcon,
   Settings as AdvancedIcon,
-  Download as DownloadIcon,
   VpnKey,
 } from '@mui/icons-material'
 import { Certificate } from '../api/certificates'
@@ -84,7 +80,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
 }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isAdmin } = usePermissions()
+  const { } = usePermissions()
   const [activeTab, setActiveTab] = useState(0)
   const [copiedText, setCopiedText] = useState<string>('')
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -134,14 +130,6 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
     })
   }
 
-  const formatShortDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
 
   const copyToClipboard = (text: string, label?: string) => {
     navigator.clipboard.writeText(text)
@@ -206,7 +194,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
           {onEdit && (
             <PermissionButton
               resource="certificates"
-              action="edit"
+              permissionAction="edit"
               onClick={() => {
                 onClose()
                 onEdit(certificate)

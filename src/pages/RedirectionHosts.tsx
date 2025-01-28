@@ -414,7 +414,7 @@ const RedirectionHosts = () => {
         />
         <PermissionButton
           resource="redirection_hosts"
-          action="create"
+          permissionAction="create"
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
@@ -683,7 +683,7 @@ const RedirectionHosts = () => {
                           </Tooltip>
                           <PermissionIconButton
                             resource="redirection_hosts"
-                            action="edit"
+                            permissionAction="edit"
                             size="small"
                             tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
                             onClick={(e) => {
@@ -696,7 +696,7 @@ const RedirectionHosts = () => {
                           </PermissionIconButton>
                           <PermissionIconButton
                             resource="redirection_hosts"
-                            action="edit"
+                            permissionAction="edit"
                             size="small"
                             tooltipTitle="Edit"
                             onClick={(e) => {
@@ -709,7 +709,7 @@ const RedirectionHosts = () => {
                           </PermissionIconButton>
                           <PermissionIconButton
                             resource="redirection_hosts"
-                            action="delete"
+                            permissionAction="delete"
                             size="small"
                             tooltipTitle="Delete"
                             onClick={(e) => {
@@ -821,7 +821,7 @@ const RedirectionHosts = () => {
                       </Tooltip>
                       <PermissionIconButton
                         resource="redirection_hosts"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
                         onClick={(e) => {
@@ -834,7 +834,7 @@ const RedirectionHosts = () => {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="redirection_hosts"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle="Edit"
                         onClick={(e) => {
@@ -847,7 +847,7 @@ const RedirectionHosts = () => {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="redirection_hosts"
-                        action="delete"
+                        permissionAction="delete"
                         size="small"
                         tooltipTitle="Delete"
                         onClick={(e) => {

@@ -263,7 +263,7 @@ const DeadHosts = () => {
         />
         <PermissionButton
           resource="dead_hosts"
-          action="create"
+          permissionAction="create"
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
@@ -425,7 +425,7 @@ const DeadHosts = () => {
                       </Tooltip>
                       <PermissionIconButton
                         resource="dead_hosts"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
                         onClick={(e) => {
@@ -438,7 +438,7 @@ const DeadHosts = () => {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="dead_hosts"
-                        action="edit"
+                        permissionAction="edit"
                         size="small"
                         tooltipTitle="Edit"
                         onClick={(e) => {
@@ -451,7 +451,7 @@ const DeadHosts = () => {
                       </PermissionIconButton>
                       <PermissionIconButton
                         resource="dead_hosts"
-                        action="delete"
+                        permissionAction="delete"
                         size="small"
                         tooltipTitle="Delete"
                         onClick={(e) => {

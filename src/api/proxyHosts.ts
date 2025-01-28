@@ -1,4 +1,7 @@
 import api from './config'
+import { Owner } from '../types/common'
+import { Certificate } from './certificates'
+import { AccessList } from './accessLists'
 
 export interface ProxyHost {
   id: number
@@ -26,9 +29,9 @@ export interface ProxyHost {
   hsts_enabled: boolean
   hsts_subdomains: boolean
   // Expanded relations
-  certificate?: any
-  owner?: any
-  access_list?: any
+  certificate?: Certificate
+  owner?: Owner
+  access_list?: AccessList
 }
 
 export interface ProxyHostLocation {

@@ -4,7 +4,7 @@ import { DeadHost } from '../api/deadHosts'
 import { Stream } from '../api/streams'
 import { AccessList } from '../api/accessLists'
 import { Certificate } from '../api/certificates'
-import { User } from '../types/user'
+import { User } from '../api/users'
 
 export type ResourceType = 'proxy_hosts' | 'redirection_hosts' | 'dead_hosts' | 'streams' | 'access_lists' | 'certificates' | 'users' | 'action'
 

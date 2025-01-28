@@ -11,14 +11,11 @@ import {
   MenuItem,
   InputLabel,
   Alert,
-  IconButton,
-  Divider,
   FormHelperText,
   Tabs,
   Tab,
 } from '@mui/material'
 import {
-  Close as CloseIcon,
   Settings as SettingsIcon,
   Code as CodeIcon,
   Block,
@@ -233,7 +230,7 @@ const DeadHostDrawer: React.FC<DeadHostDrawerProps> = ({ open, onClose, host, on
     >
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+        <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
           <Tab label="General" icon={<SettingsIcon />} iconPosition="start" value={0} />
           <Tab label="Advanced" icon={<CodeIcon />} iconPosition="start" value={1} />
         </Tabs>
