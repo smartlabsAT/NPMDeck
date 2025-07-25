@@ -1,0 +1,34 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+set -e
+
+# This service is DEVELOPMENT only.
+
+if [ "$DEVELOPMENT" = 'true' ]; then
+	. /usr/bin/common.sh
+	cd /app/frontend-new || exit 1
+	HOME=$NPMHOME
+	export HOME
+
+	# Check if frontend-new directory exists
+	if [ ! -d "/app/frontend-new" ]; then
+		log_info 'frontend-new directory not found, skipping...'
+		exit 0
+	fi
+
+	# Check if package.json exists
+	if [ ! -f "/app/frontend-new/package.json" ]; then
+		log_info 'No package.json in frontend-new, skipping...'
+		exit 0
+	fi
+
+	mkdir -p /app/frontend-new/node_modules
+	chown -R "$PUID:$PGID" /app/frontend-new/node_modules
+
+	log_info 'Starting new frontend (Vite)...'
+	s6-setuidgid "$PUID:$PGID" yarn install
+	exec s6-setuidgid "$PUID:$PGID" yarn dev
+else
+	exit 0
+fi
