@@ -8,9 +8,10 @@ services:
       context: ./
       dockerfile: ./dev/Dockerfile
     ports:
-      - 3080:80
-      - 3081:81
-      - 3443:443
+      - ${PORT_HTTP:-4070}:80
+      - ${PORT_ADMIN:-4071}:81
+      - ${PORT_HTTPS:-4072}:443
+      - ${PORT_VITE:-4073}:5173
     networks:
       nginx_proxy_manager:
         aliases:
@@ -26,17 +27,17 @@ services:
       DEVELOPMENT: 'true'
       LE_STAGING: 'true'
       # db:
-      # DB_MYSQL_HOST: 'db'
-      # DB_MYSQL_PORT: '3306'
-      # DB_MYSQL_USER: 'npm'
-      # DB_MYSQL_PASSWORD: 'npm'
-      # DB_MYSQL_NAME: 'npm'
+      # DB_MYSQL_HOST: ${DB_MYSQL_HOST:-db}
+      # DB_MYSQL_PORT: ${DB_MYSQL_PORT:-3306}
+      # DB_MYSQL_USER: ${DB_MYSQL_USER:-npm}
+      # DB_MYSQL_PASSWORD: ${DB_MYSQL_PASSWORD:-npm}
+      # DB_MYSQL_NAME: ${DB_MYSQL_NAME:-npm}
       # db-postgres:
-      DB_POSTGRES_HOST: 'db-postgres'
-      DB_POSTGRES_PORT: '5432'
-      DB_POSTGRES_USER: 'npm'
-      DB_POSTGRES_PASSWORD: 'npmpass'
-      DB_POSTGRES_NAME: 'npm'
+      DB_POSTGRES_HOST: ${DB_POSTGRES_HOST:-db-postgres}
+      DB_POSTGRES_PORT: ${DB_POSTGRES_PORT:-5432}
+      DB_POSTGRES_USER: ${DB_POSTGRES_USER:-npm}
+      DB_POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD:-npmpass}
+      DB_POSTGRES_NAME: ${DB_POSTGRES_NAME:-npm}
       # DB_SQLITE_FILE: "/data/database.sqlite"
       # DISABLE_IPV6: "true"
       # Required for DNS Certificate provisioning testing:
@@ -48,6 +49,7 @@ services:
       - './dev/resolv.conf:/etc/resolv.conf:ro'
       - ../backend:/app
       - ../frontend:/app/frontend
+      - ../frontend-new:/app/frontend-new
       - ../global:/app/global
     healthcheck:
       test: ["CMD", "/usr/bin/check-health"]
