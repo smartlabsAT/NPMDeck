@@ -10,6 +10,11 @@
 	</a>
 </p>
 
+> [!WARNING]
+> **Development Notice**: This fork is actively developing a new frontend using React and Material-UI. 
+> **This version is NOT suitable for production use** as it is still under heavy development.
+> Please use the [official release](https://github.com/NginxProxyManager/nginx-proxy-manager) for production environments.
+
 This project comes as a pre-built docker image that enables you to easily forward to your websites
 running at home or otherwise, including free SSL, without having to know too much about Nginx or Letsencrypt.
 
