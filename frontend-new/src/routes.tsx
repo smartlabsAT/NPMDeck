@@ -179,6 +179,30 @@ export const routes = [
         ),
       },
       {
+        path: 'users',
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            {withSuspense(Users)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'users/new',
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            {withSuspense(Users)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'users/:id',
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            {withSuspense(Users)}
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'admin/audit-log',
         element: (
           <ProtectedRoute requiredRole="admin">
