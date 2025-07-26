@@ -1,5 +1,17 @@
 import { create } from 'zustand'
-import { authApi, User, LoginCredentials, TokenResponse } from '../api/auth'
+import { authApi, LoginCredentials, TokenResponse } from '../api/auth'
+import { User } from '../api/users'
+import { Resource, PermissionLevel } from '../types/permissions'
+import { 
+  hasPermission, 
+  canView, 
+  canManage, 
+  isAdmin as checkIsAdmin,
+  hasAnyPermission,
+  getVisibleResources,
+  shouldFilterByUser,
+  canAccessResource
+} from '../utils/permissions'
 
 interface TokenInfo {
   token: string
@@ -29,6 +41,16 @@ interface AuthState {
   startTokenRefresh: () => void
   stopTokenRefresh: () => void
   refreshToken: () => Promise<void>
+  
+  // Permission helpers
+  hasPermission: (resource: Resource, level: PermissionLevel) => boolean
+  canView: (resource: Resource) => boolean
+  canManage: (resource: Resource) => boolean
+  canAccess: (resource: Resource, action: 'view' | 'create' | 'edit' | 'delete') => boolean
+  isAdmin: () => boolean
+  hasAnyPermission: (level?: PermissionLevel) => boolean
+  getVisibleResources: () => Resource[]
+  shouldFilterByUser: () => boolean
 }
 
 // Helper to load token stack from localStorage
@@ -263,5 +285,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Token refresh failed:', error)
       // Don't logout on refresh failure - the interceptor will handle 401s
     }
+  },
+
+  // Permission helpers
+  hasPermission: (resource: Resource, level: PermissionLevel) => {
+    const state = get()
+    return hasPermission(state.user, resource, level)
+  },
+
+  canView: (resource: Resource) => {
+    const state = get()
+    return canView(state.user, resource)
+  },
+
+  canManage: (resource: Resource) => {
+    const state = get()
+    return canManage(state.user, resource)
+  },
+
+  canAccess: (resource: Resource, action: 'view' | 'create' | 'edit' | 'delete') => {
+    const state = get()
+    return canAccessResource(state.user, resource, action)
+  },
+
+  isAdmin: () => {
+    const state = get()
+    return checkIsAdmin(state.user)
+  },
+
+  hasAnyPermission: (level?: PermissionLevel) => {
+    const state = get()
+    return hasAnyPermission(state.user, level)
+  },
+
+  getVisibleResources: () => {
+    const state = get()
+    return getVisibleResources(state.user)
+  },
+
+  shouldFilterByUser: () => {
+    const state = get()
+    return shouldFilterByUser(state.user)
   }
 }))
