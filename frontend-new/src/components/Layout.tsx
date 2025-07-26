@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import {
   AppBar,
@@ -16,7 +16,8 @@ import {
   MenuItem,
   Avatar,
   Divider,
-  Collapse
+  Collapse,
+  LinearProgress
 } from '@mui/material'
 import {
   Menu as MenuIcon,
@@ -33,7 +34,8 @@ import {
   Logout,
   ExpandLess,
   ExpandMore,
-  AccountCircle
+  AccountCircle,
+  TrendingFlat
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
 
@@ -41,12 +43,19 @@ const drawerWidth = 240
 
 const Layout = () => {
   const navigate = useNavigate()
+  const [isPending, startTransition] = useTransition()
   const { user, logout } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [hostsOpen, setHostsOpen] = useState(true)
   const [securityOpen, setSecurityOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
+  
+  const handleNavigate = (path: string) => {
+    startTransition(() => {
+      navigate(path)
+    })
+  }
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen)
@@ -61,8 +70,10 @@ const Layout = () => {
   }
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
+    startTransition(() => {
+      logout()
+      navigate('/login')
+    })
   }
 
   const menuItems = [
@@ -78,7 +89,7 @@ const Layout = () => {
       onClick: () => setHostsOpen(!hostsOpen),
       children: [
         { text: 'Proxy Hosts', icon: <SwapHoriz />, path: '/hosts/proxy' },
-        { text: 'Redirection Hosts', icon: <SwapHoriz />, path: '/hosts/redirection' },
+        { text: 'Redirection Hosts', icon: <TrendingFlat />, path: '/hosts/redirection' },
         { text: '404 Hosts', icon: <Block />, path: '/hosts/404' },
         { text: 'Streams', icon: <Stream />, path: '/hosts/streams' }
       ]
@@ -122,7 +133,7 @@ const Layout = () => {
           <div key={item.text}>
             <ListItem disablePadding>
               <ListItemButton
-                onClick={item.onClick || (() => item.path && navigate(item.path))}
+                onClick={item.onClick || (() => item.path && handleNavigate(item.path))}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
@@ -136,7 +147,7 @@ const Layout = () => {
                     <ListItemButton
                       key={child.text}
                       sx={{ pl: 4 }}
-                      onClick={() => navigate(child.path)}
+                      onClick={() => handleNavigate(child.path)}
                     >
                       <ListItemIcon>{child.icon}</ListItemIcon>
                       <ListItemText primary={child.text} />
@@ -168,7 +179,7 @@ const Layout = () => {
                       <ListItemButton
                         key={child.text}
                         sx={{ pl: 4 }}
-                        onClick={() => navigate(child.path)}
+                        onClick={() => handleNavigate(child.path)}
                       >
                         <ListItemIcon>{child.icon}</ListItemIcon>
                         <ListItemText primary={child.text} />
@@ -253,6 +264,18 @@ const Layout = () => {
           )}
         </Toolbar>
       </AppBar>
+      
+      {isPending && (
+        <LinearProgress 
+          sx={{ 
+            position: 'fixed', 
+            top: 64, 
+            left: { sm: drawerWidth }, 
+            right: 0, 
+            zIndex: 1201 
+          }} 
+        />
+      )}
       
       <Box
         component="nav"
