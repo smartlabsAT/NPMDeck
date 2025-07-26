@@ -17,7 +17,8 @@ import {
   Avatar,
   Divider,
   Collapse,
-  LinearProgress
+  LinearProgress,
+  Chip
 } from '@mui/material'
 import {
   Menu as MenuIcon,
@@ -45,7 +46,7 @@ const drawerWidth = 240
 const Layout = () => {
   const navigate = useNavigate()
   const [isPending, startTransition] = useTransition()
-  const { user, logout } = useAuthStore()
+  const { user, logout, tokenStack, popFromStack } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [hostsOpen, setHostsOpen] = useState(true)
@@ -234,9 +235,27 @@ const Layout = () => {
                 onClick={handleMenu}
                 color="inherit"
               >
-                <Avatar sx={{ width: 32, height: 32 }}>
-                  {user.name ? user.name[0].toUpperCase() : <AccountCircle />}
-                </Avatar>
+                <Box position="relative">
+                  <Avatar sx={{ width: 32, height: 32 }}>
+                    {user.name ? user.name[0].toUpperCase() : <AccountCircle />}
+                  </Avatar>
+                  {tokenStack.length > 0 && (
+                    <Chip
+                      label={tokenStack.length}
+                      size="small"
+                      color="secondary"
+                      sx={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        height: 20,
+                        minWidth: 20,
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold'
+                      }}
+                    />
+                  )}
+                </Box>
               </IconButton>
               <Menu
                 id="menu-appbar"
@@ -259,6 +278,32 @@ const Layout = () => {
                   </Typography>
                 </MenuItem>
                 <Divider />
+                {tokenStack.length > 0 && (
+                  <>
+                    <MenuItem disabled>
+                      <Typography variant="caption" color="textSecondary">
+                        Switch Account
+                      </Typography>
+                    </MenuItem>
+                    {tokenStack.map((tokenInfo, index) => (
+                      <MenuItem key={index} onClick={() => {
+                        handleClose()
+                        popFromStack()
+                      }}>
+                        <ListItemIcon>
+                          <AccountCircle fontSize="small" />
+                        </ListItemIcon>
+                        <Box>
+                          <Typography variant="body2">{tokenInfo.user.name}</Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            {tokenInfo.user.email}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                    <Divider />
+                  </>
+                )}
                 <MenuItem onClick={handleLogout}>
                   <ListItemIcon>
                     <Logout fontSize="small" />

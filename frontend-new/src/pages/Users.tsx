@@ -56,7 +56,7 @@ const Users = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [menuUser, setMenuUser] = useState<User | null>(null)
   
-  const { user: currentUser } = useAuthStore()
+  const { user: currentUser, pushCurrentToStack } = useAuthStore()
   const isAdmin = currentUser?.roles?.includes('admin')
 
   useEffect(() => {
@@ -132,6 +132,9 @@ const Users = () => {
     if (currentUser?.id === user.id) return
     
     try {
+      // Push current account to stack before switching
+      pushCurrentToStack()
+      
       const response = await usersApi.loginAs(user.id)
       // Store the new token and reload
       localStorage.setItem('npm_token', response.token)
