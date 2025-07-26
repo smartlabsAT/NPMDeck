@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Paper,
@@ -38,6 +39,7 @@ import { format } from 'date-fns'
 import { auditLogApi, AuditLogEntry } from '../api/auditLog'
 
 const AuditLog = () => {
+  const navigate = useNavigate()
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -140,6 +142,34 @@ const AuditLog = () => {
     }
   }
 
+  const getObjectLink = (entry: AuditLogEntry): string => {
+    switch (entry.object_type) {
+      case 'proxy-host':
+        return `/hosts/proxy/${entry.object_id}/view`
+      case 'redirection-host':
+        return `/hosts/redirection/${entry.object_id}/view`
+      case 'dead-host':
+        return `/hosts/404/${entry.object_id}/view`
+      case 'stream':
+        return `/hosts/streams/${entry.object_id}/view`
+      case 'access-list':
+        return `/security/access-lists/${entry.object_id}/view`
+      case 'certificate':
+        return `/security/certificates/${entry.object_id}/view`
+      case 'user':
+        return `/users/${entry.object_id}`
+      default:
+        return '#'
+    }
+  }
+
+  const handleChipClick = (entry: AuditLogEntry) => {
+    const link = getObjectLink(entry)
+    if (link !== '#') {
+      navigate(link)
+    }
+  }
+
   const getObjectDisplayName = (entry: AuditLogEntry) => {
     const items: string[] = []
     
@@ -172,7 +202,14 @@ const AuditLog = () => {
     }
     
     if (items.length === 0) {
-      return `#${entry.object_id || '?'}`
+      return (
+        <Chip 
+          label={`#${entry.object_id || '?'}`}
+          size="small" 
+          sx={{ mx: 0.5, my: 0.25, cursor: 'pointer' }}
+          onClick={() => handleChipClick(entry)}
+        />
+      )
     }
     
     return items.map((item, index) => (
@@ -180,7 +217,8 @@ const AuditLog = () => {
         key={index} 
         label={item} 
         size="small" 
-        sx={{ mx: 0.5 }}
+        sx={{ mx: 0.5, my: 0.25, cursor: 'pointer' }}
+        onClick={() => handleChipClick(entry)}
       />
     ))
   }
@@ -278,31 +316,33 @@ const AuditLog = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Box display="flex" alignItems="center">
-                      <Box 
-                        color={`${getObjectColor(entry.object_type)}.main`}
-                        display="flex"
-                        alignItems="center"
-                        mr={1}
-                      >
-                        {getObjectIcon(entry.object_type)}
+                    <Box>
+                      <Box display="flex" alignItems="center" flexWrap="wrap">
+                        <Box 
+                          color={`${getObjectColor(entry.object_type)}.main`}
+                          display="flex"
+                          alignItems="center"
+                          mr={1}
+                        >
+                          {getObjectIcon(entry.object_type)}
+                        </Box>
+                        <Chip 
+                          label={entry.action} 
+                          size="small" 
+                          color={getActionColor(entry.action) as any}
+                          sx={{ mr: 1 }}
+                        />
+                        <Typography variant="body2" component="span">
+                          {entry.object_type.replace('-', ' ')}
+                        </Typography>
                       </Box>
-                      <Chip 
-                        label={entry.action} 
-                        size="small" 
-                        color={getActionColor(entry.action) as any}
-                        sx={{ mr: 1 }}
-                      />
-                      <Typography variant="body2" component="span">
-                        {entry.object_type.replace('-', ' ')}
-                      </Typography>
-                      <Box ml={1}>
+                      <Box mt={0.5} display="flex" flexWrap="wrap">
                         {getObjectDisplayName(entry)}
                       </Box>
+                      <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+                        {format(new Date(entry.created_on), 'MMM d, yyyy h:mm a')}
+                      </Typography>
                     </Box>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {format(new Date(entry.created_on), 'MMM d, yyyy h:mm a')}
-                    </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
