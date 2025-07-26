@@ -667,7 +667,22 @@ const ProxyHosts = () => {
                       <TableCell>{getSSLIcon(host)}</TableCell>
                       <TableCell>
                         {host.access_list ? (
-                          <Chip label={host.access_list.name} size="small" />
+                          <Chip 
+                            label={host.access_list.name} 
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setViewingHost(host)
+                              setDetailsDialogOpen(true)
+                              navigate(`/hosts/proxy/${host.id}/view/access`)
+                            }}
+                            sx={{ 
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: 'action.hover'
+                              }
+                            }}
+                          />
                         ) : (
                           <Typography variant="body2" color="text.secondary">
                             Public
@@ -819,7 +834,22 @@ const ProxyHosts = () => {
                   <TableCell>{getSSLIcon(host)}</TableCell>
                   <TableCell>
                     {host.access_list ? (
-                      <Chip label={host.access_list.name} size="small" />
+                      <Chip 
+                        label={host.access_list.name} 
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setViewingHost(host)
+                          setDetailsDialogOpen(true)
+                          navigate(`/hosts/proxy/${host.id}/view/access`)
+                        }}
+                        sx={{ 
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: 'action.hover'
+                          }
+                        }}
+                      />
                     ) : (
                       <Typography variant="body2" color="text.secondary">
                         Public

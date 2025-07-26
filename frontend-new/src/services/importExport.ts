@@ -259,8 +259,19 @@ export class ImportExportService {
       case 'access_list':
         prepared.satisfy_any = prepared.satisfy_any ?? false
         prepared.pass_auth = prepared.pass_auth ?? false
-        prepared.items = prepared.items || []
-        prepared.clients = prepared.clients || []
+        // Clean items and clients to ensure they don't have IDs
+        if (prepared.items && Array.isArray(prepared.items)) {
+          prepared.items = prepared.items.map((item: any) => ({
+            username: item.username,
+            password: item.password || ''
+          }))
+        }
+        if (prepared.clients && Array.isArray(prepared.clients)) {
+          prepared.clients = prepared.clients.map((client: any) => ({
+            address: client.address,
+            directive: client.directive
+          }))
+        }
         break
     }
 

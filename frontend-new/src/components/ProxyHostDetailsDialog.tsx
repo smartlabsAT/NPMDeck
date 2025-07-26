@@ -48,11 +48,14 @@ import {
   Terminal as LogIcon,
   Settings as SettingsIcon,
   Link as LinkIcon,
+  NetworkCheck as NetworkCheckIcon,
+  Cancel as CancelIcon,
   TrendingFlat as RedirectIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material'
 import { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
+import { AccessList, accessListsApi } from '../api/accessLists'
 import ExportDialog from './ExportDialog'
 
 interface TabPanelProps {
@@ -101,6 +104,8 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
   const [linkedRedirections, setLinkedRedirections] = useState<RedirectionHost[]>([])
   const [loadingConnections, setLoadingConnections] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [fullAccessList, setFullAccessList] = useState<AccessList | null>(null)
+  const [loadingAccessList, setLoadingAccessList] = useState(false)
 
   // Parse tab from URL
   useEffect(() => {
@@ -117,6 +122,11 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
         case 'connections':
           setActiveTab(3)
           break
+        case 'access':
+          if (host?.access_list) {
+            setActiveTab(4)
+          }
+          break
         default:
           setActiveTab(0)
           break
@@ -130,6 +140,13 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
       loadConnections()
     }
   }, [open, host])
+
+  // Load access list details when access tab is active
+  useEffect(() => {
+    if (activeTab === 4 && open && host?.access_list?.id) {
+      loadAccessListDetails()
+    }
+  }, [activeTab, open, host?.access_list?.id])
 
   const loadConnections = async () => {
     if (!host) return
@@ -149,6 +166,20 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
       console.error('Failed to load connections:', error)
     } finally {
       setLoadingConnections(false)
+    }
+  }
+
+  const loadAccessListDetails = async () => {
+    if (!host?.access_list?.id) return
+    
+    try {
+      setLoadingAccessList(true)
+      const data = await accessListsApi.getById(host.access_list.id, ['items', 'clients', 'owner'])
+      setFullAccessList(data)
+    } catch (error) {
+      console.error('Failed to load access list details:', error)
+    } finally {
+      setLoadingAccessList(false)
     }
   }
 
@@ -182,6 +213,9 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
     setActiveTab(newValue)
     if (host) {
       const tabs = ['overview', 'logs', 'advanced', 'connections']
+      if (host.access_list) {
+        tabs.push('access')
+      }
       navigate(`/hosts/proxy/${host.id}/view/${tabs[newValue]}`, { replace: true })
     }
   }
@@ -227,6 +261,9 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
             icon={<LinkIcon />} 
             iconPosition="start" 
           />
+          {host.access_list && (
+            <Tab label="Access Control" icon={<SecurityIcon />} iconPosition="start" />
+          )}
         </Tabs>
       </Box>
 
@@ -277,9 +314,29 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
                   <SecurityIcon color="action" />
                   <Box>
                     <Typography variant="caption" color="text.secondary" fontWeight="bold">Access</Typography>
-                    <Typography variant="body2" fontWeight="medium">
-                      {host.access_list?.name || 'Public'}
-                    </Typography>
+                    {host.access_list ? (
+                      <Typography 
+                        variant="body2" 
+                        fontWeight="medium"
+                        sx={{ 
+                          cursor: 'pointer',
+                          color: 'primary.main',
+                          '&:hover': {
+                            textDecoration: 'underline'
+                          }
+                        }}
+                        onClick={() => {
+                          setActiveTab(4)
+                          navigate(`/hosts/proxy/${host.id}/view/access`, { replace: true })
+                        }}
+                      >
+                        {host.access_list.name}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" fontWeight="medium">
+                        Public
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </Grid>
@@ -556,13 +613,33 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
                     <Typography variant="h6">Access Control</Typography>
                   </Box>
                   
-                  <Paper variant="outlined" sx={{ p: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
-                      Access List
-                    </Typography>
-                    <Typography variant="body2">
-                      {host.access_list.name}
-                    </Typography>
+                  <Paper 
+                    variant="outlined" 
+                    sx={{ 
+                      p: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                        backgroundColor: 'action.hover'
+                      }
+                    }}
+                    onClick={() => {
+                      setActiveTab(4)
+                      navigate(`/hosts/proxy/${host.id}/view/access`, { replace: true })
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box>
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                          Access List
+                        </Typography>
+                        <Typography variant="body2" color="primary">
+                          {host.access_list.name}
+                        </Typography>
+                      </Box>
+                      <LinkIcon color="action" />
+                    </Box>
                   </Paper>
                 </Grid>
               </>
@@ -701,6 +778,297 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
             )}
           </Box>
         </TabPanel>
+
+        {host.access_list && (
+          <TabPanel value={activeTab} index={4}>
+            {/* Access Control Tab */}
+            {loadingAccessList ? (
+              <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+                <CircularProgress />
+                <Typography sx={{ ml: 2 }}>Loading access list details...</Typography>
+              </Box>
+            ) : (
+            <Box>
+              <Box display="flex" alignItems="center" gap={1} mb={3}>
+                <SecurityIcon color="primary" />
+                <Typography variant="h6">{(fullAccessList || host.access_list).name}</Typography>
+              </Box>
+
+              {/* Access List Information */}
+              <Grid container spacing={3}>
+                {/* Basic Information */}
+                <Grid item xs={12}>
+                  <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+                      Access List Information
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Typography variant="caption" color="text.secondary">ID</Typography>
+                        <Typography variant="body2">#{(fullAccessList || host.access_list).id}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Typography variant="caption" color="text.secondary">Created</Typography>
+                        <Typography variant="body2">
+                          {new Date((fullAccessList || host.access_list).created_on).toLocaleString()}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Typography variant="caption" color="text.secondary">Modified</Typography>
+                        <Typography variant="body2">
+                          {new Date((fullAccessList || host.access_list).modified_on).toLocaleString()}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Typography variant="caption" color="text.secondary">Owner</Typography>
+                        <Typography variant="body2">
+                          {(fullAccessList || host.access_list).owner ? (
+                            <Box display="flex" alignItems="center" gap={0.5}>
+                              <PersonIcon fontSize="small" />
+                              {(fullAccessList || host.access_list).owner.name || (fullAccessList || host.access_list).owner.email || `User #${(fullAccessList || host.access_list).owner_user_id}`}
+                            </Box>
+                          ) : (
+                            `User #${(fullAccessList || host.access_list).owner_user_id}`
+                          )}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+
+                {/* Configuration */}
+                <Grid item xs={12} md={6}>
+                  <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+                      Configuration
+                    </Typography>
+                    <Box display="flex" flexDirection="column" gap={2}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">Satisfy Mode</Typography>
+                        <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+                          <Chip 
+                            label={(fullAccessList || host.access_list).satisfy_any ? 'Any' : 'All'} 
+                            size="small" 
+                            color={(fullAccessList || host.access_list).satisfy_any ? 'primary' : 'secondary'}
+                          />
+                          <Typography variant="body2">
+                            {(fullAccessList || host.access_list).satisfy_any 
+                              ? 'Access granted if ANY rule matches'
+                              : 'Access granted if ALL rules match'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">Pass Authentication to Host</Typography>
+                        <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+                          {(fullAccessList || host.access_list).pass_auth ? (
+                            <CheckIcon color="success" fontSize="small" />
+                          ) : (
+                            <CancelIcon color="disabled" fontSize="small" />
+                          )}
+                          <Typography variant="body2">
+                            {(fullAccessList || host.access_list).pass_auth 
+                              ? 'Authorization headers are forwarded to the proxied host'
+                              : 'Authorization headers are not forwarded'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+                      Summary
+                    </Typography>
+                    <Box display="flex" flexDirection="column" gap={1}>
+                      {(fullAccessList || host.access_list).items && (fullAccessList || host.access_list).items.length > 0 && (
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <PersonIcon fontSize="small" color="action" />
+                          <Typography variant="body2">
+                            {(fullAccessList || host.access_list).items.length} authorized user{(fullAccessList || host.access_list).items.length !== 1 ? 's' : ''}
+                          </Typography>
+                        </Box>
+                      )}
+                      {(fullAccessList || host.access_list).clients && (fullAccessList || host.access_list).clients.length > 0 && (
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <NetworkCheckIcon fontSize="small" color="action" />
+                          <Typography variant="body2">
+                            {(fullAccessList || host.access_list).clients.length} IP rule{(fullAccessList || host.access_list).clients.length !== 1 ? 's' : ''}
+                          </Typography>
+                        </Box>
+                      )}
+                      {(!(fullAccessList || host.access_list).items || (fullAccessList || host.access_list).items.length === 0) && 
+                       (!(fullAccessList || host.access_list).clients || (fullAccessList || host.access_list).clients.length === 0) && (
+                        <Typography variant="body2" color="text.secondary">
+                          No rules configured
+                        </Typography>
+                      )}
+                    </Box>
+                  </Paper>
+                </Grid>
+
+                {/* Authorization Users */}
+                {host.access_list.items && host.access_list.items.length > 0 && (
+                  <Grid item xs={12}>
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                      <Box display="flex" alignItems="center" gap={1} mb={2}>
+                        <PersonIcon color="action" />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Authorization - HTTP Basic Auth ({host.access_list.items.length} users)
+                        </Typography>
+                      </Box>
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        Users must provide username and password to access this host.
+                        Passwords are not shown for security reasons.
+                      </Alert>
+                      <List>
+                        {(fullAccessList || host.access_list).items!.map((item: any, index: number) => (
+                          <ListItem key={item.id || index} sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+                            <ListItemIcon>
+                              <PersonIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <Typography variant="body1" fontWeight="medium">
+                                    {item.username}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    (ID: #{item.id})
+                                  </Typography>
+                                </Box>
+                              }
+                              secondary={
+                                <Box>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Protected with password • Password: ••••••••
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Created: {new Date(item.created_on).toLocaleString()}
+                                  </Typography>
+                                  {item.modified_on !== item.created_on && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                                      Modified: {new Date(item.modified_on).toLocaleString()}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Paper>
+                  </Grid>
+                )}
+
+                {/* Access Rules */}
+                {host.access_list.clients && host.access_list.clients.length > 0 && (
+                  <Grid item xs={12}>
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                      <Box display="flex" alignItems="center" gap={1} mb={2}>
+                        <NetworkCheckIcon color="action" />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Access Control - IP Based Rules ({host.access_list.clients.length} rules)
+                        </Typography>
+                      </Box>
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        Access is controlled based on client IP addresses. Rules are processed in order.
+                      </Alert>
+                      <List>
+                        {(fullAccessList || host.access_list).clients!.map((client: any, index: number) => (
+                          <ListItem key={client.id || index} sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+                            <ListItemIcon>
+                              {client.directive === 'allow' ? (
+                                <CheckIcon color="success" fontSize="small" />
+                              ) : (
+                                <CancelIcon color="error" fontSize="small" />
+                              )}
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <Typography variant="body1" fontFamily="monospace">
+                                    {client.address}
+                                  </Typography>
+                                  <Chip 
+                                    label={client.directive.toUpperCase()} 
+                                    size="small" 
+                                    color={client.directive === 'allow' ? 'success' : 'error'}
+                                    variant="outlined"
+                                  />
+                                  <Typography variant="caption" color="text.secondary">
+                                    (ID: #{client.id})
+                                  </Typography>
+                                </Box>
+                              }
+                              secondary={
+                                <Box>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {client.directive === 'allow' ? 'Access allowed from this address' : 'Access denied from this address'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Created: {new Date(client.created_on).toLocaleString()}
+                                  </Typography>
+                                  {client.modified_on !== client.created_on && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                                      Modified: {new Date(client.modified_on).toLocaleString()}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Paper>
+                  </Grid>
+                )}
+
+                {/* Meta Information */}
+                {(fullAccessList || host.access_list).meta && Object.keys((fullAccessList || host.access_list).meta).length > 0 && (
+                  <Grid item xs={12}>
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+                        Additional Metadata
+                      </Typography>
+                      <Box sx={{ mt: 1 }}>
+                        <pre style={{ 
+                          margin: 0, 
+                          fontSize: '0.875rem',
+                          backgroundColor: 'background.paper',
+                          padding: '8px',
+                          borderRadius: '4px',
+                          overflow: 'auto'
+                        }}>
+                          {JSON.stringify((fullAccessList || host.access_list).meta, null, 2)}
+                        </pre>
+                      </Box>
+                    </Paper>
+                  </Grid>
+                )}
+
+                {/* Link to full Access List */}
+                <Grid item xs={12}>
+                  <Box display="flex" justifyContent="center">
+                    <Button
+                      variant="outlined"
+                      startIcon={<LinkIcon />}
+                      onClick={() => {
+                        onClose()
+                        navigate(`/security/access-lists/${host.access_list!.id}/view`)
+                      }}
+                    >
+                      View Full Access List Details
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+            )}
+          </TabPanel>
+        )}
       </DialogContent>
       
       <DialogActions>

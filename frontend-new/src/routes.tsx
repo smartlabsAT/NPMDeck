@@ -135,6 +135,18 @@ export const routes = [
         element: withSuspense(AccessLists),
       },
       {
+        path: 'security/access-lists/new',
+        element: withSuspense(AccessLists),
+      },
+      {
+        path: 'security/access-lists/:id/edit',
+        element: withSuspense(AccessLists),
+      },
+      {
+        path: 'security/access-lists/:id/view',
+        element: withSuspense(AccessLists),
+      },
+      {
         path: 'security/certificates',
         element: withSuspense(Certificates),
       },
