@@ -47,7 +47,7 @@ export const routes = [
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: withSuspense(Dashboard),
       },
       {
         path: 'dashboard',
@@ -55,33 +55,89 @@ export const routes = [
       },
       {
         path: 'hosts/proxy',
-        element: <ProxyHosts />,
+        element: withSuspense(ProxyHosts),
+      },
+      {
+        path: 'hosts/proxy/new',
+        element: withSuspense(ProxyHosts),
+      },
+      {
+        path: 'hosts/proxy/:id/edit',
+        element: withSuspense(ProxyHosts),
+      },
+      {
+        path: 'hosts/proxy/:id/view',
+        element: withSuspense(ProxyHosts),
+      },
+      {
+        path: 'hosts/proxy/:id/view/:tab',
+        element: withSuspense(ProxyHosts),
       },
       {
         path: 'hosts/redirection',
-        element: <RedirectionHosts />,
+        element: withSuspense(RedirectionHosts),
+      },
+      {
+        path: 'hosts/redirection/new',
+        element: withSuspense(RedirectionHosts),
+      },
+      {
+        path: 'hosts/redirection/:id/edit',
+        element: withSuspense(RedirectionHosts),
+      },
+      {
+        path: 'hosts/redirection/:id/view',
+        element: withSuspense(RedirectionHosts),
+      },
+      {
+        path: 'hosts/redirection/:id/view/:tab',
+        element: withSuspense(RedirectionHosts),
       },
       {
         path: 'hosts/404',
-        element: <DeadHosts />,
+        element: withSuspense(DeadHosts),
+      },
+      {
+        path: 'hosts/404/:id/edit',
+        element: withSuspense(DeadHosts),
       },
       {
         path: 'hosts/streams',
-        element: <Streams />,
+        element: withSuspense(Streams),
       },
       {
         path: 'security/access-lists',
-        element: <AccessLists />,
+        element: withSuspense(AccessLists),
       },
       {
         path: 'security/certificates',
-        element: <Certificates />,
+        element: withSuspense(Certificates),
+      },
+      {
+        path: 'security/certificates/new',
+        element: withSuspense(Certificates),
+      },
+      {
+        path: 'security/certificates/new/:provider',
+        element: withSuspense(Certificates),
+      },
+      {
+        path: 'security/certificates/:id/edit',
+        element: withSuspense(Certificates),
+      },
+      {
+        path: 'security/certificates/:id/view',
+        element: withSuspense(Certificates),
+      },
+      {
+        path: 'security/certificates/:id/view/:tab',
+        element: withSuspense(Certificates),
       },
       {
         path: 'admin/users',
         element: (
           <ProtectedRoute requiredRole="admin">
-            <Users />
+            {withSuspense(Users)}
           </ProtectedRoute>
         ),
       },
@@ -89,7 +145,7 @@ export const routes = [
         path: 'admin/audit-log',
         element: (
           <ProtectedRoute requiredRole="admin">
-            <AuditLog />
+            {withSuspense(AuditLog)}
           </ProtectedRoute>
         ),
       },
@@ -97,13 +153,13 @@ export const routes = [
         path: 'admin/settings',
         element: (
           <ProtectedRoute requiredRole="admin">
-            <Settings />
+            {withSuspense(Settings)}
           </ProtectedRoute>
         ),
       },
       {
         path: '*',
-        element: <NotFound />,
+        element: withSuspense(NotFound),
       },
     ],
   },

@@ -44,13 +44,16 @@ export const AppRouter = () => {
           
           {/* Hosts Management */}
           <Route path="/hosts/proxy" element={<ProxyHosts />} />
+          <Route path="/hosts/proxy/:id/*" element={<ProxyHosts />} />
           <Route path="/hosts/redirection" element={<RedirectionHosts />} />
+          <Route path="/hosts/redirection/:id/*" element={<RedirectionHosts />} />
           <Route path="/hosts/404" element={<DeadHosts />} />
           <Route path="/hosts/streams" element={<Streams />} />
           
           {/* Security */}
           <Route path="/security/access-lists" element={<AccessLists />} />
           <Route path="/security/certificates" element={<Certificates />} />
+          <Route path="/security/certificates/:id/*" element={<Certificates />} />
           
           {/* Administration - Admin only */}
           <Route path="/admin/users" element={
