@@ -255,7 +255,13 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       onSave()
       onClose()
     } catch (err: any) {
-      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to save proxy host')
+      // Check for error in different response formats
+      const errorMessage = err.response?.data?.error?.message || 
+                         err.response?.data?.message || 
+                         err.message || 
+                         'Failed to save proxy host'
+      
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

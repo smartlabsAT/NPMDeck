@@ -35,7 +35,8 @@ import {
   ExpandLess,
   ExpandMore,
   AccountCircle,
-  TrendingFlat
+  TrendingFlat,
+  ImportExport as ImportExportIcon
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
 
@@ -103,6 +104,11 @@ const Layout = () => {
         { text: 'Access Lists', icon: <Security />, path: '/security/access-lists' },
         { text: 'SSL Certificates', icon: <VpnKey />, path: '/security/certificates' }
       ]
+    },
+    {
+      text: 'Import / Export',
+      icon: <ImportExportIcon />,
+      path: '/tools/import-export'
     }
   ]
 

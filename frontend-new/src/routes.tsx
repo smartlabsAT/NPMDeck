@@ -30,6 +30,7 @@ const Certificates = lazy(() => import('./pages/Certificates'))
 const Users = lazy(() => import('./pages/Users'))
 const AuditLog = lazy(() => import('./pages/AuditLog'))
 const Settings = lazy(() => import('./pages/Settings'))
+const ImportExport = lazy(() => import('./pages/ImportExport'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 export const routes = [
@@ -98,11 +99,35 @@ export const routes = [
         element: withSuspense(DeadHosts),
       },
       {
+        path: 'hosts/404/new',
+        element: withSuspense(DeadHosts),
+      },
+      {
         path: 'hosts/404/:id/edit',
         element: withSuspense(DeadHosts),
       },
       {
+        path: 'hosts/404/:id/view',
+        element: withSuspense(DeadHosts),
+      },
+      {
+        path: 'hosts/404/:id/view/:tab',
+        element: withSuspense(DeadHosts),
+      },
+      {
         path: 'hosts/streams',
+        element: withSuspense(Streams),
+      },
+      {
+        path: 'hosts/streams/new',
+        element: withSuspense(Streams),
+      },
+      {
+        path: 'hosts/streams/:id/edit',
+        element: withSuspense(Streams),
+      },
+      {
+        path: 'hosts/streams/:id/view',
         element: withSuspense(Streams),
       },
       {
@@ -156,6 +181,10 @@ export const routes = [
             {withSuspense(Settings)}
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'tools/import-export',
+        element: withSuspense(ImportExport),
       },
       {
         path: '*',

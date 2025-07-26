@@ -1,5 +1,8 @@
 export { default as api } from './config'
 export * from './auth'
 export * from './proxyHosts'
+export * from './redirectionHosts'
+export * from './deadHosts'
+export * from './streams'
 export * from './accessLists'
 export * from './certificates'

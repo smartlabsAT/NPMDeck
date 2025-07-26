@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   IconButton,
   Box,
   Typography,
@@ -37,9 +38,11 @@ import {
   Info as InfoIcon,
   Link as LinkIcon,
   SwapHoriz as ProxyIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material'
 import { RedirectionHost } from '../api/redirectionHosts'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
+import ExportDialog from './ExportDialog'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -80,6 +83,7 @@ export default function RedirectionHostDetailsDialog({
   const [activeTab, setActiveTab] = useState(0)
   const [linkedProxyHost, setLinkedProxyHost] = useState<ProxyHost | null>(null)
   const [loadingConnection, setLoadingConnection] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Parse tab from URL
   useEffect(() => {
@@ -525,6 +529,40 @@ export default function RedirectionHostDetailsDialog({
           </Box>
         </TabPanel>
       </DialogContent>
+      
+      <DialogActions>
+        <Button
+          onClick={() => setExportDialogOpen(true)}
+          startIcon={<DownloadIcon />}
+        >
+          Export
+        </Button>
+        <Box sx={{ flex: 1 }} />
+        {onEdit && (
+          <Button 
+            onClick={() => {
+              onClose()
+              onEdit(host)
+            }}
+            startIcon={<EditIcon />}
+            color="primary"
+          >
+            Edit Redirection Host
+          </Button>
+        )}
+        <Button onClick={onClose}>Close</Button>
+      </DialogActions>
+      
+      {/* Export Dialog */}
+      {host && (
+        <ExportDialog
+          open={exportDialogOpen}
+          onClose={() => setExportDialogOpen(false)}
+          items={[host]}
+          type="redirection_host"
+          itemName="Redirection Host"
+        />
+      )}
     </Dialog>
   )
 }

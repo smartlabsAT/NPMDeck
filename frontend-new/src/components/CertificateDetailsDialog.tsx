@@ -43,8 +43,10 @@ import {
   Info as InfoIcon,
   WebAsset as HostsIcon,
   Settings as AdvancedIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material'
 import { Certificate } from '../api/certificates'
+import ExportDialog from './ExportDialog'
 
 interface CertificateDetailsDialogProps {
   open: boolean
@@ -88,6 +90,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
     domains: true,
     hosts: false,
   })
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Parse tab from URL
   useEffect(() => {
@@ -653,6 +656,13 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
       </DialogContent>
       
       <DialogActions>
+        <Button
+          onClick={() => setExportDialogOpen(true)}
+          startIcon={<DownloadIcon />}
+        >
+          Export
+        </Button>
+        <Box sx={{ flex: 1 }} />
         {onEdit && (
           <Button 
             onClick={() => {
@@ -667,6 +677,17 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
         )}
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
+      
+      {/* Export Dialog */}
+      {certificate && (
+        <ExportDialog
+          open={exportDialogOpen}
+          onClose={() => setExportDialogOpen(false)}
+          items={[certificate]}
+          type="certificate"
+          itemName="Certificate"
+        />
+      )}
     </Dialog>
   )
 }
