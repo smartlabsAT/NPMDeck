@@ -42,9 +42,13 @@ import {
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { useAuthStore } from '../stores/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import ProxyHostDrawer from '../components/ProxyHostDrawer'
 import ProxyHostDetailsDialog from '../components/ProxyHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
+import PermissionButton from '../components/PermissionButton'
+import PermissionIconButton from '../components/PermissionIconButton'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'status' | 'domain_names' | 'forward_host' | 'ssl' | 'access'
@@ -103,8 +107,8 @@ const ProxyHosts = () => {
     return saved ? JSON.parse(saved) : {}
   })
   
-  const { user } = useAuthStore()
-  const canManage = user?.roles?.includes('admin') // TODO: Check actual permissions
+  const { user, shouldFilterByUser } = useAuthStore()
+  const { canView, canManage: canManageProxyHosts } = usePermissions()
 
   useEffect(() => {
     loadHosts()
@@ -296,7 +300,12 @@ const ProxyHosts = () => {
     return 0
   }
 
-  const filteredHosts = hosts.filter(host => {
+  // Apply visibility filtering first
+  const visibleHosts = useFilteredData(hosts, 'proxy_hosts')
+  const filterInfo = useFilteredInfo(hosts, visibleHosts)
+  
+  // Then apply search filtering
+  const filteredHosts = visibleHosts.filter(host => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -400,21 +409,28 @@ const ProxyHosts = () => {
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h4">Proxy Hosts</Typography>
-        {canManage && (
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
-          >
-            Add Proxy Host
-          </Button>
-        )}
+        <PermissionButton
+          resource="proxy_hosts"
+          action="create"
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={handleAdd}
+        >
+          Add Proxy Host
+        </PermissionButton>
       </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
+        </Alert>
+      )}
+
+      {filterInfo.isFiltered && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Zeige {filterInfo.visibleCount} von {filterInfo.totalCount} Proxy Hosts 
+          (nur eigene Einträge werden angezeigt)
         </Alert>
       )}
 
@@ -690,50 +706,47 @@ const ProxyHosts = () => {
                         )}
                       </TableCell>
                       <TableCell align="right">
-                        {canManage ? (
-                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                            <Tooltip title={host.enabled ? 'Disable' : 'Enable'}>
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleToggleEnabled(host)
-                                }}
-                                color={host.enabled ? 'default' : 'success'}
-                              >
-                                <PowerIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Edit">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleEdit(host)
-                                }}
-                                color="primary"
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDelete(host)
-                                }}
-                                color="error"
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            View only
-                          </Typography>
-                        )}
+                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                          <PermissionIconButton
+                            resource="proxy_hosts"
+                            action="edit"
+                            size="small"
+                            tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleToggleEnabled(host)
+                            }}
+                            color={host.enabled ? 'default' : 'success'}
+                          >
+                            <PowerIcon />
+                          </PermissionIconButton>
+                          <PermissionIconButton
+                            resource="proxy_hosts"
+                            action="edit"
+                            size="small"
+                            tooltipTitle="Edit"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEdit(host)
+                            }}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </PermissionIconButton>
+                          <PermissionIconButton
+                            resource="proxy_hosts"
+                            action="delete"
+                            size="small"
+                            tooltipTitle="Delete"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDelete(host)
+                            }}
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </PermissionIconButton>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -857,41 +870,38 @@ const ProxyHosts = () => {
                     )}
                   </TableCell>
                   <TableCell align="right">
-                    {canManage ? (
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                        <Tooltip title={host.enabled ? 'Disable' : 'Enable'}>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleToggleEnabled(host)}
-                            color={host.enabled ? 'default' : 'success'}
-                          >
-                            <PowerIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Edit">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEdit(host)}
-                            color="primary"
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDelete(host)}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        View only
-                      </Typography>
-                    )}
+                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                      <PermissionIconButton
+                        resource="proxy_hosts"
+                        action="edit"
+                        size="small"
+                        tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
+                        onClick={() => handleToggleEnabled(host)}
+                        color={host.enabled ? 'default' : 'success'}
+                      >
+                        <PowerIcon />
+                      </PermissionIconButton>
+                      <PermissionIconButton
+                        resource="proxy_hosts"
+                        action="edit"
+                        size="small"
+                        tooltipTitle="Edit"
+                        onClick={() => handleEdit(host)}
+                        color="primary"
+                      >
+                        <EditIcon />
+                      </PermissionIconButton>
+                      <PermissionIconButton
+                        resource="proxy_hosts"
+                        action="delete"
+                        size="small"
+                        tooltipTitle="Delete"
+                        onClick={() => handleDelete(host)}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </PermissionIconButton>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
