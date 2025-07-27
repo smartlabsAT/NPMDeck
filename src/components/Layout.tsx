@@ -305,28 +305,29 @@ const Layout = () => {
           ml: { sm: `${drawerWidth}px` },
         }}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          
-          {user && (
-            <Box sx={{ flexGrow: 1, mr: 2 }}>
-              <SearchBar />
-            </Box>
-          )}
-          
-          {!user && <Box sx={{ flexGrow: 1 }} />}
-          
-          <ThemeToggle />
-          
-          {user && (
+        <Toolbar sx={{ px: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', maxWidth: 'lg', px: 3 }}>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+            
+            {user && (
+              <Box sx={{ flexGrow: 1, mr: 2 }}>
+                <SearchBar />
+              </Box>
+            )}
+            
+            {!user && <Box sx={{ flexGrow: 1 }} />}
+            
+            <ThemeToggle />
+            
+            {user && (
             <div>
               <IconButton
                 size="large"
@@ -414,6 +415,7 @@ const Layout = () => {
               </Menu>
             </div>
           )}
+          </Box>
         </Toolbar>
       </AppBar>
       
