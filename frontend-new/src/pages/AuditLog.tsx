@@ -34,9 +34,11 @@ import {
   PowerOff as DeadHostIcon,
   Lock as AccessListIcon,
   Shield as CertificateIcon,
+  Description as AuditIcon,
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { auditLogApi, AuditLogEntry } from '../api/auditLog'
+import PageHeader from '../components/PageHeader'
 
 const AuditLog = () => {
   const navigate = useNavigate()
@@ -242,12 +244,11 @@ const AuditLog = () => {
   return (
     <Box>
       <Box mb={3}>
-        <Typography variant="h4" gutterBottom>
-          Audit Log
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          View all system activity and changes
-        </Typography>
+        <PageHeader
+          icon={<AuditIcon sx={{ color: '#495c68' }} />}
+          title="Audit Log"
+          description="View all system activities and changes"
+        />
       </Box>
 
       <Paper sx={{ mb: 2, p: 2 }}>

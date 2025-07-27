@@ -46,6 +46,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import ExportDialog from '../components/ExportDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
+import PageHeader from '../components/PageHeader'
 
 type OrderDirection = 'asc' | 'desc'
 type OrderBy = 'incoming_port' | 'forwarding_host' | 'status' | 'protocols' | 'created_on'
@@ -272,42 +273,20 @@ export default function Streams() {
       <Box py={3}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Box display="flex" alignItems="center" gap={2}>
-            <StreamIcon fontSize="large" color="primary" />
-            <div>
-              <Typography variant="h4">Streams</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Manage TCP/UDP port forwarding
-              </Typography>
-            </div>
-          </Box>
-          <Box display="flex" gap={1}>
-            {isAdmin && (
-              <Button
-                variant="outlined"
-                startIcon={<DownloadIcon />}
-                onClick={handleExportAll}
-              >
-                Export
-              </Button>
-            )}
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={loadStreams}
-            >
-              Refresh
-            </Button>
-            <PermissionButton
-              resource="streams"
-              action="create"
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreateStream}
-            >
-              Add Stream
-            </PermissionButton>
-          </Box>
+          <PageHeader
+            icon={<StreamIcon sx={{ color: '#467fcf' }} />}
+            title="Streams"
+            description="Manage TCP/UDP port forwarding"
+          />
+          <PermissionButton
+            resource="streams"
+            action="create"
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleCreateStream}
+          >
+            Add Stream
+          </PermissionButton>
         </Box>
 
         {error && (

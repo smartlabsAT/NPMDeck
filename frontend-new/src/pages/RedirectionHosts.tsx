@@ -51,6 +51,7 @@ import RedirectionHostDetailsDialog from '../components/RedirectionHostDetailsDi
 import ConfirmDialog from '../components/ConfirmDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
+import PageHeader from '../components/PageHeader'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'status' | 'domain_names' | 'forward_domain' | 'http_code' | 'ssl'
@@ -406,7 +407,11 @@ const RedirectionHosts = () => {
   return (
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h4">Redirection Hosts</Typography>
+        <PageHeader
+          icon={<RedirectIcon sx={{ color: '#f1c40f' }} />}
+          title="Redirection Hosts"
+          description="Configure permanent redirects from one domain to another"
+        />
         <PermissionButton
           resource="redirection_hosts"
           action="create"

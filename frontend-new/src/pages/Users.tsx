@@ -36,11 +36,13 @@ import {
   Person as PersonIcon,
   Check as CheckIcon,
   Block as BlockIcon,
+  Group as GroupIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
 import { useAuthStore } from '../stores/authStore'
 import UserDrawer from '../components/UserDrawer'
 import ConfirmDialog from '../components/ConfirmDialog'
+import PageHeader from '../components/PageHeader'
 
 const Users = () => {
   const { id } = useParams<{ id?: string }>()
@@ -183,7 +185,11 @@ const Users = () => {
   return (
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h4">Users</Typography>
+        <PageHeader
+          icon={<GroupIcon sx={{ color: '#868e96' }} />}
+          title="Users"
+          description="Manage user accounts and permissions"
+        />
         {isAdmin && (
           <Button
             variant="contained"

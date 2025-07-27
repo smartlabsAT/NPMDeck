@@ -37,7 +37,7 @@ import {
   ExpandMore,
   AccountCircle,
   TrendingFlat,
-  ImportExport as ImportExportIcon,
+  // ImportExport as ImportExportIcon,
   ChevronRight
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
@@ -46,6 +46,7 @@ import PermissionGate from './PermissionGate'
 import Footer from './Footer'
 import ThemeToggle from './ThemeToggle'
 import SearchBar from './SearchBar'
+import Logo from './Logo'
 
 const drawerWidth = 240
 
@@ -119,11 +120,11 @@ const Layout = () => {
       onClick: () => setSecurityOpen(!securityOpen),
       children: securityChildren
     },
-    isAdmin && {
+    /* isAdmin && {
       text: 'Import / Export',
       icon: <ImportExportIcon />,
       path: '/tools/import-export'
-    }
+    } */
   ].filter(Boolean)
 
   const adminItems = [
@@ -149,19 +150,11 @@ const Layout = () => {
           color: 'white',
           display: 'flex',
           alignItems: 'center',
-          px: 2,
-          gap: 1
+          justifyContent: 'center',
+          px: 2
         }}
       >
-        <Language sx={{ fontSize: 28 }} />
-        <Box>
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-            Nginx Proxy
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.9, lineHeight: 1 }}>
-            Manager
-          </Typography>
-        </Box>
+        <Logo width={100} color="white" />
       </Box>
       <List sx={{ pt: 2.5, px: 1 }}>
         {menuItems.map((item) => (
@@ -171,12 +164,7 @@ const Layout = () => {
                 onClick={item.onClick || (() => item.path && handleNavigate(item.path))}
                 selected={item.path ? location.pathname === item.path : false}
                 sx={{
-                  borderRadius: '0 24px 24px 0',
                   mr: 1,
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    backgroundColor: 'rgba(43, 203, 186, 0.04)',
-                  },
                   '&.Mui-selected': {
                     backgroundColor: 'rgba(43, 203, 186, 0.08)',
                     borderRight: '3px solid #2bcbba',
@@ -326,12 +314,9 @@ const Layout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Nginx Proxy Manager
-          </Typography>
           
           {user && (
-            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ flexGrow: 1, mr: 2 }}>
               <SearchBar />
             </Box>
           )}

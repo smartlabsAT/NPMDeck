@@ -30,6 +30,7 @@ import {
   Search as SearchIcon,
   Refresh as RefreshIcon,
   Lock as LockIcon,
+  Security as SecurityIcon,
   Person as PersonIcon,
   NetworkCheck as NetworkIcon,
   Download as DownloadIcon,
@@ -44,6 +45,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import ExportDialog from '../components/ExportDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
+import PageHeader from '../components/PageHeader'
 
 type OrderDirection = 'asc' | 'desc'
 type OrderBy = 'name' | 'users' | 'rules' | 'created_on'
@@ -266,38 +268,20 @@ export default function AccessLists() {
       <Box py={3}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Box display="flex" alignItems="center" gap={1}>
-            <LockIcon color="primary" fontSize="large" />
-            <Typography variant="h4">
-              Access Lists
-            </Typography>
-          </Box>
-          <Box display="flex" gap={1}>
-            <Button
-              startIcon={<RefreshIcon />}
-              onClick={loadAccessLists}
-              disabled={loading}
-            >
-              Refresh
-            </Button>
-            {isAdmin && (
-              <Button
-                startIcon={<DownloadIcon />}
-                onClick={handleExportAll}
-              >
-                Export All
-              </Button>
-            )}
-            <PermissionButton
-              resource="access_lists"
-              action="create"
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreateAccessList}
-            >
-              Add Access List
-            </PermissionButton>
-          </Box>
+          <PageHeader
+            icon={<SecurityIcon sx={{ color: '#2bcbba' }} />}
+            title="Access Lists"
+            description="Control access to your services with authentication and IP restrictions"
+          />
+          <PermissionButton
+            resource="access_lists"
+            action="create"
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleCreateAccessList}
+          >
+            Add Access List
+          </PermissionButton>
         </Box>
 
         {error && (

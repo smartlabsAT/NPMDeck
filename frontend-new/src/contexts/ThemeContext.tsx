@@ -34,12 +34,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       return saved
     }
     
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark'
-    }
-    
-    return 'light'
+    // Default to dark mode
+    return 'dark'
   })
 
   useEffect(() => {

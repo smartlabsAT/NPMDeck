@@ -43,6 +43,7 @@ import DeadHostDetailsDialog from '../components/DeadHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
+import PageHeader from '../components/PageHeader'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'status' | 'domain_names' | 'ssl' | 'created_on'
@@ -255,7 +256,11 @@ const DeadHosts = () => {
   return (
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h4">404 Hosts</Typography>
+        <PageHeader
+          icon={<BlockIcon sx={{ color: '#cd201f' }} />}
+          title="404 Hosts"
+          description="Configure custom 404 error pages for unmatched domains"
+        />
         <PermissionButton
           resource="dead_hosts"
           action="create"

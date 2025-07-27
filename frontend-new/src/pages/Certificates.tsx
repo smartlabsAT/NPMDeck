@@ -39,6 +39,7 @@ import {
   ChevronRight as ChevronRightIcon,
   UnfoldMore as ExpandAllIcon,
   UnfoldLess as CollapseAllIcon,
+  VpnKey as CertificateIcon,
 } from '@mui/icons-material'
 import { certificatesApi, Certificate } from '../api/certificates'
 import { useAuthStore } from '../stores/authStore'
@@ -49,6 +50,7 @@ import CertificateDrawer from '../components/CertificateDrawer'
 import CertificateDetailsDialog from '../components/CertificateDetailsDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
+import PageHeader from '../components/PageHeader'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'nice_name' | 'domain_names' | 'provider' | 'expires_on'
@@ -434,7 +436,11 @@ const Certificates = () => {
   return (
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h4">SSL Certificates</Typography>
+        <PageHeader
+          icon={<CertificateIcon sx={{ color: '#467fcf' }} />}
+          title="SSL Certificates"
+          description="Manage SSL certificates for secure HTTPS connections"
+        />
         <>
           <PermissionButton
             resource="certificates"

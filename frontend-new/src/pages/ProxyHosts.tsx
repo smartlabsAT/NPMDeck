@@ -38,6 +38,7 @@ import {
   UnfoldMore as ExpandAllIcon,
   UnfoldLess as CollapseAllIcon,
   TrendingFlat as RedirectIcon,
+  SwapHoriz as ProxyIcon,
 } from '@mui/icons-material'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
@@ -48,6 +49,7 @@ import ProxyHostDrawer from '../components/ProxyHostDrawer'
 import ProxyHostDetailsDialog from '../components/ProxyHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PermissionButton from '../components/PermissionButton'
+import PageHeader from '../components/PageHeader'
 import PermissionIconButton from '../components/PermissionIconButton'
 
 type Order = 'asc' | 'desc'
@@ -408,7 +410,11 @@ const ProxyHosts = () => {
   return (
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h4">Proxy Hosts</Typography>
+        <PageHeader
+          icon={<ProxyIcon sx={{ color: '#5eba00' }} />}
+          title="Proxy Hosts"
+          description="Manage reverse proxy configurations for your web services"
+        />
         <PermissionButton
           resource="proxy_hosts"
           action="create"
