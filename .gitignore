@@ -1,11 +1,24 @@
-.DS_Store
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
 .idea
-._*
-.vscode
-certbot-help.txt
-test/node_modules
-*/node_modules
-docker/dev/dnsrouter-config.json.tmp
-docker/dev/resolv.conf
-docker/.env
-frontend/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

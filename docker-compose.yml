@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Development environment
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: npmDeck-dev
+    ports:
+      - "5173:5173"  # Vite dev server
+      - "3001:3000"  # Express server
+    volumes:
+      - ./src:/app/src
+      - ./server:/app/server
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+    environment:
+      - NODE_ENV=development
+      - NPM_API_URL=${NPM_API_URL:-http://host.docker.internal:81}
+      - VITE_API_URL=/api
+    networks:
+      - npmDeck
+
+  # Production-like environment
+  prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: npmDeck-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NPM_API_URL=${NPM_API_URL:-http://npm-backend:81}
+      - PORT=3000
+    networks:
+      - npmDeck
+    restart: unless-stopped
+
+  # Optional: Run with existing NPM backend
+  # npm-backend:
+  #   image: jc21/nginx-proxy-manager:latest
+  #   container_name: npm-backend
+  #   ports:
+  #     - "80:80"
+  #     - "81:81"
+  #     - "443:443"
+  #   environment:
+  #     DB_SQLITE_FILE: "/data/database.sqlite"
+  #   volumes:
+  #     - npm_data:/data
+  #     - npm_letsencrypt:/etc/letsencrypt
+  #   networks:
+  #     - npmDeck
+
+networks:
+  npmDeck:
+    driver: bridge
+
+volumes:
+  npm_data:
+  npm_letsencrypt:
