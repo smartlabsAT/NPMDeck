@@ -1,38 +1,60 @@
-# NPMDeck - Modern Frontend for Nginx Proxy Manager
+# 🚀 NPMDeck - Modern Frontend for Nginx Proxy Manager
 
-NPMDeck is a modern, responsive web interface for [Nginx Proxy Manager](https://nginxproxymanager.com/). Built with React, Material-UI, and Express.js, it provides an improved user experience with features like dark mode, advanced filtering, and a customizable UI.
+<div align="center">
+  <img src="docs/assets/screenshot.png" alt="NPMDeck Screenshot" width="100%" />
+  
+  [![GitHub Stars](https://img.shields.io/github/stars/smartlabsAT/NPMDeck?style=social)](https://github.com/smartlabsAT/NPMDeck)
+  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+  [![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+</div>
 
-## Features
+> [!WARNING]
+> 🚧 **Development Status**: NPMDeck is currently under active development. A stable release is coming soon! 
+> 
+> ⭐ **Star & Watch** this repository to get notified about the release!
+
+---
+
+## 🎯 What is NPMDeck?
+
+NPMDeck is a **modern, responsive web interface** for [Nginx Proxy Manager](https://nginxproxymanager.com/). Built with React, Material-UI, and Express.js, it provides an improved user experience with powerful features and a beautiful design.
+
+## ✨ Features
 
 - 🌓 **Dark Mode** - Built-in dark theme with system preference detection
-- 🔍 **Global Search** - Quick search across all resources
+- 🔍 **Global Search** - Lightning-fast search across all resources
 - 🎨 **Customizable UI** - Choose between drawer and dialog views
 - 📊 **Enhanced Dashboard** - Real-time statistics and quick actions
 - 🔒 **Permission System** - Fine-grained access control
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
-- ⚡ **Fast & Modern** - Built with Vite and React 18
+- 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
+- ⚡ **Blazing Fast** - Built with Vite and React 18 for optimal performance
+- 🔄 **Live Updates** - Real-time data synchronization
+- 🎯 **Smart Filters** - Advanced filtering and sorting options
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js 18+ 
-- Docker (optional, for containerized deployment)
-- Running instance of Nginx Proxy Manager backend
+- ✅ Node.js 18+ 
+- 🐳 Docker (optional, for containerized deployment)
+- 🔧 Running instance of Nginx Proxy Manager backend
 
-## Development Setup
+## 🛠️ Development Setup
 
-### 1. Clone and Install
+### 🚀 Quick Start
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/smartlabsAT/NPMDeck.git
 cd NPMDeck
+
+# 2. Install dependencies
 npm install
-```
 
-### 2. Configure Environment
-
-```bash
+# 3. Configure environment
 cp .env.example .env
+# Edit .env with your NPM backend URL
 ```
+
+### ⚙️ Configure Environment
 
 Edit `.env` and set your NPM backend URL:
 ```env
@@ -40,45 +62,43 @@ NPM_API_URL=http://localhost:81  # Your NPM backend address
 PORT=3000                         # Express server port
 ```
 
-### 3. Start Development
+### 💻 Start Development
 
 ```bash
 npm run dev
 ```
 
 This starts two servers simultaneously:
-- **Vite Dev Server**: http://localhost:5173 (React app with hot reload)
-- **Express Server**: http://localhost:3000 (API proxy to NPM backend)
+- 🔥 **Vite Dev Server**: http://localhost:5173 (React app with hot reload)
+- 🚀 **Express Server**: http://localhost:3000 (API proxy to NPM backend)
 
 Open http://localhost:5173 in your browser for development.
 
-### Development with Docker
+### 🐳 Development with Docker
 
 ```bash
 docker-compose up dev
 ```
 
 This starts:
-- NPMDeck development container with hot reload
-- Watches for file changes and automatically rebuilds
+- 🔄 NPMDeck development container with hot reload
+- 👀 Watches for file changes and automatically rebuilds
 
-## Production Deployment
+## 🚀 Production Deployment
 
 ### Option 1: Node.js Deployment
 
-1. **Build the application:**
 ```bash
+# Build the application
 npm run build
-```
 
-2. **Start the production server:**
-```bash
+# Start production server
 npm start
 ```
 
 The application will be available at http://localhost:3000
 
-### Option 2: Docker Deployment (Recommended)
+### Option 2: Docker Deployment (Recommended) 🐳
 
 #### Using Docker Compose
 
@@ -115,7 +135,7 @@ docker stop npmdeck
 docker rm npmdeck
 ```
 
-### Option 3: Docker with Custom Network
+### Option 3: Docker with Custom Network 🌐
 
 If NPM backend runs in Docker, use a shared network:
 
@@ -132,7 +152,7 @@ docker run -d \
   npmdeck:latest
 ```
 
-## Environment Variables
+## 🔧 Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -142,65 +162,76 @@ docker run -d \
 | `ENABLE_LOGS` | Enable log features | `true` |
 | `ENABLE_METRICS` | Enable metrics | `true` |
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 NPMDeck/
-├── src/           # React frontend source
-├── server/        # Express backend server
-│   ├── routes/    # API routes
-│   ├── config/    # Server configuration
-│   └── index.js   # Main server file
-├── dist/          # Built frontend (generated)
-└── public/        # Static assets
+├── 📁 src/           # React frontend source
+├── 📁 server/        # Express backend server
+│   ├── 📁 routes/    # API routes
+│   ├── 📁 config/    # Server configuration
+│   └── 📄 index.js   # Main server file
+├── 📁 dist/          # Built frontend (generated)
+└── 📁 public/        # Static assets
 ```
 
-## API Integration
+## 🔌 API Integration
 
 NPMDeck acts as a proxy between the frontend and NPM backend:
 
-- All `/api/*` requests are proxied to the NPM backend
-- Authentication headers are automatically forwarded
-- Additional dashboard-specific endpoints at `/api/dashboard/*`
+- ➡️ All `/api/*` requests are proxied to the NPM backend
+- 🔐 Authentication headers are automatically forwarded
+- 📊 Additional dashboard-specific endpoints at `/api/dashboard/*`
 
-## Development
+## 💻 Development
 
-### Available Scripts
+### 📜 Available Scripts
 
-- `npm run dev` - Start development servers
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run docker:build` - Build Docker image
-- `npm run docker:run` - Run Docker container
+- `npm run dev` - 🚀 Start development servers
+- `npm run build` - 🏗️ Build for production
+- `npm start` - ▶️ Start production server
+- `npm run lint` - 🔍 Run ESLint
+- `npm run docker:build` - 🐳 Build Docker image
+- `npm run docker:run` - 🏃 Run Docker container
 
-### Tech Stack
+### 🛠️ Tech Stack
 
-- **Frontend**: React 18, TypeScript, Material-UI v5, Vite
-- **Backend**: Express.js, http-proxy-middleware
-- **State Management**: Zustand, React Query
-- **Routing**: React Router v6
-- **Build**: Vite, Docker
+- **Frontend**: ⚛️ React 18, TypeScript, Material-UI v5, Vite
+- **Backend**: 🟢 Express.js, http-proxy-middleware
+- **State Management**: 🐻 Zustand, React Query
+- **Routing**: 🛣️ React Router v6
+- **Build**: ⚡ Vite, 🐳 Docker
 
-## Contributing
+## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We love contributions! Here's how you can help:
 
-## License
+1. 🍴 Fork the repository
+2. 🌟 Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. 💾 Commit your changes (`git commit -m 'Add amazing feature'`)
+4. 📤 Push to the branch (`git push origin feature/amazing-feature`)
+5. 🔄 Open a Pull Request
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- [Nginx Proxy Manager](https://nginxproxymanager.com/) for the excellent backend
-- The NPM community for feedback and contributions
+- 🎯 [Nginx Proxy Manager](https://nginxproxymanager.com/) for the excellent backend
+- 💪 The NPM community for feedback and contributions
+- ❤️ All our contributors and supporters
 
-## Support
+## 💬 Support
 
 - 📚 [Documentation](https://github.com/smartlabsAT/NPMDeck/wiki)
 - 🐛 [Issue Tracker](https://github.com/smartlabsAT/NPMDeck/issues)
 - 💬 [Discussions](https://github.com/smartlabsAT/NPMDeck/discussions)
+
+---
+
+<div align="center">
+  Made with ❤️ by <a href="https://github.com/smartlabsAT">smartlabs</a>
+  <br>
+  ⭐ Star us on GitHub — it motivates us a lot!
+</div>
