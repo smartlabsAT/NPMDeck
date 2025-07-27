@@ -1,5 +1,5 @@
 import { useState, useTransition } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   AppBar,
   Box,
@@ -37,16 +37,19 @@ import {
   ExpandMore,
   AccountCircle,
   TrendingFlat,
-  ImportExport as ImportExportIcon
+  ImportExport as ImportExportIcon,
+  ChevronRight
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import PermissionGate from './PermissionGate'
+import Footer from './Footer'
 
 const drawerWidth = 240
 
 const Layout = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isPending, startTransition] = useTransition()
   const { user, logout, tokenStack, popFromStack } = useAuthStore()
   const { canView, isAdmin, getVisibleResources } = usePermissions()
@@ -83,33 +86,33 @@ const Layout = () => {
 
   // Build menu items based on permissions
   const hostsChildren = [
-    canView('proxy_hosts') && { text: 'Proxy Hosts', icon: <SwapHoriz />, path: '/hosts/proxy' },
-    canView('redirection_hosts') && { text: 'Redirection Hosts', icon: <TrendingFlat />, path: '/hosts/redirection' },
-    canView('dead_hosts') && { text: '404 Hosts', icon: <Block />, path: '/hosts/404' },
-    canView('streams') && { text: 'Streams', icon: <Stream />, path: '/hosts/streams' }
+    canView('proxy_hosts') && { text: 'Proxy Hosts', icon: <SwapHoriz sx={{ color: '#5eba00' }} />, path: '/hosts/proxy' },
+    canView('redirection_hosts') && { text: 'Redirection Hosts', icon: <TrendingFlat sx={{ color: '#f1c40f' }} />, path: '/hosts/redirection' },
+    canView('dead_hosts') && { text: '404 Hosts', icon: <Block sx={{ color: '#cd201f' }} />, path: '/hosts/404' },
+    canView('streams') && { text: 'Streams', icon: <Stream sx={{ color: '#467fcf' }} />, path: '/hosts/streams' }
   ].filter(Boolean)
 
   const securityChildren = [
-    canView('access_lists') && { text: 'Access Lists', icon: <Security />, path: '/security/access-lists' },
-    canView('certificates') && { text: 'SSL Certificates', icon: <VpnKey />, path: '/security/certificates' }
+    canView('access_lists') && { text: 'Access Lists', icon: <Security sx={{ color: '#2bcbba' }} />, path: '/security/access-lists' },
+    canView('certificates') && { text: 'SSL Certificates', icon: <VpnKey sx={{ color: '#467fcf' }} />, path: '/security/certificates' }
   ].filter(Boolean)
 
   const menuItems = [
     {
       text: 'Dashboard',
-      icon: <Dashboard />,
+      icon: <Dashboard sx={{ color: '#2bcbba' }} />,
       path: '/'
     },
     hostsChildren.length > 0 && {
       text: 'Hosts',
-      icon: <Language />,
+      icon: <Language sx={{ color: '#5eba00' }} />,
       open: hostsOpen,
       onClick: () => setHostsOpen(!hostsOpen),
       children: hostsChildren
     },
     securityChildren.length > 0 && {
       text: 'Security',
-      icon: <Security />,
+      icon: <Security sx={{ color: '#467fcf' }} />,
       open: securityOpen,
       onClick: () => setSecurityOpen(!securityOpen),
       children: securityChildren
@@ -137,18 +140,49 @@ const Layout = () => {
 
   const drawer = (
     <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          NPM
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List>
+      <Box 
+        sx={{ 
+          height: 64,
+          background: 'linear-gradient(45deg, #2bcbba 30%, #4dd4c5 90%)',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          px: 2,
+          gap: 1
+        }}
+      >
+        <Language sx={{ fontSize: 28 }} />
+        <Box>
+          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+            Nginx Proxy
+          </Typography>
+          <Typography variant="caption" sx={{ opacity: 0.9, lineHeight: 1 }}>
+            Manager
+          </Typography>
+        </Box>
+      </Box>
+      <List sx={{ pt: 2.5, px: 1 }}>
         {menuItems.map((item) => (
           <div key={item.text}>
             <ListItem disablePadding>
               <ListItemButton
                 onClick={item.onClick || (() => item.path && handleNavigate(item.path))}
+                selected={item.path ? location.pathname === item.path : false}
+                sx={{
+                  borderRadius: '0 24px 24px 0',
+                  mr: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(43, 203, 186, 0.04)',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(43, 203, 186, 0.08)',
+                    borderRight: '3px solid #2bcbba',
+                    '&:hover': {
+                      backgroundColor: 'rgba(43, 203, 186, 0.12)',
+                    }
+                  }
+                }}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
@@ -161,11 +195,24 @@ const Layout = () => {
                   {item.children.map((child) => (
                     <ListItemButton
                       key={child.text}
-                      sx={{ pl: 4 }}
+                      sx={{ 
+                        pl: 4,
+                        '&.Mui-selected': {
+                          backgroundColor: 'rgba(43, 203, 186, 0.08)',
+                          borderRight: '3px solid #2bcbba',
+                          '&:hover': {
+                            backgroundColor: 'rgba(43, 203, 186, 0.12)',
+                          }
+                        }
+                      }}
+                      selected={location.pathname === child.path}
                       onClick={() => handleNavigate(child.path)}
                     >
-                      <ListItemIcon>{child.icon}</ListItemIcon>
-                      <ListItemText primary={child.text} />
+                      <ListItemIcon sx={{ minWidth: 40 }}>{child.icon}</ListItemIcon>
+                      <ListItemText 
+                        primary={child.text} 
+                        primaryTypographyProps={{ fontSize: '0.875rem' }}
+                      />
                     </ListItemButton>
                   ))}
                 </List>
@@ -177,8 +224,13 @@ const Layout = () => {
       
       {isAdmin && (
         <>
-          <Divider />
-          <List>
+          <Divider sx={{ my: 1 }} />
+          <Box sx={{ px: 2, py: 0.5 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Administration
+            </Typography>
+          </Box>
+          <List sx={{ pt: 0.5, px: 1 }}>
             {adminItems.map((item) => (
               <div key={item.text}>
                 <ListItem disablePadding>
@@ -207,11 +259,50 @@ const Layout = () => {
           </List>
         </>
       )}
+      
+      {/* User Info Section */}
+      <Box sx={{ mt: 'auto' }}>
+        <Divider sx={{ mb: 0 }} />
+        <Box 
+          sx={{ 
+            p: 2, 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 2,
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.08)',
+            }
+          }}
+          onClick={handleMenu}
+        >
+          <Avatar
+            sx={{
+              width: 32,
+              height: 32,
+              bgcolor: user?.is_admin ? 'primary.main' : 'secondary.main'
+            }}
+          >
+            {user?.name.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
+              {user?.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {user?.email}
+            </Typography>
+          </Box>
+          <ChevronRight fontSize="small" color="action" />
+        </Box>
+      </Box>
     </div>
   )
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', flex: 1 }}>
       <AppBar
         position="fixed"
         sx={{
@@ -359,7 +450,14 @@ const Layout = () => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              borderRight: 'none',
+              boxShadow: '2px 0 4px rgba(0,0,0,0.08)',
+              display: 'flex',
+              flexDirection: 'column'
+            },
           }}
           open
         >
@@ -367,16 +465,22 @@ const Layout = () => {
         </Drawer>
       </Box>
       
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: 8
-        }}
-      >
-        <Outlet />
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            width: { sm: `calc(100% - ${drawerWidth}px)` },
+            mt: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 'calc(100vh - 64px)'
+          }}
+        >
+          <Box sx={{ flex: 1, p: 3 }}>
+            <Outlet />
+          </Box>
+          <Footer />
+        </Box>
       </Box>
     </Box>
   )
