@@ -40,6 +40,8 @@ import {
   ImportExport as ImportExportIcon
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import PermissionGate from './PermissionGate'
 
 const drawerWidth = 240
 
@@ -47,6 +49,7 @@ const Layout = () => {
   const navigate = useNavigate()
   const [isPending, startTransition] = useTransition()
   const { user, logout, tokenStack, popFromStack } = useAuthStore()
+  const { canView, isAdmin, getVisibleResources } = usePermissions()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [hostsOpen, setHostsOpen] = useState(true)
@@ -78,40 +81,45 @@ const Layout = () => {
     })
   }
 
+  // Build menu items based on permissions
+  const hostsChildren = [
+    canView('proxy_hosts') && { text: 'Proxy Hosts', icon: <SwapHoriz />, path: '/hosts/proxy' },
+    canView('redirection_hosts') && { text: 'Redirection Hosts', icon: <TrendingFlat />, path: '/hosts/redirection' },
+    canView('dead_hosts') && { text: '404 Hosts', icon: <Block />, path: '/hosts/404' },
+    canView('streams') && { text: 'Streams', icon: <Stream />, path: '/hosts/streams' }
+  ].filter(Boolean)
+
+  const securityChildren = [
+    canView('access_lists') && { text: 'Access Lists', icon: <Security />, path: '/security/access-lists' },
+    canView('certificates') && { text: 'SSL Certificates', icon: <VpnKey />, path: '/security/certificates' }
+  ].filter(Boolean)
+
   const menuItems = [
     {
       text: 'Dashboard',
       icon: <Dashboard />,
       path: '/'
     },
-    {
+    hostsChildren.length > 0 && {
       text: 'Hosts',
       icon: <Language />,
       open: hostsOpen,
       onClick: () => setHostsOpen(!hostsOpen),
-      children: [
-        { text: 'Proxy Hosts', icon: <SwapHoriz />, path: '/hosts/proxy' },
-        { text: 'Redirection Hosts', icon: <TrendingFlat />, path: '/hosts/redirection' },
-        { text: '404 Hosts', icon: <Block />, path: '/hosts/404' },
-        { text: 'Streams', icon: <Stream />, path: '/hosts/streams' }
-      ]
+      children: hostsChildren
     },
-    {
+    securityChildren.length > 0 && {
       text: 'Security',
       icon: <Security />,
       open: securityOpen,
       onClick: () => setSecurityOpen(!securityOpen),
-      children: [
-        { text: 'Access Lists', icon: <Security />, path: '/security/access-lists' },
-        { text: 'SSL Certificates', icon: <VpnKey />, path: '/security/certificates' }
-      ]
+      children: securityChildren
     },
-    {
+    isAdmin && {
       text: 'Import / Export',
       icon: <ImportExportIcon />,
       path: '/tools/import-export'
     }
-  ]
+  ].filter(Boolean)
 
   const adminItems = [
     {
@@ -167,7 +175,7 @@ const Layout = () => {
         ))}
       </List>
       
-      {(user?.roles.includes('admin') || user?.roles.includes('user')) && (
+      {isAdmin && (
         <>
           <Divider />
           <List>
