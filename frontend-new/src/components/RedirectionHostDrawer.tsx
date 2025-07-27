@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import {
-  Drawer,
   Box,
   Typography,
   TextField,
@@ -35,6 +34,7 @@ import { RedirectionHost, CreateRedirectionHost, redirectionHostsApi } from '../
 import { Certificate, certificatesApi } from '../api/certificates'
 import CertificateDrawer from './CertificateDrawer'
 import DomainInput from './DomainInput'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -289,55 +289,67 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
     // Add more providers as needed
   ]
 
+  const operation = host ? 'edit' : 'create'
+  const title = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <RedirectIcon sx={{ color: '#f1c40f' }} />
+      <Typography variant="h6">
+        {host ? 'Edit Redirection Host' : 'Add Redirection Host'}
+      </Typography>
+    </Box>
+  )
+
   return (
     <>
-      <Drawer
-        anchor="right"
+      <AdaptiveContainer
         open={open}
         onClose={onClose}
-        PaperProps={{
-          sx: { width: { xs: '100%', sm: 600 } }
-        }}
+        entity="redirection_hosts"
+        operation={operation}
+        title={title}
+        actions={
+          <>
+            <Button variant="outlined" onClick={onClose} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              disabled={loading}
+              startIcon={loading && <CircularProgress size={20} />}
+            >
+              {host ? 'Save Changes' : 'Create'}
+            </Button>
+          </>
+        }
       >
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="h6">
-              {host ? 'Edit Redirection Host' : 'Add Redirection Host'}
-            </Typography>
-            <IconButton onClick={onClose}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          
-          <Divider />
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
 
-          {error && (
-            <Alert severity="error" sx={{ mx: 2, mt: 2 }} onClose={() => setError(null)}>
-              {error}
-            </Alert>
-          )}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)}>
+            <Tab 
+              icon={<RedirectIcon />} 
+              label="Details" 
+              iconPosition="start"
+            />
+            <Tab 
+              icon={<LockIcon />} 
+              label="SSL" 
+              iconPosition="start"
+            />
+            <Tab 
+              icon={<CodeIcon />} 
+              label="Advanced" 
+              iconPosition="start"
+            />
+          </Tabs>
+        </Box>
 
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)}>
-              <Tab 
-                icon={<RedirectIcon />} 
-                label="Details" 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<LockIcon />} 
-                label="SSL" 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<CodeIcon />} 
-                label="Advanced" 
-                iconPosition="start"
-              />
-            </Tabs>
-          </Box>
-
-          <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+        <Box sx={{ mt: 2 }}>
             <TabPanel value={activeTab} index={0}>
               <Box sx={{ px: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>
@@ -682,25 +694,8 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
                 />
               </Box>
             </TabPanel>
-          </Box>
-
-          <Divider />
-
-          <Box sx={{ p: 2, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-            <Button variant="outlined" onClick={onClose} disabled={loading}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSave}
-              disabled={loading}
-              startIcon={loading && <CircularProgress size={20} />}
-            >
-              {host ? 'Save Changes' : 'Create'}
-            </Button>
-          </Box>
         </Box>
-      </Drawer>
+      </AdaptiveContainer>
 
       <CertificateDrawer
         open={certificateDrawerOpen}

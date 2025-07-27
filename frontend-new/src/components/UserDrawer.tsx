@@ -37,6 +37,7 @@ import {
   Edit as ManageIcon,
   Public as PublicIcon,
   PersonOutline as UserOnlyIcon,
+  Group,
 } from '@mui/icons-material'
 import { usersApi, User, CreateUserPayload, UpdateUserPayload } from '../api/users'
 import { useAuthStore } from '../stores/authStore'
@@ -418,9 +419,12 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
     >
       <Box p={3}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h5">
-            {user ? `User: ${user.name}` : 'Add User'}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {user ? <PersonIcon sx={{ color: '#6c757d' }} /> : <Group sx={{ color: '#6c757d' }} />}
+            <Typography variant="h5">
+              {user ? `Edit User: ${user.name}` : 'New User'}
+            </Typography>
+          </Box>
           <IconButton onClick={onClose} edge="end">
             <CloseIcon />
           </IconButton>

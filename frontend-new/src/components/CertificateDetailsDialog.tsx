@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -44,11 +40,13 @@ import {
   WebAsset as HostsIcon,
   Settings as AdvancedIcon,
   Download as DownloadIcon,
+  VpnKey,
 } from '@mui/icons-material'
 import { Certificate } from '../api/certificates'
-import ExportDialog from './ExportDialog'
+// import ExportDialog from './ExportDialog'
 import PermissionButton from './PermissionButton'
 import { usePermissions } from '../hooks/usePermissions'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface CertificateDetailsDialogProps {
   open: boolean
@@ -93,7 +91,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
     domains: true,
     hosts: false,
   })
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Parse tab from URL
   useEffect(() => {
@@ -177,32 +175,52 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
   }
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
-      fullWidth
-      PaperProps={{
-        sx: {
-          height: '90vh',
-          maxHeight: '90vh',
-        }
-      }}
-    >
-      <DialogTitle>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={1}>
-            <LockIcon color="primary" />
-            <Typography variant="h6">
-              {certificate.nice_name || certificate.domain_names[0] || 'Certificate Details'}
-            </Typography>
+    <AdaptiveContainer
+      open={open}
+      onClose={onClose}
+      entity="certificates"
+      operation="view"
+      title={
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <VpnKey sx={{ color: '#467fcf' }} />
+            <Typography variant="h6">Certificate</Typography>
           </Box>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
+          <Typography variant="body2" color="text.secondary">
+            {certificate.nice_name || certificate.domain_names[0] || 'Details'}
+          </Typography>
         </Box>
-      </DialogTitle>
-      
+      }
+      maxWidth="md"
+      fullWidth
+      actions={
+        <>
+          {/* {isAdmin && (
+            <Button
+              onClick={() => setExportDialogOpen(true)}
+              startIcon={<DownloadIcon />}
+            >
+              Export
+            </Button>
+          )} */}
+          {onEdit && (
+            <PermissionButton
+              resource="certificates"
+              action="edit"
+              onClick={() => {
+                onClose()
+                onEdit(certificate)
+              }}
+              startIcon={<EditIcon />}
+              color="primary"
+            >
+              Edit Certificate
+            </PermissionButton>
+          )}
+          <Button onClick={onClose}>Close</Button>
+        </>
+      }
+    >
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTab} onChange={handleTabChange} aria-label="certificate details tabs">
           <Tab label="Overview" icon={<InfoIcon />} iconPosition="start" />
@@ -211,7 +229,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
         </Tabs>
       </Box>
 
-      <DialogContent dividers sx={{ overflow: 'auto' }}>
+      <Box sx={{ overflow: 'auto' }}>
         {copiedText && (
           <Alert severity="success" sx={{ mb: 2 }}>
             Copied {copiedText} to clipboard!
@@ -656,37 +674,10 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
             Advanced certificate information and raw certificate data will be displayed here in the future.
           </Alert>
         </TabPanel>
-      </DialogContent>
-      
-      <DialogActions>
-        {isAdmin && (
-          <Button
-            onClick={() => setExportDialogOpen(true)}
-            startIcon={<DownloadIcon />}
-          >
-            Export
-          </Button>
-        )}
-        <Box sx={{ flex: 1 }} />
-        {onEdit && (
-          <PermissionButton
-            resource="certificates"
-            action="edit"
-            onClick={() => {
-              onClose()
-              onEdit(certificate)
-            }}
-            startIcon={<EditIcon />}
-            color="primary"
-          >
-            Edit Certificate
-          </PermissionButton>
-        )}
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
+      </Box>
       
       {/* Export Dialog */}
-      {certificate && (
+      {/* {certificate && (
         <ExportDialog
           open={exportDialogOpen}
           onClose={() => setExportDialogOpen(false)}
@@ -694,8 +685,8 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
           type="certificate"
           itemName="Certificate"
         />
-      )}
-    </Dialog>
+      )} */}
+    </AdaptiveContainer>
   )
 }
 

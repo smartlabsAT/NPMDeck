@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Drawer,
   Box,
   Typography,
   Button,
@@ -31,9 +30,11 @@ import {
   Description as FileIcon,
   Key as KeyIcon,
   AccountTree as ChainIcon,
+  VpnKey,
 } from '@mui/icons-material'
 import { certificatesApi, Certificate, CreateCertificate } from '../api/certificates'
 import DomainInput from './DomainInput'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface CertificateDrawerProps {
   open: boolean
@@ -384,33 +385,39 @@ const CertificateDrawer: React.FC<CertificateDrawerProps> = ({
     </Box>
   )
 
+  const operation = certificate ? 'edit' : 'create'
+  const title = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <VpnKey sx={{ color: '#467fcf' }} />
+      <Typography variant="h6">
+        {certificate ? 'Edit Certificate' : 'Add SSL Certificate'}
+      </Typography>
+    </Box>
+  )
+
   return (
-    <Drawer
-      anchor="right"
+    <AdaptiveContainer
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: { width: { xs: '100%', sm: 600 } }
-      }}
+      entity="certificates"
+      operation={operation}
+      title={title}
+      actions={
+        <>
+          <Button onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} /> : null}
+          >
+            {loading && loadingMessage ? loadingMessage : `${certificate ? 'Update' : 'Create'} Certificate`}
+          </Button>
+        </>
+      }
     >
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box display="flex" alignItems="center" gap={1}>
-              <LockIcon color="primary" />
-              <Typography variant="h6">
-                {certificate ? 'Edit Certificate' : 'Add SSL Certificate'}
-              </Typography>
-            </Box>
-            <IconButton onClick={onClose} size="small">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </Box>
-
-        {/* Content */}
-        <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
               {error}
@@ -595,26 +602,7 @@ const CertificateDrawer: React.FC<CertificateDrawerProps> = ({
               </Stack>
             )}
           </Stack>
-        </Box>
-
-        {/* Footer */}
-        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-          <Box display="flex" gap={2} justifyContent="flex-end">
-            <Button onClick={onClose} disabled={loading}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSubmit}
-              disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} /> : null}
-            >
-              {loading && loadingMessage ? loadingMessage : `${certificate ? 'Update' : 'Create'} Certificate`}
-            </Button>
-          </Box>
-        </Box>
-      </Box>
-    </Drawer>
+    </AdaptiveContainer>
   )
 }
 

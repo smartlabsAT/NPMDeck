@@ -41,7 +41,7 @@ const commonTheme: ThemeOptions = {
     },
     MuiCard: {
       defaultProps: {
-        elevation: 1,
+        elevation: 0,
       },
     },
   },
@@ -124,7 +124,7 @@ export const darkTheme = createTheme({
         },
       },
       defaultProps: {
-        elevation: 1,
+        elevation: 0,
       },
     },
     MuiTableCell: {

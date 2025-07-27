@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   IconButton,
   Box,
   Typography,
@@ -42,7 +38,8 @@ import {
 } from '@mui/icons-material'
 import { RedirectionHost } from '../api/redirectionHosts'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
-import ExportDialog from './ExportDialog'
+// import ExportDialog from './ExportDialog'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -83,7 +80,7 @@ export default function RedirectionHostDetailsDialog({
   const [activeTab, setActiveTab] = useState(0)
   const [linkedProxyHost, setLinkedProxyHost] = useState<ProxyHost | null>(null)
   const [loadingConnection, setLoadingConnection] = useState(false)
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Parse tab from URL
   useEffect(() => {
@@ -183,36 +180,48 @@ export default function RedirectionHostDetailsDialog({
   }
 
   return (
-    <Dialog
+    <AdaptiveContainer
       open={open}
       onClose={onClose}
+      entity="redirection_hosts"
+      operation="view"
+      title={
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <RedirectIcon sx={{ color: '#f1c40f' }} />
+            <Typography variant="h6">Redirection Host</Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            {host?.domain_names.join(', ') || 'Details'}
+          </Typography>
+        </Box>
+      }
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: { minHeight: '70vh' }
-      }}
-    >
-      <DialogTitle>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={1}>
-            <RedirectIcon color="primary" />
-            <Typography variant="h6">Redirection Host Details</Typography>
-          </Box>
-          <Box>
-            <IconButton
+      actions={
+        <>
+          {/* <Button
+            onClick={() => setExportDialogOpen(true)}
+            startIcon={<DownloadIcon />}
+          >
+            Export
+          </Button> */}
+          {onEdit && (
+            <Button 
+              onClick={() => {
+                onClose()
+                onEdit(host)
+              }}
+              startIcon={<EditIcon />}
               color="primary"
-              onClick={() => onEdit(host)}
-              sx={{ mr: 1 }}
             >
-              <EditIcon />
-            </IconButton>
-            <IconButton onClick={onClose}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </Box>
-      </DialogTitle>
-
+              Edit Redirection Host
+            </Button>
+          )}
+          <Button onClick={onClose}>Close</Button>
+        </>
+      }
+    >
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTab} onChange={handleTabChange} aria-label="redirection host details tabs">
           <Tab label="Overview" icon={<InfoIcon />} iconPosition="start" />
@@ -228,7 +237,7 @@ export default function RedirectionHostDetailsDialog({
         </Tabs>
       </Box>
 
-      <DialogContent dividers>
+      <Box sx={{ overflow: 'auto' }}>
         <TabPanel value={activeTab} index={0}>
           {/* Overview Tab */}
           <Box sx={{ mb: 3 }}>
@@ -528,33 +537,10 @@ export default function RedirectionHostDetailsDialog({
             )}
           </Box>
         </TabPanel>
-      </DialogContent>
-      
-      <DialogActions>
-        <Button
-          onClick={() => setExportDialogOpen(true)}
-          startIcon={<DownloadIcon />}
-        >
-          Export
-        </Button>
-        <Box sx={{ flex: 1 }} />
-        {onEdit && (
-          <Button 
-            onClick={() => {
-              onClose()
-              onEdit(host)
-            }}
-            startIcon={<EditIcon />}
-            color="primary"
-          >
-            Edit Redirection Host
-          </Button>
-        )}
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
+      </Box>
       
       {/* Export Dialog */}
-      {host && (
+      {/* {host && (
         <ExportDialog
           open={exportDialogOpen}
           onClose={() => setExportDialogOpen(false)}
@@ -562,7 +548,7 @@ export default function RedirectionHostDetailsDialog({
           type="redirection_host"
           itemName="Redirection Host"
         />
-      )}
-    </Dialog>
+      )} */}
+    </AdaptiveContainer>
   )
 }

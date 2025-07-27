@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
 import {
-  Drawer,
   Box,
   Typography,
   TextField,
   Button,
-  IconButton,
   Divider,
   FormControlLabel,
   Switch,
@@ -29,6 +27,7 @@ import {
 } from '@mui/icons-material'
 import { Stream, CreateStream, UpdateStream, streamsApi } from '../api/streams'
 import { Certificate, certificatesApi } from '../api/certificates'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -206,40 +205,48 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     }
   }
 
+  const operation = stream ? 'edit' : 'create'
+  const title = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <StreamIcon sx={{ color: '#467fcf' }} />
+      <Typography variant="h6">
+        {stream ? 'Edit Stream' : 'New Stream'}
+      </Typography>
+    </Box>
+  )
+
   return (
-    <Drawer
-      anchor="right"
+    <AdaptiveContainer
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: { width: { xs: '100%', sm: 600 } }
-      }}
+      entity="streams"
+      operation={operation}
+      title={title}
+      actions={
+        <>
+          <Button onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={loading || (!tcpForwarding && !udpForwarding)}
+            startIcon={loading && <CircularProgress size={20} />}
+          >
+            {loading ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create')}
+          </Button>
+        </>
+      }
     >
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <StreamIcon color="primary" />
-            <Typography variant="h6">
-              {isEditMode ? 'Edit Stream' : 'New Stream'}
-            </Typography>
-          </Box>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <Divider />
 
-        {/* Error display */}
-        {error && (
-          <Alert severity="error" sx={{ mx: 2, mt: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+      {/* Error display */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
-        {/* Tabs */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}>
-          <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+      <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tab 
               label="Details" 
               icon={<InfoIcon />} 
@@ -252,11 +259,10 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
               iconPosition="start"
               sx={{ minHeight: 48 }}
             />
-          </Tabs>
-        </Box>
+      </Tabs>
 
-        {/* Content */}
-        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+      {/* Content */}
+      <Box sx={{ mt: 2 }}>
           <TabPanel value={activeTab} index={0}>
             {/* Details Tab */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -430,24 +436,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
               </Box>
             </Box>
           </TabPanel>
-        </Box>
-
-        {/* Footer */}
-        <Divider />
-        <Box sx={{ p: 2, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-          <Button onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            disabled={loading || (!tcpForwarding && !udpForwarding)}
-            startIcon={loading && <CircularProgress size={20} />}
-          >
-            {loading ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create')}
-          </Button>
-        </Box>
       </Box>
-    </Drawer>
+    </AdaptiveContainer>
   )
 }

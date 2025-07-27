@@ -1,9 +1,5 @@
 import { useState } from 'react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -27,7 +23,8 @@ import {
   Download as DownloadIcon,
 } from '@mui/icons-material'
 import { Stream } from '../api/streams'
-import ExportDialog from './ExportDialog'
+// import ExportDialog from './ExportDialog'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface StreamDetailsDialogProps {
   open: boolean
@@ -43,7 +40,7 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
   onEdit,
 }) => {
   const [copiedText, setCopiedText] = useState<string>('')
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   if (!stream) return null
 
@@ -81,30 +78,49 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
 
   return (
     <>
-      <Dialog
+      <AdaptiveContainer
         open={open}
         onClose={onClose}
+        entity="streams"
+        operation="view"
+        title={
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <StreamIcon sx={{ color: '#467fcf' }} />
+              <Typography variant="h6">Stream</Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Port {stream.incoming_port}
+            </Typography>
+          </Box>
+        }
         maxWidth="md"
         fullWidth
-        PaperProps={{
-          sx: { minHeight: '400px' }
-        }}
+        actions={
+          <>
+            {/* <Button
+              onClick={() => setExportDialogOpen(true)}
+              startIcon={<DownloadIcon />}
+            >
+              Export
+            </Button> */}
+            {onEdit && (
+              <Button 
+                onClick={() => {
+                  onClose()
+                  onEdit(stream)
+                }}
+                startIcon={<EditIcon />}
+                color="primary"
+                variant="contained"
+              >
+                Edit Stream
+              </Button>
+            )}
+            <Button onClick={onClose}>Close</Button>
+          </>
+        }
       >
-        <DialogTitle>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box display="flex" alignItems="center" gap={1}>
-              <StreamIcon color="primary" />
-              <Typography variant="h6">
-                Stream Port {stream.incoming_port}
-              </Typography>
-            </Box>
-            <IconButton onClick={onClose} size="small">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        
-        <DialogContent>
           {/* Status Alert */}
           <Alert 
             severity={getStatusColor() as any}
@@ -269,34 +285,10 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
               )}
             </Grid>
           </Box>
-        </DialogContent>
-        
-        <DialogActions>
-          <Button
-            onClick={() => setExportDialogOpen(true)}
-            startIcon={<DownloadIcon />}
-          >
-            Export
-          </Button>
-          <Box sx={{ flex: 1 }} />
-          {onEdit && (
-            <Button 
-              onClick={() => {
-                onClose()
-                onEdit(stream)
-              }}
-              startIcon={<EditIcon />}
-              color="primary"
-            >
-              Edit Stream
-            </Button>
-          )}
-          <Button onClick={onClose}>Close</Button>
-        </DialogActions>
-      </Dialog>
+      </AdaptiveContainer>
       
       {/* Export Dialog */}
-      {stream && (
+      {/* {stream && (
         <ExportDialog
           open={exportDialogOpen}
           onClose={() => setExportDialogOpen(false)}
@@ -304,7 +296,7 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
           type="stream"
           itemName="Stream"
         />
-      )}
+      )} */}
     </>
   )
 }

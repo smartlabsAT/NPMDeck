@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -39,6 +35,7 @@ import {
   ExpandMore,
   Edit as EditIcon,
   SwapHoriz as SwapHorizIcon,
+  Language as ProxyIcon,
   Block as BlockIcon,
   Speed as SpeedIcon,
   Wifi as WebSocketIcon,
@@ -56,10 +53,11 @@ import {
 import { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { AccessList, accessListsApi } from '../api/accessLists'
-import ExportDialog from './ExportDialog'
+// import ExportDialog from './ExportDialog'
 import PermissionButton from './PermissionButton'
 import PermissionGate from './PermissionGate'
 import { usePermissions } from '../hooks/usePermissions'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -107,7 +105,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
   })
   const [linkedRedirections, setLinkedRedirections] = useState<RedirectionHost[]>([])
   const [loadingConnections, setLoadingConnections] = useState(false)
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [fullAccessList, setFullAccessList] = useState<AccessList | null>(null)
   const [loadingAccessList, setLoadingAccessList] = useState(false)
 
@@ -117,18 +115,15 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
       const pathParts = location.pathname.split('/')
       const tabIndex = pathParts[pathParts.length - 1]
       switch (tabIndex) {
-        case 'logs':
+        case 'advanced':
           setActiveTab(1)
           break
-        case 'advanced':
-          setActiveTab(2)
-          break
         case 'connections':
-          setActiveTab(3)
+          setActiveTab(2)
           break
         case 'access':
           if (host?.access_list) {
-            setActiveTab(4)
+            setActiveTab(3)
           }
           break
         default:
@@ -147,7 +142,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
 
   // Load access list details when access tab is active
   useEffect(() => {
-    if (activeTab === 4 && open && host?.access_list?.id) {
+    if (activeTab === 3 && open && host?.access_list?.id) {
       loadAccessListDetails()
     }
   }, [activeTab, open, host?.access_list?.id])
@@ -216,7 +211,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
     if (host) {
-      const tabs = ['overview', 'logs', 'advanced', 'connections']
+      const tabs = ['overview', 'advanced', 'connections']
       if (host.access_list) {
         tabs.push('access')
       }
@@ -225,36 +220,45 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
   }
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
-      fullWidth
-      PaperProps={{
-        sx: {
-          height: '90vh',
-          maxHeight: '90vh',
-        }
-      }}
-    >
-      <DialogTitle>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={1}>
-            <LanguageIcon color="primary" />
-            <Typography variant="h6">
-              {host.domain_names[0] || 'Proxy Host Details'}
-            </Typography>
+    <AdaptiveContainer
+      open={open}
+      onClose={onClose}
+      entity="proxy_hosts"
+      operation="view"
+      title={
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <SwapHorizIcon sx={{ color: '#5eba00' }} />
+            <Typography variant="h6">Proxy Host</Typography>
           </Box>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
+          <Typography variant="body2" color="text.secondary">
+            {host?.domain_names.join(', ') || 'Details'}
+          </Typography>
         </Box>
-      </DialogTitle>
-      
+      }
+      maxWidth="md"
+      fullWidth
+      actions={
+        <>
+          <Button onClick={onClose}>Close</Button>
+          {onEdit && (
+            <PermissionButton
+              resource="proxy_hosts"
+              action="edit"
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={() => onEdit(host!)}
+            >
+              Edit
+            </PermissionButton>
+          )}
+        </>
+      }
+    >
+      {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTab} onChange={handleTabChange} aria-label="proxy host details tabs">
           <Tab label="Overview" icon={<InfoIcon />} iconPosition="start" />
-          <Tab label="Logs" icon={<LogIcon />} iconPosition="start" />
           <Tab label="Advanced" icon={<SettingsIcon />} iconPosition="start" />
           <Tab 
             label={
@@ -271,7 +275,8 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
         </Tabs>
       </Box>
 
-      <DialogContent dividers sx={{ overflow: 'auto' }}>
+      {/* Content */}
+      <Box sx={{ overflow: 'auto' }}>
         {copiedText && (
           <Alert severity="success" sx={{ mb: 2 }}>
             Copied {copiedText} to clipboard!
@@ -330,7 +335,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
                           }
                         }}
                         onClick={() => {
-                          setActiveTab(4)
+                          setActiveTab(3)
                           navigate(`/hosts/proxy/${host.id}/view/access`, { replace: true })
                         }}
                       >
@@ -629,7 +634,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
                       }
                     }}
                     onClick={() => {
-                      setActiveTab(4)
+                      setActiveTab(3)
                       navigate(`/hosts/proxy/${host.id}/view/access`, { replace: true })
                     }}
                   >
@@ -672,13 +677,6 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
         </TabPanel>
 
         <TabPanel value={activeTab} index={1}>
-          {/* Logs Tab */}
-          <Alert severity="info">
-            Logs functionality will be implemented soon. This will show access logs, error logs, and other relevant information for this proxy host.
-          </Alert>
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={2}>
           {/* Advanced Tab */}
           {host.advanced_config ? (
             <Paper variant="outlined" sx={{ p: 2 }}>
@@ -706,7 +704,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
           )}
         </TabPanel>
 
-        <TabPanel value={activeTab} index={3}>
+        <TabPanel value={activeTab} index={2}>
           {/* Connections Tab */}
           <Box>
             <Box display="flex" alignItems="center" gap={1} mb={3}>
@@ -784,7 +782,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
         </TabPanel>
 
         {host.access_list && (
-          <TabPanel value={activeTab} index={4}>
+          <TabPanel value={activeTab} index={3}>
             {/* Access Control Tab */}
             {loadingAccessList ? (
               <Box display="flex" justifyContent="center" alignItems="center" py={4}>
@@ -1073,37 +1071,24 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
             )}
           </TabPanel>
         )}
-      </DialogContent>
+      </Box>
       
-      <DialogActions>
-        {isAdmin && (
+      {/* Export Button for Admin */}
+      {/* {isAdmin && (
+        <Box sx={{ mt: 2 }}>
           <Button
             onClick={() => setExportDialogOpen(true)}
             startIcon={<DownloadIcon />}
+            variant="outlined"
+            fullWidth
           >
             Export
           </Button>
-        )}
-        <Box sx={{ flex: 1 }} />
-        {onEdit && (
-          <PermissionButton
-            resource="proxy_hosts"
-            action="edit"
-            onClick={() => {
-              onClose()
-              onEdit(host)
-            }}
-            startIcon={<EditIcon />}
-            color="primary"
-          >
-            Edit Proxy Host
-          </PermissionButton>
-        )}
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
+        </Box>
+      )} */}
       
       {/* Export Dialog */}
-      {host && (
+      {/* {host && (
         <ExportDialog
           open={exportDialogOpen}
           onClose={() => setExportDialogOpen(false)}
@@ -1111,8 +1096,8 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
           type="proxy_host"
           itemName="Proxy Host"
         />
-      )}
-    </Dialog>
+      )} */}
+    </AdaptiveContainer>
   )
 }
 

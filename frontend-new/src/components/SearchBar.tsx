@@ -225,7 +225,7 @@ const SearchBar: React.FC = () => {
       loading={isLoading}
       loadingText="Loading resources..."
       noOptionsText={inputValue ? "No results found" : "Start typing to search..."}
-      sx={{ width: 400, ml: 2 }}
+      sx={{ width: '100%', maxWidth: 600 }}
       renderInput={(params) => (
         <TextField
           {...params}

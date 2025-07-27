@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import {
-  Drawer,
   Box,
   Typography,
   TextField,
@@ -26,8 +25,10 @@ import {
   Lock as LockIcon,
   Info as InfoIcon,
   CheckCircle as CheckIcon,
+  Security,
 } from '@mui/icons-material'
 import { AccessList, CreateAccessList, UpdateAccessList, accessListsApi } from '../api/accessLists'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -200,63 +201,72 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     }
   }
 
+  const operation = accessList ? 'edit' : 'create'
+  const title = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Security sx={{ color: '#2bcbba' }} />
+      <Typography variant="h6">
+        {isEditMode ? 'Edit Access List' : 'New Access List'}
+      </Typography>
+    </Box>
+  )
+
   return (
-    <Drawer
-      anchor="right"
+    <AdaptiveContainer
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: { width: { xs: '100%', sm: 600 } }
-      }}
+      entity="access_lists"
+      operation={operation}
+      title={title}
+      actions={
+        <>
+          <Button onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={loading}
+            startIcon={loading && <CircularProgress size={20} />}
+          >
+            {loading ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create')}
+          </Button>
+        </>
+      }
     >
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LockIcon color="primary" />
-            <Typography variant="h6">
-              {isEditMode ? 'Edit Access List' : 'New Access List'}
-            </Typography>
-          </Box>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <Divider />
+      {/* Error display */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
-        {/* Error display */}
-        {error && (
-          <Alert severity="error" sx={{ mx: 2, mt: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+          <Tab 
+            label="Details" 
+            icon={<InfoIcon />} 
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab 
+            label="Authorization" 
+            icon={<LockIcon />} 
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab 
+            label="Access" 
+            icon={<CheckIcon />} 
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+        </Tabs>
+      </Box>
 
-        {/* Tabs */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}>
-          <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
-            <Tab 
-              label="Details" 
-              icon={<InfoIcon />} 
-              iconPosition="start"
-              sx={{ minHeight: 48 }}
-            />
-            <Tab 
-              label="Authorization" 
-              icon={<LockIcon />} 
-              iconPosition="start"
-              sx={{ minHeight: 48 }}
-            />
-            <Tab 
-              label="Access" 
-              icon={<CheckIcon />} 
-              iconPosition="start"
-              sx={{ minHeight: 48 }}
-            />
-          </Tabs>
-        </Box>
-
-        {/* Content */}
-        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+      {/* Content */}
+      <Box sx={{ mt: 2 }}>
           <TabPanel value={activeTab} index={0}>
             {/* Details Tab */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -429,24 +439,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
               </Box>
             </Box>
           </TabPanel>
-        </Box>
-
-        {/* Footer */}
-        <Divider />
-        <Box sx={{ p: 2, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-          <Button onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            disabled={loading}
-            startIcon={loading && <CircularProgress size={20} />}
-          >
-            {loading ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create')}
-          </Button>
-        </Box>
       </Box>
-    </Drawer>
+    </AdaptiveContainer>
   )
 }

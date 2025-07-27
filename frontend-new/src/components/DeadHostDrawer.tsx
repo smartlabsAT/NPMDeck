@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Drawer,
   Box,
   Typography,
   Button,
@@ -22,10 +21,12 @@ import {
   Close as CloseIcon,
   Settings as SettingsIcon,
   Code as CodeIcon,
+  Block,
 } from '@mui/icons-material'
 import { deadHostsApi, DeadHost, CreateDeadHost, UpdateDeadHost } from '../api/deadHosts'
 import { certificatesApi } from '../api/certificates'
 import DomainInput from './DomainInput'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -198,39 +199,48 @@ const DeadHostDrawer: React.FC<DeadHostDrawerProps> = ({ open, onClose, host, on
   }
 
   const hasCertificate = formData.certificate_id && formData.certificate_id !== 0
+  const operation = host ? 'edit' : 'create'
+  const title = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Block sx={{ color: '#cd201f' }} />
+      <Typography variant="h6">
+        {host ? 'Edit 404 Host' : 'Create 404 Host'}
+      </Typography>
+    </Box>
+  )
 
   return (
-    <Drawer
-      anchor="right"
+    <AdaptiveContainer
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: { width: { xs: '100%', sm: 500 } }
-      }}
+      entity="dead_hosts"
+      operation={operation}
+      title={title}
+      actions={
+        <>
+          <Button onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSubmit}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : (host ? 'Save Changes' : 'Create 404 Host')}
+          </Button>
+        </>
+      }
     >
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography variant="h6">
-              {host ? 'Edit 404 Host' : 'Create 404 Host'}
-            </Typography>
-            <IconButton onClick={onClose} size="small">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </Box>
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+          <Tab label="General" icon={<SettingsIcon />} iconPosition="start" value={0} />
+          <Tab label="Advanced" icon={<CodeIcon />} iconPosition="start" value={1} />
+        </Tabs>
+      </Box>
 
-        {/* Tabs */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-            <Tab label="General" icon={<SettingsIcon />} iconPosition="start" value={0} />
-            <Tab label="Advanced" icon={<CodeIcon />} iconPosition="start" value={1} />
-          </Tabs>
-        </Box>
-
-        {/* Form Content */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+      {/* Form Content */}
+      <Box sx={{ mt: 2 }}>
           {errors.submit && (
             <Alert severity="error" sx={{ m: 2 }} onClose={() => setErrors(prev => ({ ...prev, submit: '' }))}>
               {errors.submit}
@@ -368,25 +378,8 @@ const DeadHostDrawer: React.FC<DeadHostDrawerProps> = ({ open, onClose, host, on
               />
             </Box>
           </TabPanel>
-        </Box>
-
-        {/* Footer */}
-        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-          <Box display="flex" gap={1} justifyContent="flex-end">
-            <Button onClick={onClose} disabled={saving}>
-              Cancel
-            </Button>
-            <Button 
-              variant="contained" 
-              onClick={handleSubmit}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : (host ? 'Save Changes' : 'Create 404 Host')}
-            </Button>
-          </Box>
-        </Box>
       </Box>
-    </Drawer>
+    </AdaptiveContainer>
   )
 }
 

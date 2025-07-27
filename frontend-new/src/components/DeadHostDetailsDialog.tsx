@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -40,7 +36,8 @@ import {
   Download as DownloadIcon,
 } from '@mui/icons-material'
 import { DeadHost } from '../api/deadHosts'
-import ExportDialog from './ExportDialog'
+// import ExportDialog from './ExportDialog'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -80,7 +77,7 @@ const DeadHostDetailsDialog: React.FC<DeadHostDetailsDialogProps> = ({
   const location = useLocation()
   const [activeTab, setActiveTab] = useState(0)
   const [copiedText, setCopiedText] = useState<string>('')
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Parse tab from URL
   useEffect(() => {
@@ -126,32 +123,48 @@ const DeadHostDetailsDialog: React.FC<DeadHostDetailsDialogProps> = ({
   }
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
-      fullWidth
-      PaperProps={{
-        sx: {
-          height: '90vh',
-          maxHeight: '90vh',
-        }
-      }}
-    >
-      <DialogTitle>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={1}>
-            <BlockIcon color="primary" />
-            <Typography variant="h6">
-              {host.domain_names[0] || '404 Host Details'}
-            </Typography>
+    <AdaptiveContainer
+      open={open}
+      onClose={onClose}
+      entity="dead_hosts"
+      operation="view"
+      title={
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <BlockIcon sx={{ color: '#cd201f' }} />
+            <Typography variant="h6">404 Host</Typography>
           </Box>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
+          <Typography variant="body2" color="text.secondary">
+            {host.domain_names.join(', ') || 'Details'}
+          </Typography>
         </Box>
-      </DialogTitle>
-      
+      }
+      maxWidth="md"
+      fullWidth
+      actions={
+        <>
+          {/* <Button
+            onClick={() => setExportDialogOpen(true)}
+            startIcon={<DownloadIcon />}
+          >
+            Export
+          </Button> */}
+          {onEdit && (
+            <Button 
+              onClick={() => {
+                onClose()
+                onEdit(host)
+              }}
+              startIcon={<EditIcon />}
+              color="primary"
+            >
+              Edit 404 Host
+            </Button>
+          )}
+          <Button onClick={onClose}>Close</Button>
+        </>
+      }
+    >
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTab} onChange={handleTabChange} aria-label="dead host details tabs">
           <Tab label="Overview" icon={<InfoIcon />} iconPosition="start" />
@@ -159,7 +172,7 @@ const DeadHostDetailsDialog: React.FC<DeadHostDetailsDialogProps> = ({
         </Tabs>
       </Box>
 
-      <DialogContent dividers sx={{ overflow: 'auto' }}>
+      <Box sx={{ overflow: 'auto' }}>
         {copiedText && (
           <Alert severity="success" sx={{ mb: 2 }}>
             Copied {copiedText} to clipboard!
@@ -465,33 +478,10 @@ const DeadHostDetailsDialog: React.FC<DeadHostDetailsDialogProps> = ({
             </Alert>
           )}
         </TabPanel>
-      </DialogContent>
-      
-      <DialogActions>
-        <Button
-          onClick={() => setExportDialogOpen(true)}
-          startIcon={<DownloadIcon />}
-        >
-          Export
-        </Button>
-        <Box sx={{ flex: 1 }} />
-        {onEdit && (
-          <Button 
-            onClick={() => {
-              onClose()
-              onEdit(host)
-            }}
-            startIcon={<EditIcon />}
-            color="primary"
-          >
-            Edit 404 Host
-          </Button>
-        )}
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
+      </Box>
       
       {/* Export Dialog */}
-      {host && (
+      {/* {host && (
         <ExportDialog
           open={exportDialogOpen}
           onClose={() => setExportDialogOpen(false)}
@@ -499,8 +489,8 @@ const DeadHostDetailsDialog: React.FC<DeadHostDetailsDialogProps> = ({
           type="dead_host"
           itemName="404 Host"
         />
-      )}
-    </Dialog>
+      )} */}
+    </AdaptiveContainer>
   )
 }
 

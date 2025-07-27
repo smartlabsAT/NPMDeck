@@ -1,9 +1,5 @@
 import { useState } from 'react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
   Box,
@@ -28,9 +24,11 @@ import {
   Download as DownloadIcon,
   NetworkCheck as NetworkIcon,
   VerifiedUser as AuthIcon,
+  Security,
 } from '@mui/icons-material'
 import { AccessList } from '../api/accessLists'
-import ExportDialog from './ExportDialog'
+// import ExportDialog from './ExportDialog'
+import AdaptiveContainer from './AdaptiveContainer'
 
 interface AccessListDetailsDialogProps {
   open: boolean
@@ -46,7 +44,7 @@ const AccessListDetailsDialog: React.FC<AccessListDetailsDialogProps> = ({
   onEdit,
 }) => {
   const [copiedText, setCopiedText] = useState<string>('')
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   if (!accessList) return null
 
@@ -65,30 +63,48 @@ const AccessListDetailsDialog: React.FC<AccessListDetailsDialogProps> = ({
 
   return (
     <>
-      <Dialog
+      <AdaptiveContainer
         open={open}
         onClose={onClose}
+        entity="access_lists"
+        operation="view"
+        title={
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <Security sx={{ color: '#2bcbba' }} />
+              <Typography variant="h6">Access List</Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              {accessList.name}
+            </Typography>
+          </Box>
+        }
         maxWidth="md"
         fullWidth
-        PaperProps={{
-          sx: { minHeight: '400px' }
-        }}
+        actions={
+          <>
+            {/* <Button
+              onClick={() => setExportDialogOpen(true)}
+              startIcon={<DownloadIcon />}
+            >
+              Export
+            </Button> */}
+            {onEdit && (
+              <Button 
+                onClick={() => {
+                  onClose()
+                  onEdit(accessList)
+                }}
+                startIcon={<EditIcon />}
+                color="primary"
+              >
+                Edit Access List
+              </Button>
+            )}
+            <Button onClick={onClose}>Close</Button>
+          </>
+        }
       >
-        <DialogTitle>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box display="flex" alignItems="center" gap={1}>
-              <LockIcon color="primary" />
-              <Typography variant="h6">
-                {accessList.name}
-              </Typography>
-            </Box>
-            <IconButton onClick={onClose} size="small">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        
-        <DialogContent>
           {/* Configuration Overview */}
           <Box mb={3}>
             <Typography variant="subtitle2" gutterBottom color="primary">
@@ -259,34 +275,10 @@ const AccessListDetailsDialog: React.FC<AccessListDetailsDialogProps> = ({
               )}
             </Grid>
           </Box>
-        </DialogContent>
-        
-        <DialogActions>
-          <Button
-            onClick={() => setExportDialogOpen(true)}
-            startIcon={<DownloadIcon />}
-          >
-            Export
-          </Button>
-          <Box sx={{ flex: 1 }} />
-          {onEdit && (
-            <Button 
-              onClick={() => {
-                onClose()
-                onEdit(accessList)
-              }}
-              startIcon={<EditIcon />}
-              color="primary"
-            >
-              Edit Access List
-            </Button>
-          )}
-          <Button onClick={onClose}>Close</Button>
-        </DialogActions>
-      </Dialog>
+      </AdaptiveContainer>
       
       {/* Export Dialog */}
-      {accessList && (
+      {/* {accessList && (
         <ExportDialog
           open={exportDialogOpen}
           onClose={() => setExportDialogOpen(false)}
@@ -294,7 +286,7 @@ const AccessListDetailsDialog: React.FC<AccessListDetailsDialogProps> = ({
           type="access_list"
           itemName="Access List"
         />
-      )}
+      )} */}
     </>
   )
 }

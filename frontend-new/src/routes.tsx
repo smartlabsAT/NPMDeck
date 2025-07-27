@@ -31,7 +31,7 @@ const Certificates = lazy(() => import('./pages/Certificates'))
 const Users = lazy(() => import('./pages/Users'))
 const AuditLog = lazy(() => import('./pages/AuditLog'))
 const Settings = lazy(() => import('./pages/Settings'))
-const ImportExport = lazy(() => import('./pages/ImportExport'))
+// const ImportExport = lazy(() => import('./pages/ImportExport'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const Forbidden = lazy(() => import('./pages/Forbidden'))
 
@@ -340,14 +340,14 @@ export const routes = [
           </ProtectedRoute>
         ),
       },
-      {
+      /* {
         path: 'tools/import-export',
         element: (
           <ProtectedRoute requiredRole="admin">
             {withSuspense(ImportExport)}
           </ProtectedRoute>
         ),
-      },
+      }, */
       {
         path: '*',
         element: withSuspense(NotFound),
