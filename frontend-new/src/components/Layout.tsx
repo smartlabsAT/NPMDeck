@@ -45,6 +45,7 @@ import { usePermissions } from '../hooks/usePermissions'
 import PermissionGate from './PermissionGate'
 import Footer from './Footer'
 import ThemeToggle from './ThemeToggle'
+import SearchBar from './SearchBar'
 
 const drawerWidth = 240
 
@@ -325,9 +326,17 @@ const Layout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap component="div">
             Nginx Proxy Manager
           </Typography>
+          
+          {user && (
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+              <SearchBar />
+            </Box>
+          )}
+          
+          {!user && <Box sx={{ flexGrow: 1 }} />}
           
           <ThemeToggle />
           

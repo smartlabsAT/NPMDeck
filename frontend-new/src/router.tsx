@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { CircularProgress, Box } from '@mui/material'
 import ProtectedRoute from './components/ProtectedRoute'
-import Layout from './components/Layout'
+import LayoutWithSearch from './components/LayoutWithSearch'
 
 // Lazy load pages
 const Login = lazy(() => import('./pages/Login'))
@@ -35,7 +35,7 @@ export const AppRouter = () => {
         {/* Protected routes */}
         <Route element={
           <ProtectedRoute>
-            <Layout />
+            <LayoutWithSearch />
           </ProtectedRoute>
         }>
           {/* Dashboard */}

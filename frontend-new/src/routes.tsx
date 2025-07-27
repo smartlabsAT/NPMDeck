@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { CircularProgress, Box } from '@mui/material'
 import ProtectedRoute from './components/ProtectedRoute'
 import PermissionRoute from './components/PermissionRoute'
-import Layout from './components/Layout'
+import LayoutWithSearch from './components/LayoutWithSearch'
 
 // Loading component
 const PageLoader = () => (
@@ -48,7 +48,7 @@ export const routes = [
     path: '/',
     element: (
       <ProtectedRoute>
-        <Layout />
+        <LayoutWithSearch />
       </ProtectedRoute>
     ),
     children: [
