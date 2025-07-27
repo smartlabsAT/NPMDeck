@@ -47,6 +47,8 @@ import {
 } from '@mui/icons-material'
 import { Certificate } from '../api/certificates'
 import ExportDialog from './ExportDialog'
+import PermissionButton from './PermissionButton'
+import { usePermissions } from '../hooks/usePermissions'
 
 interface CertificateDetailsDialogProps {
   open: boolean
@@ -84,6 +86,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
 }) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isAdmin } = usePermissions()
   const [activeTab, setActiveTab] = useState(0)
   const [copiedText, setCopiedText] = useState<string>('')
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -656,15 +659,19 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
       </DialogContent>
       
       <DialogActions>
-        <Button
-          onClick={() => setExportDialogOpen(true)}
-          startIcon={<DownloadIcon />}
-        >
-          Export
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={() => setExportDialogOpen(true)}
+            startIcon={<DownloadIcon />}
+          >
+            Export
+          </Button>
+        )}
         <Box sx={{ flex: 1 }} />
         {onEdit && (
-          <Button 
+          <PermissionButton
+            resource="certificates"
+            action="edit"
             onClick={() => {
               onClose()
               onEdit(certificate)
@@ -673,7 +680,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
             color="primary"
           >
             Edit Certificate
-          </Button>
+          </PermissionButton>
         )}
         <Button onClick={onClose}>Close</Button>
       </DialogActions>

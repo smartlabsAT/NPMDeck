@@ -57,6 +57,9 @@ import { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { AccessList, accessListsApi } from '../api/accessLists'
 import ExportDialog from './ExportDialog'
+import PermissionButton from './PermissionButton'
+import PermissionGate from './PermissionGate'
+import { usePermissions } from '../hooks/usePermissions'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -94,6 +97,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
 }) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isAdmin } = usePermissions()
   const [activeTab, setActiveTab] = useState(0)
   const [copiedText, setCopiedText] = useState<string>('')
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -1072,15 +1076,19 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
       </DialogContent>
       
       <DialogActions>
-        <Button
-          onClick={() => setExportDialogOpen(true)}
-          startIcon={<DownloadIcon />}
-        >
-          Export
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={() => setExportDialogOpen(true)}
+            startIcon={<DownloadIcon />}
+          >
+            Export
+          </Button>
+        )}
         <Box sx={{ flex: 1 }} />
         {onEdit && (
-          <Button 
+          <PermissionButton
+            resource="proxy_hosts"
+            action="edit"
             onClick={() => {
               onClose()
               onEdit(host)
@@ -1089,7 +1097,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
             color="primary"
           >
             Edit Proxy Host
-          </Button>
+          </PermissionButton>
         )}
         <Button onClick={onClose}>Close</Button>
       </DialogActions>

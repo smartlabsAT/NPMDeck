@@ -1,4 +1,5 @@
 import api from './config'
+import { User } from './users'
 
 export interface LoginCredentials {
   identity: string
@@ -8,16 +9,6 @@ export interface LoginCredentials {
 export interface TokenResponse {
   token: string
   expires: string
-}
-
-export interface User {
-  id: number
-  email: string
-  name: string
-  nickname: string
-  is_disabled: boolean
-  roles: string[]
-  permissions?: Record<string, string[]>
 }
 
 export const authApi = {

@@ -32,11 +32,20 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor to handle token refresh
+// Response interceptor to handle token refresh and permission errors
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error) => {
     const originalRequest = error.config
+
+    // Handle 403 Forbidden - Permission denied
+    if (error.response?.status === 403) {
+      // Navigate to forbidden page instead of throwing error
+      if (!window.location.pathname.includes('/403')) {
+        window.location.href = '/403'
+      }
+      return Promise.reject(error)
+    }
 
     // Don't try to refresh on login endpoint or if no token exists
     const isLoginRequest = originalRequest.url?.includes('/tokens') && originalRequest.method === 'post'
