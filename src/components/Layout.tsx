@@ -478,8 +478,10 @@ const Layout = () => {
             minHeight: 'calc(100vh - 64px)'
           }}
         >
-          <Box sx={{ flex: 1, p: 3 }}>
-            <Outlet />
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flex: 1, p: 3, maxWidth: 'lg' }}>
+              <Outlet />
+            </Box>
           </Box>
           <Footer />
         </Box>
