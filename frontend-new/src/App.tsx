@@ -1,9 +1,8 @@
-import { ThemeProvider, CssBaseline } from '@mui/material'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { theme } from './theme'
 import { routes } from './routes'
 import { AuthInitializer } from './components/AuthInitializer'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,8 +23,7 @@ const router = createBrowserRouter(routes, {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+      <ThemeProvider>
         <AuthInitializer>
           <RouterProvider router={router} />
         </AuthInitializer>

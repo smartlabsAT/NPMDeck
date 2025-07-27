@@ -486,7 +486,7 @@ export default function AccessLists() {
       </Box>
 
       {/* Drawer for create/edit */}
-      {canManage && (
+      {canManageAccessLists('access_lists') && (
         <AccessListDrawer
           open={drawerOpen}
           onClose={handleCloseDrawer}

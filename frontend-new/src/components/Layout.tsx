@@ -44,6 +44,7 @@ import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import PermissionGate from './PermissionGate'
 import Footer from './Footer'
+import ThemeToggle from './ThemeToggle'
 
 const drawerWidth = 240
 
@@ -269,10 +270,14 @@ const Layout = () => {
             display: 'flex', 
             alignItems: 'center', 
             gap: 2,
-            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            backgroundColor: (theme) => theme.palette.mode === 'dark' 
+              ? 'rgba(255, 255, 255, 0.05)' 
+              : 'rgba(0, 0, 0, 0.04)',
             cursor: 'pointer',
             '&:hover': {
-              backgroundColor: 'rgba(0, 0, 0, 0.08)',
+              backgroundColor: (theme) => theme.palette.mode === 'dark'
+                ? 'rgba(255, 255, 255, 0.08)'
+                : 'rgba(0, 0, 0, 0.08)',
             }
           }}
           onClick={handleMenu}
@@ -323,6 +328,8 @@ const Layout = () => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Nginx Proxy Manager
           </Typography>
+          
+          <ThemeToggle />
           
           {user && (
             <div>

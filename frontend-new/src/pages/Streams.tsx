@@ -518,7 +518,7 @@ export default function Streams() {
       </Box>
 
       {/* Drawer for create/edit */}
-      {canManage && (
+      {canManageStreams('streams') && (
         <StreamDrawer
           open={drawerOpen}
           onClose={handleCloseDrawer}
