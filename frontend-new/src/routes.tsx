@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate } from 'react-router-dom'
 import { CircularProgress, Box } from '@mui/material'
 import ProtectedRoute from './components/ProtectedRoute'
+import PermissionRoute from './components/PermissionRoute'
 import Layout from './components/Layout'
 
 // Loading component
@@ -32,11 +33,16 @@ const AuditLog = lazy(() => import('./pages/AuditLog'))
 const Settings = lazy(() => import('./pages/Settings'))
 const ImportExport = lazy(() => import('./pages/ImportExport'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const Forbidden = lazy(() => import('./pages/Forbidden'))
 
 export const routes = [
   {
     path: '/login',
     element: withSuspense(Login),
+  },
+  {
+    path: '/403',
+    element: withSuspense(Forbidden),
   },
   {
     path: '/',
@@ -56,119 +62,235 @@ export const routes = [
       },
       {
         path: 'hosts/proxy',
-        element: withSuspense(ProxyHosts),
+        element: (
+          <PermissionRoute resource="proxy_hosts" level="view">
+            {withSuspense(ProxyHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/proxy/new',
-        element: withSuspense(ProxyHosts),
+        element: (
+          <PermissionRoute resource="proxy_hosts" level="manage">
+            {withSuspense(ProxyHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/proxy/:id/edit',
-        element: withSuspense(ProxyHosts),
+        element: (
+          <PermissionRoute resource="proxy_hosts" level="manage">
+            {withSuspense(ProxyHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/proxy/:id/view',
-        element: withSuspense(ProxyHosts),
+        element: (
+          <PermissionRoute resource="proxy_hosts" level="view">
+            {withSuspense(ProxyHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/proxy/:id/view/:tab',
-        element: withSuspense(ProxyHosts),
+        element: (
+          <PermissionRoute resource="proxy_hosts" level="view">
+            {withSuspense(ProxyHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/redirection',
-        element: withSuspense(RedirectionHosts),
+        element: (
+          <PermissionRoute resource="redirection_hosts" level="view">
+            {withSuspense(RedirectionHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/redirection/new',
-        element: withSuspense(RedirectionHosts),
+        element: (
+          <PermissionRoute resource="redirection_hosts" level="manage">
+            {withSuspense(RedirectionHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/redirection/:id/edit',
-        element: withSuspense(RedirectionHosts),
+        element: (
+          <PermissionRoute resource="redirection_hosts" level="manage">
+            {withSuspense(RedirectionHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/redirection/:id/view',
-        element: withSuspense(RedirectionHosts),
+        element: (
+          <PermissionRoute resource="redirection_hosts" level="view">
+            {withSuspense(RedirectionHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/redirection/:id/view/:tab',
-        element: withSuspense(RedirectionHosts),
+        element: (
+          <PermissionRoute resource="redirection_hosts" level="view">
+            {withSuspense(RedirectionHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/404',
-        element: withSuspense(DeadHosts),
+        element: (
+          <PermissionRoute resource="dead_hosts" level="view">
+            {withSuspense(DeadHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/404/new',
-        element: withSuspense(DeadHosts),
+        element: (
+          <PermissionRoute resource="dead_hosts" level="manage">
+            {withSuspense(DeadHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/404/:id/edit',
-        element: withSuspense(DeadHosts),
+        element: (
+          <PermissionRoute resource="dead_hosts" level="manage">
+            {withSuspense(DeadHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/404/:id/view',
-        element: withSuspense(DeadHosts),
+        element: (
+          <PermissionRoute resource="dead_hosts" level="view">
+            {withSuspense(DeadHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/404/:id/view/:tab',
-        element: withSuspense(DeadHosts),
+        element: (
+          <PermissionRoute resource="dead_hosts" level="view">
+            {withSuspense(DeadHosts)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/streams',
-        element: withSuspense(Streams),
+        element: (
+          <PermissionRoute resource="streams" level="view">
+            {withSuspense(Streams)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/streams/new',
-        element: withSuspense(Streams),
+        element: (
+          <PermissionRoute resource="streams" level="manage">
+            {withSuspense(Streams)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/streams/:id/edit',
-        element: withSuspense(Streams),
+        element: (
+          <PermissionRoute resource="streams" level="manage">
+            {withSuspense(Streams)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'hosts/streams/:id/view',
-        element: withSuspense(Streams),
+        element: (
+          <PermissionRoute resource="streams" level="view">
+            {withSuspense(Streams)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/access-lists',
-        element: withSuspense(AccessLists),
+        element: (
+          <PermissionRoute resource="access_lists" level="view">
+            {withSuspense(AccessLists)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/access-lists/new',
-        element: withSuspense(AccessLists),
+        element: (
+          <PermissionRoute resource="access_lists" level="manage">
+            {withSuspense(AccessLists)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/access-lists/:id/edit',
-        element: withSuspense(AccessLists),
+        element: (
+          <PermissionRoute resource="access_lists" level="manage">
+            {withSuspense(AccessLists)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/access-lists/:id/view',
-        element: withSuspense(AccessLists),
+        element: (
+          <PermissionRoute resource="access_lists" level="view">
+            {withSuspense(AccessLists)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/certificates',
-        element: withSuspense(Certificates),
+        element: (
+          <PermissionRoute resource="certificates" level="view">
+            {withSuspense(Certificates)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/certificates/new',
-        element: withSuspense(Certificates),
+        element: (
+          <PermissionRoute resource="certificates" level="manage">
+            {withSuspense(Certificates)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/certificates/new/:provider',
-        element: withSuspense(Certificates),
+        element: (
+          <PermissionRoute resource="certificates" level="manage">
+            {withSuspense(Certificates)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/certificates/:id/edit',
-        element: withSuspense(Certificates),
+        element: (
+          <PermissionRoute resource="certificates" level="manage">
+            {withSuspense(Certificates)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/certificates/:id/view',
-        element: withSuspense(Certificates),
+        element: (
+          <PermissionRoute resource="certificates" level="view">
+            {withSuspense(Certificates)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'security/certificates/:id/view/:tab',
-        element: withSuspense(Certificates),
+        element: (
+          <PermissionRoute resource="certificates" level="view">
+            {withSuspense(Certificates)}
+          </PermissionRoute>
+        ),
       },
       {
         path: 'admin/users',
@@ -220,7 +342,11 @@ export const routes = [
       },
       {
         path: 'tools/import-export',
-        element: withSuspense(ImportExport),
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            {withSuspense(ImportExport)}
+          </ProtectedRoute>
+        ),
       },
       {
         path: '*',
