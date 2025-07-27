@@ -35,11 +35,15 @@ import {
   Download as DownloadIcon,
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { AccessList, accessListsApi } from '../api/accessLists'
 import AccessListDrawer from '../components/AccessListDrawer'
 import AccessListDetailsDialog from '../components/AccessListDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ExportDialog from '../components/ExportDialog'
+import PermissionButton from '../components/PermissionButton'
+import PermissionIconButton from '../components/PermissionIconButton'
 
 type OrderDirection = 'asc' | 'desc'
 type OrderBy = 'name' | 'users' | 'rules' | 'created_on'
@@ -48,8 +52,8 @@ export default function AccessLists() {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
-  const { user } = useAuthStore()
-  const canManage = user?.roles?.includes('admin') || false
+  const { user, shouldFilterByUser } = useAuthStore()
+  const { canView, canManage: canManageAccessLists, isAdmin } = usePermissions()
 
   // State
   const [accessLists, setAccessLists] = useState<AccessList[]>([])
@@ -76,10 +80,10 @@ export default function AccessLists() {
 
   // Handle URL-based navigation
   useEffect(() => {
-    if (location.pathname.includes('/new') && canManage) {
+    if (location.pathname.includes('/new') && canManageAccessLists('access_lists')) {
       setSelectedAccessList(null)
       setDrawerOpen(true)
-    } else if (location.pathname.includes('/edit') && id && canManage) {
+    } else if (location.pathname.includes('/edit') && id && canManageAccessLists('access_lists')) {
       const accessList = accessLists.find(al => al.id === parseInt(id))
       if (accessList) {
         setSelectedAccessList(accessList)
@@ -92,7 +96,7 @@ export default function AccessLists() {
         setDetailsOpen(true)
       }
     }
-  }, [location.pathname, id, accessLists, canManage])
+  }, [location.pathname, id, accessLists, canManageAccessLists])
 
   const loadAccessLists = async () => {
     try {
@@ -155,12 +159,16 @@ export default function AccessLists() {
     setOrderBy(property)
   }
 
+  // Apply visibility filtering
+  const visibleAccessLists = useFilteredData(accessLists, 'access_lists')
+  const filterInfo = useFilteredInfo(accessLists, visibleAccessLists)
+
   const filteredAndSortedAccessLists = useMemo(() => {
-    let filtered = accessLists
+    let filtered = visibleAccessLists
 
     // Apply search filter
     if (searchTerm) {
-      filtered = accessLists.filter(accessList => 
+      filtered = visibleAccessLists.filter(accessList => 
         accessList.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         accessList.items?.some(item => item.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
         accessList.clients?.some(client => client.address.includes(searchTerm))
@@ -201,7 +209,7 @@ export default function AccessLists() {
     })
 
     return sorted
-  }, [accessLists, searchTerm, orderBy, orderDirection])
+  }, [visibleAccessLists, searchTerm, orderBy, orderDirection])
 
   // Pagination
   const paginatedAccessLists = useMemo(() => {
@@ -272,27 +280,36 @@ export default function AccessLists() {
             >
               Refresh
             </Button>
-            <Button
-              startIcon={<DownloadIcon />}
-              onClick={handleExportAll}
-            >
-              Export All
-            </Button>
-            {canManage && (
+            {isAdmin && (
               <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleCreateAccessList}
+                startIcon={<DownloadIcon />}
+                onClick={handleExportAll}
               >
-                Add Access List
+                Export All
               </Button>
             )}
+            <PermissionButton
+              resource="access_lists"
+              action="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateAccessList}
+            >
+              Add Access List
+            </PermissionButton>
           </Box>
         </Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
+          </Alert>
+        )}
+
+        {filterInfo.isFiltered && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Showing {filterInfo.visibleCount} of {filterInfo.totalCount} access lists 
+            (only your own entries are displayed)
           </Alert>
         )}
 
@@ -416,38 +433,31 @@ export default function AccessLists() {
                           <ViewIcon />
                         </IconButton>
                       </Tooltip>
-                      {canManage ? (
-                        <>
-                          <Tooltip title="Edit">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleEditAccessList(accessList)
-                              }}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setAccessListToDelete(accessList)
-                                setDeleteDialogOpen(true)
-                              }}
-                              color="error"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          View only
-                        </Typography>
-                      )}
+                      <PermissionIconButton
+                        resource="access_lists"
+                        action="edit"
+                        size="small"
+                        tooltipTitle="Edit"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEditAccessList(accessList)
+                        }}
+                      >
+                        <EditIcon />
+                      </PermissionIconButton>
+                      <PermissionIconButton
+                        resource="access_lists"
+                        action="delete"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setAccessListToDelete(accessList)
+                          setDeleteDialogOpen(true)
+                        }}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </PermissionIconButton>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -493,7 +503,7 @@ export default function AccessLists() {
         open={detailsOpen}
         onClose={handleCloseDetails}
         accessList={selectedAccessList}
-        onEdit={canManage ? handleEditAccessList : undefined}
+        onEdit={canManageAccessLists('access_lists') ? handleEditAccessList : undefined}
       />
 
       {/* Delete confirmation dialog */}

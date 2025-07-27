@@ -39,13 +39,18 @@ import {
   UnfoldLess as CollapseAllIcon,
   TrendingFlat as RedirectIcon,
   SwapHoriz as ProxyIcon,
+  Visibility as ViewIcon,
 } from '@mui/icons-material'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { useAuthStore } from '../stores/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import RedirectionHostDrawer from '../components/RedirectionHostDrawer'
 import RedirectionHostDetailsDialog from '../components/RedirectionHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
+import PermissionButton from '../components/PermissionButton'
+import PermissionIconButton from '../components/PermissionIconButton'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'status' | 'domain_names' | 'forward_domain' | 'http_code' | 'ssl'
@@ -114,8 +119,8 @@ const RedirectionHosts = () => {
     return saved ? JSON.parse(saved) : {}
   })
   
-  const { user } = useAuthStore()
-  const canManage = user?.roles?.includes('admin') // TODO: Check actual permissions
+  const { user, shouldFilterByUser } = useAuthStore()
+  const { canView, canManage: canManageRedirectionHosts, isAdmin } = usePermissions()
 
   useEffect(() => {
     loadHosts()
@@ -123,7 +128,7 @@ const RedirectionHosts = () => {
 
   // Handle URL parameter for editing or viewing
   useEffect(() => {
-    if (location.pathname.includes('/new')) {
+    if (location.pathname.includes('/new') && canManageRedirectionHosts('redirection_hosts')) {
       setEditingHost(null)
       setDrawerOpen(true)
       setDetailsDialogOpen(false)
@@ -136,7 +141,7 @@ const RedirectionHosts = () => {
       
       const host = hosts.find(h => h.id === parseInt(id))
       if (host) {
-        if (location.pathname.includes('/edit')) {
+        if (location.pathname.includes('/edit') && canManageRedirectionHosts('redirection_hosts')) {
           setEditingHost(host)
           setDrawerOpen(true)
           setDetailsDialogOpen(false)
@@ -160,7 +165,7 @@ const RedirectionHosts = () => {
       setDetailsDialogOpen(false)
       setViewingHost(null)
     }
-  }, [id, hosts, location.pathname, navigate, loading])
+  }, [id, hosts, location.pathname, navigate, loading, canManageRedirectionHosts])
 
   // Save groupByDomain to localStorage
   useEffect(() => {
@@ -303,7 +308,12 @@ const RedirectionHosts = () => {
     return 0
   }
 
-  const filteredHosts = hosts.filter(host => {
+  // Apply visibility filtering first
+  const visibleHosts = useFilteredData(hosts, 'redirection_hosts')
+  const filterInfo = useFilteredInfo(hosts, visibleHosts)
+  
+  // Then apply search filtering
+  const filteredHosts = visibleHosts.filter(host => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -397,21 +407,28 @@ const RedirectionHosts = () => {
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h4">Redirection Hosts</Typography>
-        {canManage && (
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
-          >
-            Add Redirection Host
-          </Button>
-        )}
+        <PermissionButton
+          resource="redirection_hosts"
+          action="create"
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={handleAdd}
+        >
+          Add Redirection Host
+        </PermissionButton>
       </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
+        </Alert>
+      )}
+
+      {filterInfo.isFiltered && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Showing {filterInfo.visibleCount} of {filterInfo.totalCount} redirection hosts 
+          (only your own entries are displayed)
         </Alert>
       )}
 
@@ -647,41 +664,58 @@ const RedirectionHosts = () => {
                       </TableCell>
                       <TableCell>{getSSLIcon(host)}</TableCell>
                       <TableCell align="right">
-                        {canManage ? (
-                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                            <Tooltip title={host.enabled ? 'Disable' : 'Enable'}>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleToggleEnabled(host)}
-                                color={host.enabled ? 'default' : 'success'}
-                              >
-                                <PowerIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Edit">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEdit(host)}
-                                color="primary"
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleDelete(host)}
-                                color="error"
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            View only
-                          </Typography>
-                        )}
+                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleView(host)
+                              }}
+                            >
+                              <ViewIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <PermissionIconButton
+                            resource="redirection_hosts"
+                            action="edit"
+                            size="small"
+                            tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleToggleEnabled(host)
+                            }}
+                            color={host.enabled ? 'default' : 'success'}
+                          >
+                            <PowerIcon />
+                          </PermissionIconButton>
+                          <PermissionIconButton
+                            resource="redirection_hosts"
+                            action="edit"
+                            size="small"
+                            tooltipTitle="Edit"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEdit(host)
+                            }}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </PermissionIconButton>
+                          <PermissionIconButton
+                            resource="redirection_hosts"
+                            action="delete"
+                            size="small"
+                            tooltipTitle="Delete"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDelete(host)
+                            }}
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </PermissionIconButton>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -768,50 +802,58 @@ const RedirectionHosts = () => {
                   </TableCell>
                   <TableCell>{getSSLIcon(host)}</TableCell>
                   <TableCell align="right">
-                    {canManage ? (
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                        <Tooltip title={host.enabled ? 'Disable' : 'Enable'}>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleToggleEnabled(host)
-                            }}
-                            color={host.enabled ? 'default' : 'success'}
-                          >
-                            <PowerIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Edit">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEdit(host)
-                            }}
-                            color="primary"
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(host)
-                            }}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        View only
-                      </Typography>
-                    )}
+                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                      <Tooltip title="View Details">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleView(host)
+                          }}
+                        >
+                          <ViewIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <PermissionIconButton
+                        resource="redirection_hosts"
+                        action="edit"
+                        size="small"
+                        tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleToggleEnabled(host)
+                        }}
+                        color={host.enabled ? 'default' : 'success'}
+                      >
+                        <PowerIcon />
+                      </PermissionIconButton>
+                      <PermissionIconButton
+                        resource="redirection_hosts"
+                        action="edit"
+                        size="small"
+                        tooltipTitle="Edit"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEdit(host)
+                        }}
+                        color="primary"
+                      >
+                        <EditIcon />
+                      </PermissionIconButton>
+                      <PermissionIconButton
+                        resource="redirection_hosts"
+                        action="delete"
+                        size="small"
+                        tooltipTitle="Delete"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(host)
+                        }}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </PermissionIconButton>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -820,18 +862,20 @@ const RedirectionHosts = () => {
         </Table>
       </TableContainer>
 
-      <RedirectionHostDrawer
-        open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false)
-          navigate('/hosts/redirection')
-        }}
-        host={editingHost}
-        onSave={() => {
-          loadHosts()
-          navigate('/hosts/redirection')
-        }}
-      />
+      {canManageRedirectionHosts('redirection_hosts') && (
+        <RedirectionHostDrawer
+          open={drawerOpen}
+          onClose={() => {
+            setDrawerOpen(false)
+            navigate('/hosts/redirection')
+          }}
+          host={editingHost}
+          onSave={() => {
+            loadHosts()
+            navigate('/hosts/redirection')
+          }}
+        />
+      )}
 
       <RedirectionHostDetailsDialog
         open={detailsDialogOpen}
@@ -842,7 +886,7 @@ const RedirectionHosts = () => {
           }
         }}
         host={viewingHost}
-        onEdit={handleEdit}
+        onEdit={canManageRedirectionHosts('redirection_hosts') ? handleEdit : undefined}
       />
 
       <ConfirmDialog

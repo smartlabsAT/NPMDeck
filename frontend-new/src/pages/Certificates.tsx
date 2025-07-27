@@ -42,9 +42,13 @@ import {
 } from '@mui/icons-material'
 import { certificatesApi, Certificate } from '../api/certificates'
 import { useAuthStore } from '../stores/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import ConfirmDialog from '../components/ConfirmDialog'
 import CertificateDrawer from '../components/CertificateDrawer'
 import CertificateDetailsDialog from '../components/CertificateDetailsDialog'
+import PermissionButton from '../components/PermissionButton'
+import PermissionIconButton from '../components/PermissionIconButton'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'nice_name' | 'domain_names' | 'provider' | 'expires_on'
@@ -126,8 +130,8 @@ const Certificates = () => {
     return saved ? JSON.parse(saved) : {}
   })
   
-  const { user } = useAuthStore()
-  const canManage = user?.roles?.includes('admin') // TODO: Check actual permissions
+  const { user, shouldFilterByUser } = useAuthStore()
+  const { canView, canManage: canManageCertificates, isAdmin } = usePermissions()
 
   useEffect(() => {
     loadCertificates()
@@ -232,7 +236,12 @@ const Certificates = () => {
     return 0
   }
 
-  const filteredCertificates = certificates.filter(cert => {
+  // Apply visibility filtering first
+  const visibleCertificates = useFilteredData(certificates, 'certificates')
+  const filterInfo = useFilteredInfo(certificates, visibleCertificates)
+  
+  // Then apply search filtering
+  const filteredCertificates = visibleCertificates.filter(cert => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -426,18 +435,19 @@ const Certificates = () => {
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h4">SSL Certificates</Typography>
-        {canManage && (
-          <>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={(e) => setAddMenuAnchor(e.currentTarget)}
-            >
-              Add SSL Certificate
-            </Button>
-            <Menu
-              anchorEl={addMenuAnchor}
+        <>
+          <PermissionButton
+            resource="certificates"
+            action="create"
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={(e) => setAddMenuAnchor(e.currentTarget)}
+          >
+            Add SSL Certificate
+          </PermissionButton>
+          <Menu
+            anchorEl={addMenuAnchor}
               open={Boolean(addMenuAnchor)}
               onClose={() => setAddMenuAnchor(null)}
             >
@@ -449,8 +459,7 @@ const Certificates = () => {
                 Custom
               </MenuItem>
             </Menu>
-          </>
-        )}
+        </>
       </Box>
 
       {error && (
@@ -642,16 +651,15 @@ const Certificates = () => {
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
-                        {canManage ? (
-                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                            <Tooltip title="View Details">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleView(cert)}
-                              >
-                                <ViewIcon />
-                              </IconButton>
-                            </Tooltip>
+                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleView(cert)}
+                            >
+                              <ViewIcon />
+                            </IconButton>
+                          </Tooltip>
                             {cert.provider === 'letsencrypt' && (
                               <Tooltip title="Renew">
                                 <IconButton
@@ -682,36 +690,33 @@ const Certificates = () => {
                                 <DownloadIcon />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Edit">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleEdit(cert)
-                                }}
-                                color="primary"
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDelete(cert)
-                                }}
-                                color="error"
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            View only
-                          </Typography>
-                        )}
+                          <PermissionIconButton
+                            resource="certificates"
+                            action="edit"
+                            size="small"
+                            tooltipTitle="Edit"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEdit(cert)
+                            }}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </PermissionIconButton>
+                          <PermissionIconButton
+                            resource="certificates"
+                            action="delete"
+                            size="small"
+                            tooltipTitle="Delete"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDelete(cert)
+                            }}
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </PermissionIconButton>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -756,7 +761,6 @@ const Certificates = () => {
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    {canManage ? (
                       <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
                         <Tooltip title="View Details">
                           <IconButton
@@ -793,30 +797,27 @@ const Certificates = () => {
                             <DownloadIcon />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Edit">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEdit(cert)}
-                            color="primary"
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDelete(cert)}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
+                        <PermissionIconButton
+                          resource="certificates"
+                          action="edit"
+                          size="small"
+                          tooltipTitle="Edit"
+                          onClick={() => handleEdit(cert)}
+                          color="primary"
+                        >
+                          <EditIcon />
+                        </PermissionIconButton>
+                        <PermissionIconButton
+                          resource="certificates"
+                          action="delete"
+                          size="small"
+                          tooltipTitle="Delete"
+                          onClick={() => handleDelete(cert)}
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </PermissionIconButton>
                       </Box>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        View only
-                      </Typography>
-                    )}
                   </TableCell>
                 </TableRow>
               ))

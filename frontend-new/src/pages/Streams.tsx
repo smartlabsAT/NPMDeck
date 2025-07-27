@@ -37,11 +37,15 @@ import {
   Download as DownloadIcon,
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
+import { usePermissions } from '../hooks/usePermissions'
+import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { Stream, streamsApi } from '../api/streams'
 import StreamDrawer from '../components/StreamDrawer'
 import StreamDetailsDialog from '../components/StreamDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ExportDialog from '../components/ExportDialog'
+import PermissionButton from '../components/PermissionButton'
+import PermissionIconButton from '../components/PermissionIconButton'
 
 type OrderDirection = 'asc' | 'desc'
 type OrderBy = 'incoming_port' | 'forwarding_host' | 'status' | 'protocols' | 'created_on'
@@ -50,8 +54,8 @@ export default function Streams() {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
-  const { user } = useAuthStore()
-  const canManage = user?.roles?.includes('admin') || false
+  const { user, shouldFilterByUser } = useAuthStore()
+  const { canView, canManage: canManageStreams, isAdmin } = usePermissions()
 
   // State
   const [streams, setStreams] = useState<Stream[]>([])
@@ -78,10 +82,10 @@ export default function Streams() {
 
   // Handle URL-based navigation
   useEffect(() => {
-    if (location.pathname.includes('/new') && canManage) {
+    if (location.pathname.includes('/new') && canManageStreams('streams')) {
       setSelectedStream(null)
       setDrawerOpen(true)
-    } else if (location.pathname.includes('/edit') && id && canManage) {
+    } else if (location.pathname.includes('/edit') && id && canManageStreams('streams')) {
       const stream = streams.find(s => s.id === parseInt(id))
       if (stream) {
         setSelectedStream(stream)
@@ -94,7 +98,7 @@ export default function Streams() {
         setDetailsOpen(true)
       }
     }
-  }, [location.pathname, id, streams, canManage])
+  }, [location.pathname, id, streams, canManageStreams])
 
   const loadStreams = async () => {
     try {
@@ -170,12 +174,16 @@ export default function Streams() {
     setOrderBy(property)
   }
 
+  // Apply visibility filtering
+  const visibleStreams = useFilteredData(streams, 'streams')
+  const filterInfo = useFilteredInfo(streams, visibleStreams)
+
   const filteredAndSortedStreams = useMemo(() => {
-    let filtered = streams
+    let filtered = visibleStreams
 
     // Apply search filter
     if (searchTerm) {
-      filtered = streams.filter(stream => 
+      filtered = visibleStreams.filter(stream => 
         stream.incoming_port.toString().includes(searchTerm) ||
         stream.forwarding_host.toLowerCase().includes(searchTerm.toLowerCase()) ||
         stream.forwarding_port.toString().includes(searchTerm)
@@ -220,7 +228,7 @@ export default function Streams() {
     })
 
     return sorted
-  }, [streams, searchTerm, orderBy, orderDirection])
+  }, [visibleStreams, searchTerm, orderBy, orderDirection])
 
   // Pagination
   const paginatedStreams = useMemo(() => {
@@ -274,13 +282,15 @@ export default function Streams() {
             </div>
           </Box>
           <Box display="flex" gap={1}>
-            <Button
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              onClick={handleExportAll}
-            >
-              Export
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="outlined"
+                startIcon={<DownloadIcon />}
+                onClick={handleExportAll}
+              >
+                Export
+              </Button>
+            )}
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
@@ -288,21 +298,28 @@ export default function Streams() {
             >
               Refresh
             </Button>
-            {canManage && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleCreateStream}
-              >
-                Add Stream
-              </Button>
-            )}
+            <PermissionButton
+              resource="streams"
+              action="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateStream}
+            >
+              Add Stream
+            </PermissionButton>
           </Box>
         </Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
             {error}
+          </Alert>
+        )}
+
+        {filterInfo.isFiltered && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Showing {filterInfo.visibleCount} of {filterInfo.totalCount} streams 
+            (only your own entries are displayed)
           </Alert>
         )}
 
@@ -432,46 +449,45 @@ export default function Streams() {
                           <ViewIcon />
                         </IconButton>
                       </Tooltip>
-                      {canManage && (
-                        <>
-                          <Tooltip title={stream.enabled ? 'Disable' : 'Enable'}>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleToggleEnabled(stream)
-                              }}
-                              color={stream.enabled ? 'default' : 'success'}
-                            >
-                              <PowerIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Edit">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleEditStream(stream)
-                              }}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setStreamToDelete(stream)
-                                setDeleteDialogOpen(true)
-                              }}
-                              color="error"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
+                      <PermissionIconButton
+                        resource="streams"
+                        action="edit"
+                        size="small"
+                        tooltipTitle={stream.enabled ? 'Disable' : 'Enable'}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleToggleEnabled(stream)
+                        }}
+                        color={stream.enabled ? 'default' : 'success'}
+                      >
+                        <PowerIcon />
+                      </PermissionIconButton>
+                      <PermissionIconButton
+                        resource="streams"
+                        action="edit"
+                        size="small"
+                        tooltipTitle="Edit"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEditStream(stream)
+                        }}
+                      >
+                        <EditIcon />
+                      </PermissionIconButton>
+                      <PermissionIconButton
+                        resource="streams"
+                        action="delete"
+                        size="small"
+                        tooltipTitle="Delete"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setStreamToDelete(stream)
+                          setDeleteDialogOpen(true)
+                        }}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </PermissionIconButton>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -519,7 +535,7 @@ export default function Streams() {
         open={detailsOpen}
         onClose={handleCloseDetails}
         stream={selectedStream}
-        onEdit={canManage ? handleEditStream : undefined}
+        onEdit={canManageStreams('streams') ? handleEditStream : undefined}
       />
 
       {/* Delete confirmation dialog */}
