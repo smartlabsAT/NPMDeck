@@ -18,6 +18,7 @@ export interface SearchResult {
     ssl?: boolean
     port?: number
     owner?: string
+    resourceType?: ResourceType
   }
   resource?: ProxyHost | RedirectionHost | DeadHost | Stream | AccessList | Certificate | User
   action?: () => void

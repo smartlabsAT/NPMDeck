@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
-  Button,
   Container,
   Paper,
   Table,
@@ -28,14 +27,13 @@ import {
   Delete as DeleteIcon,
   Visibility as ViewIcon,
   Search as SearchIcon,
-  Refresh as RefreshIcon,
+  
   Lock as LockIcon,
   Security as SecurityIcon,
   Person as PersonIcon,
   NetworkCheck as NetworkIcon,
-  Download as DownloadIcon,
+  
 } from '@mui/icons-material'
-import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { AccessList, accessListsApi } from '../api/accessLists'
@@ -54,8 +52,7 @@ export default function AccessLists() {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
-  const { user, shouldFilterByUser } = useAuthStore()
-  const { canView, canManage: canManageAccessLists, isAdmin } = usePermissions()
+  const { canManage: canManageAccessLists } = usePermissions()
 
   // State
   const [accessLists, setAccessLists] = useState<AccessList[]>([])
@@ -150,7 +147,7 @@ export default function AccessLists() {
     navigate('/security/access-lists')
   }
 
-  const handleExportAll = () => {
+  const _handleExportAll = () => {
     setExportDialogOpen(true)
   }
 

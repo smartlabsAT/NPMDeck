@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
-  Button,
   Container,
   Paper,
   Table,
@@ -28,15 +27,14 @@ import {
   Delete as DeleteIcon,
   Visibility as ViewIcon,
   Search as SearchIcon,
-  Refresh as RefreshIcon,
+  
   Stream as StreamIcon,
   Power as PowerIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
   Error as ErrorIcon,
-  Download as DownloadIcon,
+  
 } from '@mui/icons-material'
-import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { Stream, streamsApi } from '../api/streams'
@@ -55,8 +53,8 @@ export default function Streams() {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
-  const { user, shouldFilterByUser } = useAuthStore()
-  const { canView, canManage: canManageStreams, isAdmin } = usePermissions()
+  
+  const { canManage: canManageStreams } = usePermissions()
 
   // State
   const [streams, setStreams] = useState<Stream[]>([])
@@ -164,7 +162,7 @@ export default function Streams() {
     navigate('/hosts/streams')
   }
 
-  const handleExportAll = () => {
+  const _handleExportAll = () => {
     setExportDialogOpen(true)
   }
 

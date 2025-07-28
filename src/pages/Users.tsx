@@ -16,9 +16,7 @@ import {
   InputAdornment,
   CircularProgress,
   Alert,
-  Tooltip,
   Avatar,
-  Chip,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -30,12 +28,12 @@ import {
   MoreVert as MoreVertIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Lock as LockIcon,
-  Shield as ShieldIcon,
+  
+  
   Login as LoginIcon,
   Person as PersonIcon,
-  Check as CheckIcon,
-  Block as BlockIcon,
+  
+  
   Group as GroupIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'

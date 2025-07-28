@@ -7,7 +7,6 @@ import {
   CircularProgress,
   Box,
   Typography,
-  Chip,
   Paper,
   Divider,
   ListItem,
@@ -88,7 +87,7 @@ const SearchBar: React.FC = () => {
     return null
   }
   
-  const { searchState, preloadData, searchQuery, setSearchQuery, searchResults, quickActions } = searchContext
+  const { searchState, preloadData, searchResults, quickActions } = searchContext
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [preventReopen, setPreventReopen] = useState(false)
@@ -219,8 +218,8 @@ const SearchBar: React.FC = () => {
       inputValue={inputValue}
       onInputChange={(_, value) => setInputValue(value)}
       options={allOptions}
-      getOptionLabel={(option) => option.type === 'divider' ? '' : option.title}
-      isOptionEqualToValue={(option, value) => option.id === value.id}
+      getOptionLabel={(option) => 'type' in option && option.type === 'divider' ? '' : 'title' in option ? option.title : ''}
+      isOptionEqualToValue={(option, value) => 'id' in option && 'id' in value && option.id === value.id}
       onChange={(_, value) => handleSelect(value as SearchResult)}
       loading={isLoading}
       loadingText="Loading resources..."

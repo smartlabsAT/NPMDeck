@@ -17,7 +17,7 @@ import {
   Chip,
 } from '@mui/material'
 import {
-  Close as CloseIcon,
+  
   Add as AddIcon,
   Lock as LockIcon,
   Warning as WarningIcon,

@@ -81,7 +81,7 @@ export const useDashboardStats = () => {
 
         const [proxyHosts, redirectionHosts, deadHosts, streams, certificates, accessLists] = results.map(
           result => result.status === 'fulfilled' ? result.value : []
-        )
+        ) as [any[], any[], any[], any[], Certificate[], any[]]
 
         // Process proxy hosts
         const proxyStats = {
@@ -112,7 +112,6 @@ export const useDashboardStats = () => {
         }
 
         // Process certificates
-        const now = new Date()
         const expiringCerts: Certificate[] = []
         let validCount = 0
         let expiringSoonCount = 0

@@ -14,9 +14,6 @@ import {
   Tabs,
   Tab,
   FormControl,
-  FormLabel,
-  RadioGroup,
-  Radio,
   Select,
   MenuItem,
   InputLabel,
@@ -233,7 +230,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
     }
   }, [user, open])
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
     setError(null)
     setSuccessMessage(null)

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
-  Button,
   Paper,
   Table,
   TableBody,
@@ -43,7 +42,6 @@ import {
 } from '@mui/icons-material'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
-import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import RedirectionHostDrawer from '../components/RedirectionHostDrawer'
@@ -98,7 +96,7 @@ const RedirectionHosts = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [hosts, setHosts] = useState<RedirectionHost[]>([])
-  const [proxyHosts, setProxyHosts] = useState<ProxyHost[]>([])
+  const [_proxyHosts, setProxyHosts] = useState<ProxyHost[]>([])
   const [proxyHostsByDomain, setProxyHostsByDomain] = useState<Map<string, ProxyHost>>(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -120,8 +118,8 @@ const RedirectionHosts = () => {
     return saved ? JSON.parse(saved) : {}
   })
   
-  const { user, shouldFilterByUser } = useAuthStore()
-  const { canView, canManage: canManageRedirectionHosts, isAdmin } = usePermissions()
+  
+  const { canManage: canManageRedirectionHosts } = usePermissions()
 
   useEffect(() => {
     loadHosts()
@@ -891,7 +889,7 @@ const RedirectionHosts = () => {
           }
         }}
         host={viewingHost}
-        onEdit={canManageRedirectionHosts('redirection_hosts') ? handleEdit : undefined}
+        onEdit={canManageRedirectionHosts('redirection_hosts') ? handleEdit : () => {}}
       />
 
       <ConfirmDialog

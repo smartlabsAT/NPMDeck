@@ -10,7 +10,7 @@ import {
   Alert,
 } from '@mui/material'
 import {
-  Close as CloseIcon,
+  
   Lock as LockIcon,
   LockOpen as LockOpenIcon,
   ContentCopy as CopyIcon,
@@ -20,7 +20,7 @@ import {
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
   Error as ErrorIcon,
-  Download as DownloadIcon,
+  
 } from '@mui/icons-material'
 import { Stream } from '../api/streams'
 // import ExportDialog from './ExportDialog'

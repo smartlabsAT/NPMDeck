@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
-  Button,
   Paper,
   Table,
   TableBody,
@@ -34,7 +33,7 @@ import {
   Refresh as RefreshIcon,
   Visibility as ViewIcon,
   Warning as WarningIcon,
-  Language as LanguageIcon,
+  
   ExpandMore as ExpandMoreIcon,
   ChevronRight as ChevronRightIcon,
   UnfoldMore as ExpandAllIcon,
@@ -132,8 +131,8 @@ const Certificates = () => {
     return saved ? JSON.parse(saved) : {}
   })
   
-  const { user, shouldFilterByUser } = useAuthStore()
-  const { canView, canManage: canManageCertificates, isAdmin } = usePermissions()
+  const { } = useAuthStore()
+  const { } = usePermissions()
 
   useEffect(() => {
     loadCertificates()

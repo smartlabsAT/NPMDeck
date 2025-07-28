@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
-  Button,
   Paper,
   Table,
   TableBody,
@@ -13,7 +12,6 @@ import {
   TableSortLabel,
   IconButton,
   Typography,
-  Chip,
   TextField,
   InputAdornment,
   CircularProgress,
@@ -35,7 +33,6 @@ import {
   Visibility as ViewIcon,
 } from '@mui/icons-material'
 import { deadHostsApi, DeadHost } from '../api/deadHosts'
-import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import DeadHostDrawer from '../components/DeadHostDrawer'
@@ -65,8 +62,8 @@ const DeadHosts = () => {
   const [order, setOrder] = useState<Order>('asc')
   const [orderBy, setOrderBy] = useState<OrderBy>('domain_names')
   
-  const { user, shouldFilterByUser } = useAuthStore()
-  const { canView, canManage: canManageDeadHosts, isAdmin } = usePermissions()
+  
+  const { canManage: canManageDeadHosts } = usePermissions()
 
   useEffect(() => {
     loadHosts()

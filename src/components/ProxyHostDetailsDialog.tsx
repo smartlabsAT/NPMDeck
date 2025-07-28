@@ -818,13 +818,13 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="caption" color="text.secondary">Owner</Typography>
                         <Typography variant="body2">
-                          {(fullAccessList || host.access_list).owner ? (
+                          {(fullAccessList || host.access_list)?.owner ? (
                             <Box display="flex" alignItems="center" gap={0.5}>
                               <PersonIcon fontSize="small" />
-                              {(fullAccessList || host.access_list).owner.name || (fullAccessList || host.access_list).owner.email || `User #${(fullAccessList || host.access_list).owner_user_id}`}
+                              {(fullAccessList || host.access_list)?.owner?.name || (fullAccessList || host.access_list)?.owner?.email || `User #${(fullAccessList || host.access_list)?.owner_user_id}`}
                             </Box>
                           ) : (
-                            `User #${(fullAccessList || host.access_list).owner_user_id}`
+                            `User #${(fullAccessList || host.access_list)?.owner_user_id}`
                           )}
                         </Typography>
                       </Grid>
@@ -879,24 +879,24 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
                       Summary
                     </Typography>
                     <Box display="flex" flexDirection="column" gap={1}>
-                      {(fullAccessList || host.access_list).items && (fullAccessList || host.access_list).items.length > 0 && (
+                      {(fullAccessList || host.access_list)?.items && ((fullAccessList || host.access_list)?.items?.length ?? 0) > 0 && (
                         <Box display="flex" alignItems="center" gap={1}>
                           <PersonIcon fontSize="small" color="action" />
                           <Typography variant="body2">
-                            {(fullAccessList || host.access_list).items.length} authorized user{(fullAccessList || host.access_list).items.length !== 1 ? 's' : ''}
+                            {(fullAccessList || host.access_list)?.items?.length} authorized user{(fullAccessList || host.access_list)?.items?.length !== 1 ? 's' : ''}
                           </Typography>
                         </Box>
                       )}
-                      {(fullAccessList || host.access_list).clients && (fullAccessList || host.access_list).clients.length > 0 && (
+                      {(fullAccessList || host.access_list)?.clients && ((fullAccessList || host.access_list)?.clients?.length ?? 0) > 0 && (
                         <Box display="flex" alignItems="center" gap={1}>
                           <NetworkCheckIcon fontSize="small" color="action" />
                           <Typography variant="body2">
-                            {(fullAccessList || host.access_list).clients.length} IP rule{(fullAccessList || host.access_list).clients.length !== 1 ? 's' : ''}
+                            {(fullAccessList || host.access_list)?.clients?.length} IP rule{(fullAccessList || host.access_list)?.clients?.length !== 1 ? 's' : ''}
                           </Typography>
                         </Box>
                       )}
-                      {(!(fullAccessList || host.access_list).items || (fullAccessList || host.access_list).items.length === 0) && 
-                       (!(fullAccessList || host.access_list).clients || (fullAccessList || host.access_list).clients.length === 0) && (
+                      {(!(fullAccessList || host.access_list)?.items || (fullAccessList || host.access_list)?.items?.length === 0) && 
+                       (!(fullAccessList || host.access_list)?.clients || (fullAccessList || host.access_list)?.clients?.length === 0) && (
                         <Typography variant="body2" color="text.secondary">
                           No rules configured
                         </Typography>

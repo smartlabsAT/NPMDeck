@@ -212,7 +212,7 @@ export const GlobalSearchProvider: React.FC<GlobalSearchProviderProps> = ({ chil
       id: `redir-${host.id}`,
       type: 'redirection_hosts',
       title: host.domain_names.join(', '),
-      subtitle: `→ ${host.forward_scheme}://${host.forward_domain}`,
+      subtitle: `→ ${host.forward_scheme}://${host.forward_domain_name}`,
       metadata: {
         status: host.enabled ? 'online' : 'disabled',
         ssl: !!host.certificate_id,

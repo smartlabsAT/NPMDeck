@@ -129,17 +129,18 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({ open, onC
             <RadioGroup
               value={permissions.visibility}
               onChange={(e) => handlePermissionChange('visibility', e.target.value)}
-              disabled={isAdmin}
             >
               <FormControlLabel 
                 value="all" 
                 control={<Radio />} 
                 label="All - Can view all items created by any user" 
+                disabled={isAdmin}
               />
               <FormControlLabel 
                 value="user" 
                 control={<Radio />} 
                 label="User - Can only view items created by themselves" 
+                disabled={isAdmin}
               />
             </RadioGroup>
           </FormControl>
@@ -164,11 +165,10 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({ open, onC
                 row
                 value={permissions[key as keyof Permissions]}
                 onChange={(e) => handlePermissionChange(key as keyof Permissions, e.target.value)}
-                disabled={isAdmin}
               >
-                <FormControlLabel value="hidden" control={<Radio />} label="Hidden" />
-                <FormControlLabel value="view" control={<Radio />} label="View" />
-                <FormControlLabel value="manage" control={<Radio />} label="Manage" />
+                <FormControlLabel value="hidden" control={<Radio />} label="Hidden" disabled={isAdmin} />
+                <FormControlLabel value="view" control={<Radio />} label="View" disabled={isAdmin} />
+                <FormControlLabel value="manage" control={<Radio />} label="Manage" disabled={isAdmin} />
               </RadioGroup>
             </FormControl>
           ))}

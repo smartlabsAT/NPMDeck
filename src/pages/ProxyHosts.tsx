@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
-  Button,
   Paper,
   Table,
   TableBody,
@@ -87,7 +86,7 @@ const ProxyHosts = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [hosts, setHosts] = useState<ProxyHost[]>([])
-  const [redirectionHosts, setRedirectionHosts] = useState<RedirectionHost[]>([])
+  const [_redirectionHosts, setRedirectionHosts] = useState<RedirectionHost[]>([])
   const [redirectionsByTarget, setRedirectionsByTarget] = useState<Map<string, RedirectionHost[]>>(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -109,8 +108,8 @@ const ProxyHosts = () => {
     return saved ? JSON.parse(saved) : {}
   })
   
-  const { user, shouldFilterByUser } = useAuthStore()
-  const { canView, canManage: canManageProxyHosts } = usePermissions()
+  const { } = useAuthStore()
+  const { } = usePermissions()
 
   useEffect(() => {
     loadHosts()
@@ -394,7 +393,7 @@ const ProxyHosts = () => {
     )
   }
 
-  const handleViewRedirection = (redirect: RedirectionHost, event: React.MouseEvent) => {
+  const _handleViewRedirection = (redirect: RedirectionHost, event: React.MouseEvent) => {
     event.stopPropagation()
     navigate(`/hosts/redirection/${redirect.id}/view/connections`)
   }

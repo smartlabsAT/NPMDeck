@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Paper,
@@ -25,7 +25,6 @@ import {
   Select,
   MenuItem,
   Slider,
-  Stack,
   Chip,
 } from '@mui/material'
 import { Settings as SettingsIcon, Refresh as RefreshIcon } from '@mui/icons-material'
@@ -36,7 +35,7 @@ import { usePermissions } from '../hooks/usePermissions'
 import { EntityType, Operation, ContainerType, ENTITY_DISPLAY_NAMES } from '../types/uiSettings'
 
 const Settings = () => {
-  const [settings, setSettings] = useState<Setting[]>([])
+  const [_settings, setSettings] = useState<Setting[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)

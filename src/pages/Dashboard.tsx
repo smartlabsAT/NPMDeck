@@ -8,17 +8,14 @@ import {
   CardContent,
   Skeleton,
   Chip,
-  IconButton,
   Button,
-  Alert,
   Divider,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
   ListItemSecondaryAction,
-  LinearProgress,
-  useTheme
+  LinearProgress
 } from '@mui/material'
 import { 
   SwapHoriz as ProxyIcon,
@@ -32,7 +29,7 @@ import {
   Error as ErrorIcon,
   ArrowForward as ArrowIcon,
   Add as AddIcon,
-  Refresh as RefreshIcon,
+  
   Schedule as ScheduleIcon
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
@@ -40,6 +37,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useDashboardStats } from '../hooks/useDashboardStats'
 import { usePermissions } from '../hooks/usePermissions'
 import PermissionButton from '../components/PermissionButton'
+import { Resource } from '../types/permissions'
 
 interface StatCardProps {
   title: string
@@ -54,7 +52,7 @@ interface StatCardProps {
 
 const StatCard = ({ title, value, icon, color, path, active, inactive, loading }: StatCardProps) => {
   const navigate = useNavigate()
-  const theme = useTheme()
+  
   
   return (
     <Card 
@@ -145,7 +143,7 @@ const getGreeting = () => {
 const Dashboard = () => {
   const { user } = useAuthStore()
   const navigate = useNavigate()
-  const { canView, canManage } = usePermissions()
+  const { canView } = usePermissions()
   const stats = useDashboardStats()
   
   const statsCards = [
@@ -273,7 +271,7 @@ const Dashboard = () => {
                   {quickActions.map((action, index) => (
                     <PermissionButton
                       key={index}
-                      resource={action.resource}
+                      resource={action.resource as Resource}
                       permissionAction="create"
                       variant="outlined"
                       size="small"

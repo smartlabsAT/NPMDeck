@@ -2,7 +2,7 @@ import { User } from '../api/users'
 import { 
   PermissionLevel, 
   Resource, 
-  UserPermissions, 
+   
   PERMISSION_HIERARCHY, 
   ADMIN_ROLE,
   DEFAULT_PERMISSIONS 
@@ -50,7 +50,6 @@ export const hasAnyPermission = (user: User | null, requiredLevel: PermissionLev
   
   if (isAdmin(user)) return true
   
-  const permissions = user.permissions || DEFAULT_PERMISSIONS
   const resources: Resource[] = [
     'proxy_hosts',
     'redirection_hosts', 
