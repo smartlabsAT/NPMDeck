@@ -4,14 +4,10 @@ import {
   Typography,
   TextField,
   Button,
-  Divider,
   FormControl,
   FormControlLabel,
   Switch,
-  Tabs,
-  Tab,
   Alert,
-  CircularProgress,
   Chip,
   InputAdornment,
   Select,
@@ -21,7 +17,6 @@ import {
   FormHelperText,
 } from '@mui/material'
 import {
-  
   Add as AddIcon,
   Lock as LockIcon,
   Code as CodeIcon,
@@ -31,30 +26,12 @@ import {
 } from '@mui/icons-material'
 import { RedirectionHost, CreateRedirectionHost, redirectionHostsApi } from '../api/redirectionHosts'
 import { Certificate, certificatesApi } from '../api/certificates'
+import BaseDrawer, { Tab } from './base/BaseDrawer'
+import { useDrawerForm } from '../hooks/useDrawerForm'
 import CertificateDrawer from './CertificateDrawer'
 import DomainInput from './DomainInput'
-import AdaptiveContainer from './AdaptiveContainer'
-
-interface TabPanelProps {
-  children?: React.ReactNode
-  index: number
-  value: number
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`redirection-host-tabpanel-${index}`}
-      aria-labelledby={`redirection-host-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
-    </div>
-  )
-}
+import FormSection from './shared/FormSection'
+import TabPanel from './shared/TabPanel'
 
 interface RedirectionHostDrawerProps {
   open: boolean
@@ -63,10 +40,31 @@ interface RedirectionHostDrawerProps {
   onSave: () => void
 }
 
+interface RedirectionHostFormData {
+  domain_names: string[]
+  forward_scheme: string
+  forward_domain_name: string
+  forward_http_code: number
+  preserve_path: boolean
+  block_exploits: boolean
+  certificate_id: number | string
+  ssl_forced: boolean
+  hsts_enabled: boolean
+  hsts_subdomains: boolean
+  http2_support: boolean
+  advanced_config: string
+  enabled: boolean
+  use_lets_encrypt: boolean
+  letsencrypt_email: string
+  letsencrypt_agree: boolean
+  dns_challenge: boolean
+  dns_provider: string
+  dns_provider_credentials: string
+  propagation_seconds: string
+}
+
 export default function RedirectionHostDrawer({ open, onClose, host, onSave }: RedirectionHostDrawerProps) {
   const [activeTab, setActiveTab] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [certificateDrawerOpen, setCertificateDrawerOpen] = useState(false)
   
@@ -88,89 +86,131 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
     return { color: 'success' as const, text: `${days} days`, icon: CheckCircleIcon }
   }
   
-  // Form state
-  const [domainNames, setDomainNames] = useState<string[]>([])
-  const [forwardScheme, setForwardScheme] = useState<string>('http')
-  const [forwardDomainName, setForwardDomainName] = useState('')
-  const [forwardHttpCode, setForwardHttpCode] = useState(301)
-  const [preservePath, setPreservePath] = useState(true)
-  const [blockExploits, setBlockExploits] = useState(false)
-  const [certificateId, setCertificateId] = useState<number | string>(0)
-  const [sslForced, setSslForced] = useState(false)
-  const [hstsEnabled, setHstsEnabled] = useState(false)
-  const [hstsSubdomains, setHstsSubdomains] = useState(false)
-  const [http2Support, setHttp2Support] = useState(false)
-  const [advancedConfig, setAdvancedConfig] = useState('')
-  const [enabled, setEnabled] = useState(true)
-  
-  // Let's Encrypt options
-  const [useLetsEncrypt, setUseLetsEncrypt] = useState(false)
-  const [letsencryptEmail, setLetsencryptEmail] = useState('')
-  const [letsencryptAgree, setLetsencryptAgree] = useState(false)
-  const [dnsChallenge, setDnsChallenge] = useState(false)
-  const [dnsProvider, setDnsProvider] = useState('')
-  const [dnsProviderCredentials, setDnsProviderCredentials] = useState('')
-  const [propagationSeconds, setPropagationSeconds] = useState('')
+  // Form management with useDrawerForm
+  const form = useDrawerForm<RedirectionHostFormData>({
+    initialData: {
+      domain_names: host?.domain_names || [],
+      forward_scheme: host?.forward_scheme || 'http',
+      forward_domain_name: host?.forward_domain_name || '',
+      forward_http_code: host?.forward_http_code || 301,
+      preserve_path: host?.preserve_path ?? true,
+      block_exploits: host?.block_exploits ?? false,
+      certificate_id: host?.certificate_id || 0,
+      ssl_forced: host?.ssl_forced ?? false,
+      hsts_enabled: host?.hsts_enabled ?? false,
+      hsts_subdomains: host?.hsts_subdomains ?? false,
+      http2_support: host?.http2_support ?? false,
+      advanced_config: host?.advanced_config || '',
+      enabled: host?.enabled ?? true,
+      use_lets_encrypt: false,
+      letsencrypt_email: host?.meta?.letsencrypt_email || '',
+      letsencrypt_agree: false,
+      dns_challenge: host?.meta?.dns_challenge ?? false,
+      dns_provider: host?.meta?.dns_provider || '',
+      dns_provider_credentials: host?.meta?.dns_provider_credentials || '',
+      propagation_seconds: host?.meta?.propagation_seconds?.toString() || '',
+    },
+    fields: {
+      domain_names: { initialValue: [], required: true },
+      forward_scheme: { initialValue: 'http' },
+      forward_domain_name: { initialValue: '', required: true },
+      forward_http_code: { initialValue: 301 },
+      preserve_path: { initialValue: true },
+      block_exploits: { initialValue: true },
+      certificate_id: { initialValue: 0 },
+      ssl_forced: { initialValue: false },
+      hsts_enabled: { initialValue: false },
+      hsts_subdomains: { initialValue: false },
+      http2_support: { initialValue: false },
+      advanced_config: { initialValue: '' },
+      use_lets_encrypt: { initialValue: false },
+      letsencrypt_email: { 
+        initialValue: '', 
+        validate: (value, formData) => {
+          if (formData?.use_lets_encrypt && !value) return 'Email is required for Let\'s Encrypt'
+          return null
+        }
+      },
+      letsencrypt_agree: { initialValue: false },
+      dns_challenge: { initialValue: false },
+      dns_provider: { initialValue: '' },
+      dns_provider_credentials: { initialValue: '' },
+      propagation_seconds: { initialValue: '' },
+      enabled: { initialValue: true },
+    },
+    onSubmit: async (data) => {
+      const payload: CreateRedirectionHost = {
+        domain_names: data.domain_names,
+        forward_scheme: data.forward_scheme,
+        forward_domain_name: data.forward_domain_name,
+        forward_http_code: data.forward_http_code,
+        preserve_path: data.preserve_path,
+        block_exploits: data.block_exploits,
+        ssl_forced: data.ssl_forced,
+        hsts_enabled: data.hsts_enabled,
+        hsts_subdomains: data.hsts_subdomains,
+        http2_support: data.http2_support,
+        advanced_config: data.advanced_config,
+      }
+      
+      if (data.certificate_id === 'new' && data.use_lets_encrypt) {
+        payload.meta = {
+          letsencrypt_email: data.letsencrypt_email,
+          letsencrypt_agree: data.letsencrypt_agree,
+          dns_challenge: data.dns_challenge,
+        }
+        if (data.dns_challenge) {
+          payload.meta.dns_provider = data.dns_provider
+          payload.meta.dns_provider_credentials = data.dns_provider_credentials
+          if (data.propagation_seconds) {
+            payload.meta.propagation_seconds = parseInt(data.propagation_seconds)
+          }
+        }
+      } else if (data.certificate_id && data.certificate_id !== 0) {
+        payload.certificate_id = parseInt(data.certificate_id.toString())
+      }
+      
+      if (host) {
+        await redirectionHostsApi.update({ ...payload, id: host.id })
+      } else {
+        await redirectionHostsApi.create(payload)
+      }
+      
+      onSave()
+      onClose()
+    },
+  })
 
   useEffect(() => {
     if (open) {
       loadCertificates()
-      if (host) {
-        // Populate form with existing host data
-        setDomainNames(host.domain_names)
-        setForwardScheme(host.forward_scheme)
-        setForwardDomainName(host.forward_domain_name)
-        setForwardHttpCode(host.forward_http_code)
-        setPreservePath(host.preserve_path)
-        setBlockExploits(host.block_exploits)
-        setCertificateId(host.certificate_id || 0)
-        setSslForced(host.ssl_forced)
-        setHstsEnabled(host.hsts_enabled)
-        setHstsSubdomains(host.hsts_subdomains)
-        setHttp2Support(host.http2_support)
-        setAdvancedConfig(host.advanced_config)
-        setEnabled(host.enabled)
-        setUseLetsEncrypt(false)
-        
-        // Meta fields
-        if (host.meta) {
-          setDnsChallenge(host.meta.dns_challenge || false)
-          setDnsProvider(host.meta.dns_provider || '')
-          setDnsProviderCredentials(host.meta.dns_provider_credentials || '')
-          setPropagationSeconds(host.meta.propagation_seconds?.toString() || '')
-          setLetsencryptEmail(host.meta.letsencrypt_email || '')
-        }
-      } else {
-        // Reset form for new host
-        resetForm()
-      }
       setActiveTab(0)
-      setError(null)
+      if (host) {
+        form.resetForm({
+          domain_names: host.domain_names,
+          forward_scheme: host.forward_scheme,
+          forward_domain_name: host.forward_domain_name,
+          forward_http_code: host.forward_http_code,
+          preserve_path: host.preserve_path,
+          block_exploits: host.block_exploits,
+          certificate_id: host.certificate_id || 0,
+          ssl_forced: host.ssl_forced,
+          hsts_enabled: host.hsts_enabled,
+          hsts_subdomains: host.hsts_subdomains,
+          http2_support: host.http2_support,
+          advanced_config: host.advanced_config,
+          enabled: host.enabled,
+          use_lets_encrypt: false,
+          letsencrypt_email: host.meta?.letsencrypt_email || '',
+          letsencrypt_agree: false,
+          dns_challenge: host.meta?.dns_challenge ?? false,
+          dns_provider: host.meta?.dns_provider || '',
+          dns_provider_credentials: host.meta?.dns_provider_credentials || '',
+          propagation_seconds: host.meta?.propagation_seconds?.toString() || '',
+        })
+      }
     }
   }, [open, host])
-
-  const resetForm = () => {
-    setDomainNames([])
-    setForwardScheme('http')
-    setForwardDomainName('')
-    setForwardHttpCode(301)
-    setPreservePath(true)
-    setBlockExploits(false)
-    setCertificateId(0)
-    setSslForced(false)
-    setHstsEnabled(false)
-    setHstsSubdomains(false)
-    setHttp2Support(false)
-    setAdvancedConfig('')
-    setEnabled(true)
-    setUseLetsEncrypt(false)
-    setLetsencryptEmail('')
-    setLetsencryptAgree(false)
-    setDnsChallenge(false)
-    setDnsProvider('')
-    setDnsProviderCredentials('')
-    setPropagationSeconds('')
-  }
 
   const loadCertificates = async () => {
     try {
@@ -178,92 +218,6 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
       setCertificates(certs)
     } catch (err: any) {
       console.error('Failed to load certificates:', err)
-    }
-  }
-
-  const handleSave = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Validate required fields
-      if (domainNames.length === 0) {
-        setError('Domain names are required')
-        setActiveTab(0)
-        return
-      }
-
-      if (!forwardDomainName.trim()) {
-        setError('Forward domain is required')
-        setActiveTab(0)
-        return
-      }
-      
-      // Prepare data
-      const data: CreateRedirectionHost = {
-        domain_names: domainNames,
-        forward_scheme: forwardScheme,
-        forward_domain_name: forwardDomainName,
-        forward_http_code: forwardHttpCode,
-        preserve_path: preservePath,
-        block_exploits: blockExploits,
-        ssl_forced: sslForced,
-        hsts_enabled: hstsEnabled,
-        hsts_subdomains: hstsSubdomains,
-        http2_support: http2Support,
-        advanced_config: advancedConfig,
-      }
-
-      // Handle certificate
-      if (certificateId === 'new' && useLetsEncrypt) {
-        if (!letsencryptEmail) {
-          setError('Let\'s Encrypt email is required')
-          setActiveTab(1)
-          return
-        }
-        if (!letsencryptAgree) {
-          setError('You must agree to Let\'s Encrypt terms')
-          setActiveTab(1)
-          return
-        }
-        
-        data.certificate_id = undefined
-        data.meta = {
-          letsencrypt_email: letsencryptEmail,
-          letsencrypt_agree: letsencryptAgree,
-          dns_challenge: dnsChallenge,
-        }
-        
-        if (dnsChallenge) {
-          if (!dnsProvider) {
-            setError('DNS provider is required for DNS challenge')
-            setActiveTab(1)
-            return
-          }
-          data.meta.dns_provider = dnsProvider
-          data.meta.dns_provider_credentials = dnsProviderCredentials
-          if (propagationSeconds) {
-            data.meta.propagation_seconds = parseInt(propagationSeconds)
-          }
-        }
-      } else if (certificateId && certificateId !== 0) {
-        data.certificate_id = parseInt(certificateId.toString())
-      }
-
-      if (host) {
-        // Update existing host
-        await redirectionHostsApi.update({ ...data, id: host.id })
-      } else {
-        // Create new host
-        await redirectionHostsApi.create(data)
-      }
-
-      onSave()
-      onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to save redirection host')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -285,416 +239,372 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
     { value: 'hetzner', label: 'Hetzner' },
     { value: 'linode', label: 'Linode' },
     { value: 'route53', label: 'AWS Route53' },
-    // Add more providers as needed
   ]
 
-  const operation = host ? 'edit' : 'create'
-  const title = (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <RedirectIcon sx={{ color: '#f1c40f' }} />
-      <Typography variant="h6">
-        {host ? 'Edit Redirection Host' : 'Add Redirection Host'}
-      </Typography>
-    </Box>
-  )
+  const tabs: Tab[] = [
+    {
+      id: 'details',
+      label: 'Details',
+      icon: <RedirectIcon />,
+      hasError: Boolean(form.errors.domain_names || form.errors.forward_domain_name),
+    },
+    {
+      id: 'ssl',
+      label: 'SSL',
+      icon: <LockIcon />,
+      hasError: Boolean(form.errors.letsencrypt_email),
+    },
+    {
+      id: 'advanced',
+      label: 'Advanced',
+      icon: <CodeIcon />,
+    },
+  ]
 
   return (
     <>
-      <AdaptiveContainer
+      <BaseDrawer
         open={open}
         onClose={onClose}
-        entity="redirection_hosts"
-        operation={operation}
-        title={title}
-        actions={
-          <>
-            <Button variant="outlined" onClick={onClose} disabled={loading}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSave}
-              disabled={loading}
-              startIcon={loading && <CircularProgress size={20} />}
-            >
-              {host ? 'Save Changes' : 'Create'}
-            </Button>
-          </>
-        }
+        title={host ? 'Edit Redirection Host' : 'Add Redirection Host'}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        loading={form.loading}
+        error={form.globalError || undefined}
+        onSave={form.handleSubmit}
+        isDirty={form.isDirty}
+        saveDisabled={!form.isValid}
+        saveText={host ? 'Save Changes' : 'Create'}
       >
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)}>
-            <Tab 
-              icon={<RedirectIcon />} 
-              label="Details" 
-              iconPosition="start"
+        <TabPanel value={activeTab} index={0}>
+          <FormSection title="Source">
+            <DomainInput
+              value={form.data.domain_names}
+              onChange={(value) => form.setFieldValue('domain_names', value)}
+              required
+              error={Boolean(form.errors.domain_names && form.touched.domain_names)}
+              helperText={form.touched.domain_names ? form.errors.domain_names : undefined}
             />
-            <Tab 
-              icon={<LockIcon />} 
-              label="SSL" 
-              iconPosition="start"
+          </FormSection>
+
+          <FormSection title="Destination">
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Forward Scheme</InputLabel>
+              <Select
+                value={form.data.forward_scheme}
+                onChange={(e) => form.setFieldValue('forward_scheme', e.target.value)}
+                label="Forward Scheme"
+              >
+                <MenuItem value="http">HTTP</MenuItem>
+                <MenuItem value="https">HTTPS</MenuItem>
+              </Select>
+              <FormHelperText>Choose the scheme for the redirect destination</FormHelperText>
+            </FormControl>
+
+            <TextField
+              {...form.getFieldProps('forward_domain_name')}
+              fullWidth
+              label="Forward Domain"
+              placeholder="example.com or example.com/path"
+              margin="normal"
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <RedirectIcon />
+                  </InputAdornment>
+                ),
+              }}
             />
-            <Tab 
-              icon={<CodeIcon />} 
-              label="Advanced" 
-              iconPosition="start"
+
+            <FormControl fullWidth margin="normal">
+              <InputLabel>HTTP Status Code</InputLabel>
+              <Select
+                value={form.data.forward_http_code}
+                onChange={(e) => form.setFieldValue('forward_http_code', Number(e.target.value))}
+                label="HTTP Status Code"
+              >
+                {httpStatusCodes.map(code => (
+                  <MenuItem key={code.value} value={code.value}>
+                    {code.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </FormSection>
+
+          <FormSection title="Options">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={form.data.preserve_path}
+                  onChange={(e) => form.setFieldValue('preserve_path', e.target.checked)}
+                />
+              }
+              label="Preserve Path"
             />
-          </Tabs>
-        </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+              Append the request path to the forward domain
+            </Typography>
 
-        <Box sx={{ mt: 2 }}>
-            <TabPanel value={activeTab} index={0}>
-              <Box sx={{ px: 2 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Source
-                </Typography>
-                
-                <DomainInput
-                  value={domainNames}
-                  onChange={setDomainNames}
-                  required
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={form.data.block_exploits}
+                  onChange={(e) => form.setFieldValue('block_exploits', e.target.checked)}
                 />
+              }
+              label="Block Common Exploits"
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+              Prevent common exploits like SQL injection attempts
+            </Typography>
 
-                <Divider sx={{ my: 3 }} />
-
-                <Typography variant="subtitle2" gutterBottom>
-                  Destination
-                </Typography>
-
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Forward Scheme</InputLabel>
-                  <Select
-                    value={forwardScheme}
-                    onChange={(e) => setForwardScheme(e.target.value)}
-                    label="Forward Scheme"
-                  >
-                    <MenuItem value="http">HTTP</MenuItem>
-                    <MenuItem value="https">HTTPS</MenuItem>
-                  </Select>
-                  <FormHelperText>Choose the scheme for the redirect destination</FormHelperText>
-                </FormControl>
-
-                <TextField
-                  fullWidth
-                  label="Forward Domain"
-                  value={forwardDomainName}
-                  onChange={(e) => setForwardDomainName(e.target.value)}
-                  placeholder="example.com or example.com/path"
-                  margin="normal"
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <RedirectIcon />
-                      </InputAdornment>
-                    ),
-                  }}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={form.data.enabled}
+                  onChange={(e) => form.setFieldValue('enabled', e.target.checked)}
                 />
+              }
+              label="Enabled"
+            />
+          </FormSection>
+        </TabPanel>
 
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>HTTP Status Code</InputLabel>
-                  <Select
-                    value={forwardHttpCode}
-                    onChange={(e) => setForwardHttpCode(Number(e.target.value))}
-                    label="HTTP Status Code"
-                  >
-                    {httpStatusCodes.map(code => (
-                      <MenuItem key={code.value} value={code.value}>
-                        {code.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <Divider sx={{ my: 3 }} />
-
-                <Typography variant="subtitle2" gutterBottom>
-                  Options
-                </Typography>
-
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={preservePath}
-                      onChange={(e) => setPreservePath(e.target.checked)}
-                    />
-                  }
-                  label="Preserve Path"
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
-                  Append the request path to the forward domain
-                </Typography>
-
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={blockExploits}
-                      onChange={(e) => setBlockExploits(e.target.checked)}
-                    />
-                  }
-                  label="Block Common Exploits"
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
-                  Prevent common exploits like SQL injection attempts
-                </Typography>
-
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={enabled}
-                      onChange={(e) => setEnabled(e.target.checked)}
-                    />
-                  }
-                  label="Enabled"
-                />
-              </Box>
-            </TabPanel>
-
-            <TabPanel value={activeTab} index={1}>
-              <Box sx={{ px: 2 }}>
-                <Autocomplete
-                  value={certificates.find(c => c.id === certificateId) || null}
-                  onChange={(_, newValue) => {
-                    if (newValue === 'new' as any) {
-                      setCertificateId('new')
-                      setUseLetsEncrypt(true)
-                    } else if (newValue) {
-                      setCertificateId(newValue.id)
-                      setUseLetsEncrypt(false)
-                    } else {
-                      setCertificateId(0)
-                      setUseLetsEncrypt(false)
-                    }
-                  }}
-                  options={[
-                    ...(certificates || []),
-                    { id: 'new', nice_name: 'Request a new SSL Certificate', provider: 'letsencrypt' } as any
-                  ]}
-                  getOptionLabel={(option: any) => option.nice_name || ''}
-                  renderOption={(props, option: any) => (
-                    <Box component="li" {...props}>
-                      <Box sx={{ width: '100%' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Typography variant="body2">
-                            {option.nice_name}
-                          </Typography>
-                          {option.id !== 'new' && option.expires_on && (() => {
-                            const status = getCertificateStatus(option)
-                            const IconComponent = status.icon
-                            return (
-                              <Chip
-                                size="small"
-                                label={status.text}
-                                color={status.color}
-                                icon={<IconComponent />}
-                              />
-                            )
-                          })()}
-                        </Box>
-                        {option.domain_names && (
-                          <Typography variant="caption" color="text.secondary">
-                            {option.domain_names.join(', ')}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="SSL Certificate"
-                      margin="normal"
-                      helperText="Choose an existing certificate or request a new one"
-                    />
-                  )}
-                />
-
-                <Button
-                  variant="outlined"
-                  startIcon={<AddIcon />}
-                  onClick={() => setCertificateDrawerOpen(true)}
-                  sx={{ mt: 1 }}
-                >
-                  Add Certificate
-                </Button>
-
-                {(certificateId !== 0 && certificateId !== 'new') && (
-                  <>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={sslForced}
-                          onChange={(e) => setSslForced(e.target.checked)}
-                        />
-                      }
-                      label="Force SSL"
-                      sx={{ mt: 2 }}
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
-                      Redirect all HTTP traffic to HTTPS
+        <TabPanel value={activeTab} index={1}>
+          <Autocomplete
+            value={certificates.find(c => c.id === form.data.certificate_id) || null}
+            onChange={(_, newValue) => {
+              if (newValue === 'new' as any) {
+                form.setFieldValue('certificate_id', 'new')
+                form.setFieldValue('use_lets_encrypt', true)
+              } else if (newValue) {
+                form.setFieldValue('certificate_id', newValue.id)
+                form.setFieldValue('use_lets_encrypt', false)
+              } else {
+                form.setFieldValue('certificate_id', 0)
+                form.setFieldValue('use_lets_encrypt', false)
+              }
+            }}
+            options={[
+              ...(certificates || []),
+              { id: 'new', nice_name: 'Request a new SSL Certificate', provider: 'letsencrypt' } as any
+            ]}
+            getOptionLabel={(option: any) => option.nice_name || ''}
+            renderOption={(props, option: any) => (
+              <Box component="li" {...props}>
+                <Box sx={{ width: '100%' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography variant="body2">
+                      {option.nice_name}
                     </Typography>
-
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={http2Support}
-                          onChange={(e) => setHttp2Support(e.target.checked)}
+                    {option.id !== 'new' && option.expires_on && (() => {
+                      const status = getCertificateStatus(option)
+                      const IconComponent = status.icon
+                      return (
+                        <Chip
+                          size="small"
+                          label={status.text}
+                          color={status.color}
+                          icon={<IconComponent />}
                         />
-                      }
-                      label="HTTP/2 Support"
-                    />
-
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={hstsEnabled}
-                          onChange={(e) => setHstsEnabled(e.target.checked)}
-                          disabled={!sslForced}
-                        />
-                      }
-                      label="HSTS Enabled"
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
-                      HTTP Strict Transport Security
-                    </Typography>
-
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={hstsSubdomains}
-                          onChange={(e) => setHstsSubdomains(e.target.checked)}
-                          disabled={!hstsEnabled}
-                        />
-                      }
-                      label="HSTS Subdomains"
-                      sx={{ ml: 4 }}
-                    />
-                  </>
-                )}
-
-                {useLetsEncrypt && certificateId === 'new' && (
-                  <Box sx={{ mt: 3 }}>
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      A new Let's Encrypt certificate will be requested when you save
-                    </Alert>
-
-                    <TextField
-                      fullWidth
-                      label="Email Address"
-                      type="email"
-                      value={letsencryptEmail}
-                      onChange={(e) => setLetsencryptEmail(e.target.value)}
-                      margin="normal"
-                      required
-                      helperText="For Let's Encrypt notifications"
-                    />
-
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={dnsChallenge}
-                          onChange={(e) => setDnsChallenge(e.target.checked)}
-                        />
-                      }
-                      label="Use DNS Challenge"
-                      sx={{ mt: 2 }}
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
-                      Required for wildcard certificates
-                    </Typography>
-
-                    {dnsChallenge && (
-                      <>
-                        <FormControl fullWidth margin="normal">
-                          <InputLabel>DNS Provider</InputLabel>
-                          <Select
-                            value={dnsProvider}
-                            onChange={(e) => setDnsProvider(e.target.value)}
-                            label="DNS Provider"
-                            required
-                          >
-                            {dnsProviders.map(provider => (
-                              <MenuItem key={provider.value} value={provider.value}>
-                                {provider.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-
-                        <TextField
-                          fullWidth
-                          label="DNS Provider Credentials"
-                          multiline
-                          rows={4}
-                          value={dnsProviderCredentials}
-                          onChange={(e) => setDnsProviderCredentials(e.target.value)}
-                          margin="normal"
-                          helperText="Provider-specific API credentials"
-                        />
-
-                        <TextField
-                          fullWidth
-                          label="Propagation Seconds"
-                          type="number"
-                          value={propagationSeconds}
-                          onChange={(e) => setPropagationSeconds(e.target.value)}
-                          margin="normal"
-                          helperText="Time to wait for DNS propagation (default: provider-specific)"
-                        />
-                      </>
-                    )}
-
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={letsencryptAgree}
-                          onChange={(e) => setLetsencryptAgree(e.target.checked)}
-                        />
-                      }
-                      label="I agree to the Let's Encrypt Terms of Service"
-                      sx={{ mt: 2 }}
-                      required
-                    />
+                      )
+                    })()}
                   </Box>
-                )}
+                  {option.domain_names && (
+                    <Typography variant="caption" color="text.secondary">
+                      {option.domain_names.join(', ')}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
-            </TabPanel>
+            )}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="SSL Certificate"
+                margin="normal"
+                helperText="Choose an existing certificate or request a new one"
+              />
+            )}
+          />
 
-            <TabPanel value={activeTab} index={2}>
-              <Box sx={{ px: 2 }}>
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  <Typography variant="body2">
-                    Advanced configuration allows you to add custom Nginx directives.
-                    Be careful, as invalid configuration can break your redirection host.
-                  </Typography>
-                </Alert>
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={() => setCertificateDrawerOpen(true)}
+            sx={{ mt: 1 }}
+          >
+            Add Certificate
+          </Button>
 
-                <TextField
-                  fullWidth
-                  label="Custom Nginx Configuration"
-                  multiline
-                  rows={15}
-                  value={advancedConfig}
-                  onChange={(e) => setAdvancedConfig(e.target.value)}
-                  margin="normal"
-                  sx={{
-                    '& .MuiInputBase-input': {
-                      fontFamily: 'monospace',
-                      fontSize: '0.875rem',
-                    },
-                  }}
-                  helperText="Add custom Nginx directives here"
-                />
-              </Box>
-            </TabPanel>
-        </Box>
-      </AdaptiveContainer>
+          {(form.data.certificate_id !== 0 && form.data.certificate_id !== 'new') && (
+            <Box sx={{ mt: 3 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.data.ssl_forced}
+                    onChange={(e) => form.setFieldValue('ssl_forced', e.target.checked)}
+                  />
+                }
+                label="Force SSL"
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+                Redirect all HTTP traffic to HTTPS
+              </Typography>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.data.http2_support}
+                    onChange={(e) => form.setFieldValue('http2_support', e.target.checked)}
+                  />
+                }
+                label="HTTP/2 Support"
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.data.hsts_enabled}
+                    onChange={(e) => form.setFieldValue('hsts_enabled', e.target.checked)}
+                    disabled={!form.data.ssl_forced}
+                  />
+                }
+                label="HSTS Enabled"
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+                HTTP Strict Transport Security
+              </Typography>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.data.hsts_subdomains}
+                    onChange={(e) => form.setFieldValue('hsts_subdomains', e.target.checked)}
+                    disabled={!form.data.hsts_enabled}
+                  />
+                }
+                label="HSTS Subdomains"
+                sx={{ ml: 4 }}
+              />
+            </Box>
+          )}
+
+          {form.data.use_lets_encrypt && form.data.certificate_id === 'new' && (
+            <Box sx={{ mt: 3 }}>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                A new Let's Encrypt certificate will be requested when you save
+              </Alert>
+
+              <TextField
+                {...form.getFieldProps('letsencrypt_email')}
+                fullWidth
+                label="Email Address"
+                type="email"
+                margin="normal"
+                required
+                helperText="For Let's Encrypt notifications"
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.data.dns_challenge}
+                    onChange={(e) => form.setFieldValue('dns_challenge', e.target.checked)}
+                  />
+                }
+                label="Use DNS Challenge"
+                sx={{ mt: 2 }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+                Required for wildcard certificates
+              </Typography>
+
+              {form.data.dns_challenge && (
+                <>
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>DNS Provider</InputLabel>
+                    <Select
+                      value={form.data.dns_provider}
+                      onChange={(e) => form.setFieldValue('dns_provider', e.target.value)}
+                      label="DNS Provider"
+                      required
+                    >
+                      {dnsProviders.map(provider => (
+                        <MenuItem key={provider.value} value={provider.value}>
+                          {provider.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    fullWidth
+                    label="DNS Provider Credentials"
+                    multiline
+                    rows={4}
+                    value={form.data.dns_provider_credentials}
+                    onChange={(e) => form.setFieldValue('dns_provider_credentials', e.target.value)}
+                    margin="normal"
+                    helperText="Provider-specific API credentials"
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Propagation Seconds"
+                    type="number"
+                    value={form.data.propagation_seconds}
+                    onChange={(e) => form.setFieldValue('propagation_seconds', e.target.value)}
+                    margin="normal"
+                    helperText="Time to wait for DNS propagation (default: provider-specific)"
+                  />
+                </>
+              )}
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.data.letsencrypt_agree}
+                    onChange={(e) => form.setFieldValue('letsencrypt_agree', e.target.checked)}
+                  />
+                }
+                label="I agree to the Let's Encrypt Terms of Service"
+                sx={{ mt: 2 }}
+                required
+              />
+            </Box>
+          )}
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={2}>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            <Typography variant="body2">
+              Advanced configuration allows you to add custom Nginx directives.
+              Be careful, as invalid configuration can break your redirection host.
+            </Typography>
+          </Alert>
+
+          <TextField
+            fullWidth
+            label="Custom Nginx Configuration"
+            multiline
+            rows={15}
+            value={form.data.advanced_config}
+            onChange={(e) => form.setFieldValue('advanced_config', e.target.value)}
+            margin="normal"
+            sx={{
+              '& .MuiInputBase-input': {
+                fontFamily: 'monospace',
+                fontSize: '0.875rem',
+              },
+            }}
+            helperText="Add custom Nginx directives here"
+          />
+        </TabPanel>
+      </BaseDrawer>
 
       <CertificateDrawer
         open={certificateDrawerOpen}

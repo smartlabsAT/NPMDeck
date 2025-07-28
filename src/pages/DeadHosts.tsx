@@ -35,7 +35,7 @@ import {
 import { deadHostsApi, DeadHost } from '../api/deadHosts'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
-import DeadHostDrawer from '../components/DeadHostDrawer'
+import { DeadHostDrawer } from '../components/features'
 import DeadHostDetailsDialog from '../components/DeadHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PermissionButton from '../components/PermissionButton'

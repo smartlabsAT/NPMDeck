@@ -37,7 +37,7 @@ import {
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { AccessList, accessListsApi } from '../api/accessLists'
-import AccessListDrawer from '../components/AccessListDrawer'
+import AccessListDrawer from '../components/features/access-lists/AccessListDrawer'
 import AccessListDetailsDialog from '../components/AccessListDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ExportDialog from '../components/ExportDialog'
