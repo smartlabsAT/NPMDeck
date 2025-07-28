@@ -24,7 +24,6 @@ interface Column<T> {
 interface FilteredDataTableProps<T> {
   data: T[]
   columns: Column<T>[]
-  resource?: string
   loading?: boolean
   error?: string | null
   onRowClick?: (item: T) => void
@@ -36,7 +35,6 @@ interface FilteredDataTableProps<T> {
 function FilteredDataTable<T extends { id?: number; owner_user_id?: number }>({
   data,
   columns,
-  resource,
   loading = false,
   error = null,
   onRowClick,
@@ -45,7 +43,7 @@ function FilteredDataTable<T extends { id?: number; owner_user_id?: number }>({
   keyExtractor = (item) => item.id || Math.random()
 }: FilteredDataTableProps<T>) {
   // Apply visibility filtering
-  const visibleData = useFilteredData(data, resource)
+  const visibleData = useFilteredData(data)
   const filterInfo = useFilteredInfo(data, visibleData)
 
   if (loading) {

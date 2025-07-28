@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const path = require('path');
 const dotenv = require('dotenv');
+const logger = require('./utils/logger');
 
 // Load environment variables
 dotenv.config();
@@ -47,7 +48,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/logs', require('./routes/logs'));
 
 // Proxy all NPM API requests
-console.log('NPM API URL:', API_URL);
+logger.debug('NPM API URL:', API_URL);
 app.use('/api', createProxyMiddleware({
   target: API_URL,
   changeOrigin: true,
@@ -57,7 +58,7 @@ app.use('/api', createProxyMiddleware({
   // Important: Don't parse JSON body before proxy
   onProxyReq: (proxyReq, req, res) => {
     // Log the request for debugging
-    console.log(`Proxying ${req.method} ${req.path} to ${API_URL}`);
+    logger.debug(`Proxying ${req.method} ${req.path} to ${API_URL}`);
     
     // Forward all headers
     if (req.headers.authorization) {
@@ -84,9 +85,9 @@ app.use('/api', createProxyMiddleware({
     proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
   },
   onError: (err, req, res) => {
-    console.error('Proxy error:', err);
-    console.error('Target URL:', API_URL);
-    console.error('Request path:', req.path);
+    logger.error('Proxy error:', err);
+    logger.error('Target URL:', API_URL);
+    logger.error('Request path:', req.path);
     res.status(502).json({ error: 'Bad Gateway', message: 'Unable to reach NPM backend' });
   },
   // Self handle response to fix body issues
@@ -105,22 +106,22 @@ if (process.env.NODE_ENV === 'production') {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(err.stack);
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
 // Start server
 const server = app.listen(PORT, () => {
-  console.log(`NPMDeck Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`NPM API URL: ${API_URL}`);
+  logger.server(`NPMDeck Server running on port ${PORT}`);
+  logger.server(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.server(`NPM API URL: ${API_URL}`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
+  logger.server('SIGTERM signal received: closing HTTP server');
   server.close(() => {
-    console.log('HTTP server closed');
+    logger.server('HTTP server closed');
   });
 });
 

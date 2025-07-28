@@ -7,8 +7,7 @@ interface HasOwnerId {
 }
 
 export function useFilteredData<T extends HasOwnerId>(
-  data: T[],
-  resource?: string
+  data: T[]
 ): T[] {
   const { user, shouldFilterByUser } = useAuthStore()
 

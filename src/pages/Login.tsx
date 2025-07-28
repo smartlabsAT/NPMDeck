@@ -8,8 +8,7 @@ import {
   Typography,
   Box,
   Alert,
-  CircularProgress,
-  Snackbar
+  CircularProgress
 } from '@mui/material'
 import { useAuthStore } from '../stores/authStore'
 import UserProfileModal from '../components/UserProfileModal'

@@ -3,18 +3,21 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Copy package files
-COPY package*.json ./
-COPY yarn.lock* ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
 
 # Install dependencies
-RUN npm ci || yarn install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build the frontend
-RUN npm run build
+RUN pnpm run build
 
 # Production stage
 FROM node:20-alpine
@@ -27,13 +30,15 @@ RUN apk add --no-cache dumb-init
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Copy package files
-COPY package*.json ./
-COPY yarn.lock* ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
 
 # Install production dependencies only
-RUN npm ci --only=production || yarn install --production --frozen-lockfile && \
-    npm cache clean --force
+RUN pnpm install --prod --frozen-lockfile
 
 # Copy server code
 COPY --chown=nodejs:nodejs server ./server
@@ -43,6 +48,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 
 # Switch to non-root user
 USER nodejs
+
+# Set production environment
+ENV NODE_ENV=production
 
 # Expose port
 EXPOSE 3000

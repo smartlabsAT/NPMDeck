@@ -147,9 +147,6 @@ export default function AccessLists() {
     navigate('/security/access-lists')
   }
 
-  const _handleExportAll = () => {
-    setExportDialogOpen(true)
-  }
 
   // Sorting and filtering
   const handleSort = (property: OrderBy) => {
@@ -159,7 +156,7 @@ export default function AccessLists() {
   }
 
   // Apply visibility filtering
-  const visibleAccessLists = useFilteredData(accessLists, 'access_lists')
+  const visibleAccessLists = useFilteredData(accessLists)
   const filterInfo = useFilteredInfo(accessLists, visibleAccessLists)
 
   const filteredAndSortedAccessLists = useMemo(() => {

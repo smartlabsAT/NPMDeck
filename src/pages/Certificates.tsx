@@ -43,7 +43,7 @@ import {
 import { certificatesApi, Certificate } from '../api/certificates'
 import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
-import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
+import { useFilteredData } from '../hooks/useFilteredData'
 import ConfirmDialog from '../components/ConfirmDialog'
 import CertificateDrawer from '../components/CertificateDrawer'
 import CertificateDetailsDialog from '../components/CertificateDetailsDialog'
@@ -238,8 +238,7 @@ const Certificates = () => {
   }
 
   // Apply visibility filtering first
-  const visibleCertificates = useFilteredData(certificates, 'certificates')
-  const filterInfo = useFilteredInfo(certificates, visibleCertificates)
+  const visibleCertificates = useFilteredData(certificates)
   
   // Then apply search filtering
   const filteredCertificates = visibleCertificates.filter(cert => {

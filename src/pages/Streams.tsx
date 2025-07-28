@@ -162,9 +162,6 @@ export default function Streams() {
     navigate('/hosts/streams')
   }
 
-  const _handleExportAll = () => {
-    setExportDialogOpen(true)
-  }
 
   // Sorting and filtering
   const handleSort = (property: OrderBy) => {
@@ -174,7 +171,7 @@ export default function Streams() {
   }
 
   // Apply visibility filtering
-  const visibleStreams = useFilteredData(streams, 'streams')
+  const visibleStreams = useFilteredData(streams)
   const filterInfo = useFilteredInfo(streams, visibleStreams)
 
   const filteredAndSortedStreams = useMemo(() => {

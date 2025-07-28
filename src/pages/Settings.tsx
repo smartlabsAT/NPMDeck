@@ -32,7 +32,7 @@ import { settingsApi, Setting } from '../api/settings'
 import PageHeader from '../components/PageHeader'
 import { useUISettingsStore } from '../stores/uiSettingsStore'
 import { usePermissions } from '../hooks/usePermissions'
-import { EntityType, Operation, ContainerType, ENTITY_DISPLAY_NAMES } from '../types/uiSettings'
+import { EntityType, ContainerType, ENTITY_DISPLAY_NAMES } from '../types/uiSettings'
 
 const Settings = () => {
   const [_settings, setSettings] = useState<Setting[]>([])
@@ -54,7 +54,7 @@ const Settings = () => {
     resetToDefaults
   } = useUISettingsStore()
   
-  const { getVisibleResources, canView, canManage } = usePermissions()
+  const { getVisibleResources, canManage } = usePermissions()
 
   useEffect(() => {
     fetchSettings()

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import logger from '../utils/logger'
 import {
   Autocomplete,
   TextField,
@@ -74,15 +75,15 @@ const SearchBar: React.FC = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   
-  console.log('SearchBar component rendering')
+  logger.debug('SearchBar component rendering')
   
   // Try to use GlobalSearch context, return null if not available
   let searchContext
   try {
     searchContext = useGlobalSearch()
-    console.log('SearchBar: GlobalSearch context found')
+    logger.debug('SearchBar: GlobalSearch context found')
   } catch (error) {
-    console.warn('SearchBar: GlobalSearchProvider not found', error)
+    logger.warn('SearchBar: GlobalSearchProvider not found', error)
     // SearchBar is being rendered outside of GlobalSearchProvider
     return null
   }
@@ -263,7 +264,7 @@ const SearchBar: React.FC = () => {
         // Determine the icon to show
         let icon
         if (option.type === 'action' && option.metadata?.resourceType) {
-          console.log('Rendering action with resourceType:', option.metadata.resourceType)
+          logger.debug('Rendering action with resourceType:', option.metadata.resourceType)
           // For actions, show the Add icon with the resource type icon
           icon = (
             <Box display="flex" alignItems="center" gap={0.5}>

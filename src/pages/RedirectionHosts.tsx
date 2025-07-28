@@ -308,7 +308,7 @@ const RedirectionHosts = () => {
   }
 
   // Apply visibility filtering first
-  const visibleHosts = useFilteredData(hosts, 'redirection_hosts')
+  const visibleHosts = useFilteredData(hosts)
   const filterInfo = useFilteredInfo(hosts, visibleHosts)
   
   // Then apply search filtering

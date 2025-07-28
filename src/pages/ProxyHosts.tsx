@@ -302,7 +302,7 @@ const ProxyHosts = () => {
   }
 
   // Apply visibility filtering first
-  const visibleHosts = useFilteredData(hosts, 'proxy_hosts')
+  const visibleHosts = useFilteredData(hosts)
   const filterInfo = useFilteredInfo(hosts, visibleHosts)
   
   // Then apply search filtering
@@ -393,10 +393,6 @@ const ProxyHosts = () => {
     )
   }
 
-  const _handleViewRedirection = (redirect: RedirectionHost, event: React.MouseEvent) => {
-    event.stopPropagation()
-    navigate(`/hosts/redirection/${redirect.id}/view/connections`)
-  }
 
   if (loading) {
     return (

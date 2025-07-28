@@ -261,7 +261,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
           email: formData.email,
           is_disabled: formData.is_disabled,
         }
-        const newUser = await usersApi.create(createData)
+        await usersApi.create(createData)
         setSuccessMessage('User created successfully')
         // For new users, switch to permissions tab
         setActiveTab(2)
@@ -667,7 +667,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
                 <ToggleButtonGroup
                   value={permissions.visibility}
                   exclusive
-                  onChange={(e, value) => value && handlePermissionChange('visibility', value)}
+                  onChange={(_e, value) => value && handlePermissionChange('visibility', value)}
                   disabled={isAdminUser}
                   fullWidth
                   sx={{ mt: 1 }}
@@ -720,7 +720,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
                         <ToggleButtonGroup
                           value={permissions[key as keyof typeof permissions]}
                           exclusive
-                          onChange={(e, value) => value && handlePermissionChange(key as keyof typeof permissions, value)}
+                          onChange={(_e, value) => value && handlePermissionChange(key as keyof typeof permissions, value)}
                           disabled={isAdminUser}
                           size="small"
                         >

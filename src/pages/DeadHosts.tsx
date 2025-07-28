@@ -210,7 +210,7 @@ const DeadHosts = () => {
   }
 
   // Apply visibility filtering first
-  const visibleHosts = useFilteredData(hosts, 'dead_hosts')
+  const visibleHosts = useFilteredData(hosts)
   const filterInfo = useFilteredInfo(hosts, visibleHosts)
   
   // Then apply search filtering

@@ -4,17 +4,17 @@
   "description": "Modern frontend for Nginx Proxy Manager",
   "main": "server/index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:client\"",
     "dev:server": "nodemon server/index.js",
     "dev:client": "vite --host 0.0.0.0",
     "build": "tsc && vite build",
     "start": "NODE_ENV=production node server/index.js",
-    "start:dev": "npm run dev",
+    "start:dev": "pnpm run dev",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "docker:build": "docker build -t npmDeck:latest .",
-    "docker:run": "docker run -p 3000:3000 npmDeck:latest"
+    "docker:build": "docker build -t npmdeck:latest .",
+    "docker:run": "docker run -p 3000:3000 npmdeck:latest"
   },
   "dependencies": {
     "@emotion/react": "^11.11.0",

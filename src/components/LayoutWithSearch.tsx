@@ -1,9 +1,10 @@
 import React from 'react'
 import { GlobalSearchProvider } from '../contexts/GlobalSearchContext'
 import Layout from './Layout'
+import logger from '../utils/logger'
 
 const LayoutWithSearch: React.FC = () => {
-  console.log('LayoutWithSearch rendering')
+  logger.debug('LayoutWithSearch rendering')
   return (
     <GlobalSearchProvider>
       <Layout />

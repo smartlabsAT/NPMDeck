@@ -1,7 +1,8 @@
 import { create } from 'zustand'
-import { authApi, LoginCredentials, TokenResponse } from '../api/auth'
+import { authApi, LoginCredentials } from '../api/auth'
 import { User } from '../api/users'
 import { Resource, PermissionLevel } from '../types/permissions'
+import logger from '../utils/logger'
 import { 
   hasPermission, 
   canView, 
@@ -280,9 +281,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('npm_token', response.token)
       set({ token: response.token })
       
-      console.log('Token refreshed successfully')
+      logger.log('Token refreshed successfully')
     } catch (error) {
-      console.error('Token refresh failed:', error)
+      logger.error('Token refresh failed:', error)
       // Don't logout on refresh failure - the interceptor will handle 401s
     }
   },

@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: npmDeck-dev
+    container_name: npmdeck-dev
     ports:
       - "5173:5173"  # Vite dev server
       - "3001:3000"  # Express server
@@ -21,14 +21,14 @@ services:
       - NPM_API_URL=${NPM_API_URL:-http://host.docker.internal:81}
       - VITE_API_URL=/api
     networks:
-      - npmDeck
+      - npmdeck
 
   # Production-like environment
   prod:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: npmDeck-prod
+    container_name: npmdeck-prod
     ports:
       - "3000:3000"
     environment:
@@ -36,7 +36,7 @@ services:
       - NPM_API_URL=${NPM_API_URL:-http://npm-backend:81}
       - PORT=3000
     networks:
-      - npmDeck
+      - npmdeck
     restart: unless-stopped
 
   # Optional: Run with existing NPM backend
@@ -56,7 +56,7 @@ services:
   #     - npmDeck
 
 networks:
-  npmDeck:
+  npmdeck:
     driver: bridge
 
 volumes:
