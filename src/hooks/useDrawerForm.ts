@@ -292,6 +292,14 @@ export const useDrawerForm = <T extends Record<string, any>>({
   }, []);
 
   /**
+   * Mark form as clean by updating initial data reference
+   */
+  const markAsClean = useCallback(() => {
+    initialDataRef.current = { ...formState.data };
+    setFormState((prev) => ({ ...prev, isDirty: false }));
+  }, [formState.data]);
+
+  /**
    * Handle form submission
    */
   const handleSubmit = useCallback(async (event?: React.FormEvent) => {
@@ -427,6 +435,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
     setFieldTouched,
     resetForm,
     handleSubmit,
+    markAsClean,
     
     // Helpers
     getFieldProps,

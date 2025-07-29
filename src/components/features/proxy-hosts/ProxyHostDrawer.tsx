@@ -96,6 +96,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
     errors,
     handleSubmit,
     resetForm,
+    markAsClean,
     isDirty,
     isValid,
   } = useDrawerForm<ProxyHostFormData>({
@@ -173,16 +174,6 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
 
       onSave()
       onClose()
-    },
-    autoSave: {
-      enabled: true,
-      delay: 3000,
-      onAutoSave: async (data) => {
-        if (isEditMode && isDirty) {
-          // Auto-save draft for existing hosts
-          console.log('Auto-saving draft...', data)
-        }
-      }
     }
   })
 
@@ -235,7 +226,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
     }
   }
 
-  const tabs = [
+  const tabs = React.useMemo(() => [
     { 
       id: 'details', 
       label: 'Details', 
@@ -254,7 +245,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       label: 'Advanced',
       icon: <CodeIcon />
     },
-  ]
+  ], [errors.domainNames, errors.forwardHost, errors.forwardPort, errors.certificateId, data.sslEnabled])
 
   return (
     <BaseDrawer
@@ -274,7 +265,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       confirmClose={isDirty}
       width={600}
     >
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab
           data={data}
           setFieldValue={setFieldValue}
@@ -284,7 +275,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <SSLTab
           data={data}
           setFieldValue={setFieldValue}
@@ -295,7 +286,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={2}>
+      <TabPanel value={activeTab} index={2} keepMounted animation="none">
         <AdvancedTab
           data={data}
           setFieldValue={setFieldValue}
@@ -315,7 +306,7 @@ interface DetailsTabProps {
   loadingData: boolean
 }
 
-function DetailsTab({ data, setFieldValue, errors, accessLists, loadingData }: DetailsTabProps) {
+const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadingData }: DetailsTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="Host Details" required>
@@ -429,7 +420,7 @@ function DetailsTab({ data, setFieldValue, errors, accessLists, loadingData }: D
       </FormSection>
     </Box>
   )
-}
+})
 
 // SSL Tab Component
 interface SSLTabProps {
@@ -441,7 +432,7 @@ interface SSLTabProps {
   getCertificateStatus: (cert: Certificate) => { color: 'error' | 'warning' | 'success', text: string, icon: any }
 }
 
-function SSLTab({ data, setFieldValue, errors, certificates, loadingData, getCertificateStatus }: SSLTabProps) {
+const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingData, getCertificateStatus }: SSLTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="SSL Configuration">
@@ -595,7 +586,7 @@ function SSLTab({ data, setFieldValue, errors, certificates, loadingData, getCer
       )}
     </Box>
   )
-}
+})
 
 // Advanced Tab Component
 interface AdvancedTabProps {
@@ -604,7 +595,7 @@ interface AdvancedTabProps {
   errors: Record<string, string>
 }
 
-function AdvancedTab({ data, setFieldValue, errors }: AdvancedTabProps) {
+const AdvancedTab = React.memo(({ data, setFieldValue, errors }: AdvancedTabProps) => {
   return (
     <FormSection title="Custom Configuration">
       <Alert severity="warning" sx={{ mb: 2 }}>
@@ -630,4 +621,4 @@ function AdvancedTab({ data, setFieldValue, errors }: AdvancedTabProps) {
       />
     </FormSection>
   )
-}
+})
