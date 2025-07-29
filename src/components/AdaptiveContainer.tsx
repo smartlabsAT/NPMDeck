@@ -108,6 +108,18 @@ const AdaptiveContainer: React.FC<AdaptiveContainerProps> = ({
       maxWidth={maxWidth}
       fullWidth={fullWidth}
       fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          // Fixed height for non-fullscreen dialogs to prevent jumping
+          ...(!isMobile && {
+            height: '90vh',
+            maxHeight: '90vh',
+            minHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column'
+          })
+        }
+      }}
     >
       <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         {title}
@@ -123,7 +135,14 @@ const AdaptiveContainer: React.FC<AdaptiveContainerProps> = ({
         </IconButton>
       </DialogTitle>
       
-      <DialogContent dividers>
+      <DialogContent dividers sx={{
+        // Make content scrollable for fixed height dialogs
+        ...(!isMobile && {
+          overflowY: 'auto',
+          flex: 1,
+          minHeight: 0 // Important for flexbox overflow
+        })
+      }}>
         {children}
       </DialogContent>
       
