@@ -38,7 +38,7 @@ import {
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { Stream, streamsApi } from '../api/streams'
-import StreamDrawer from '../components/StreamDrawer'
+import StreamDrawer from '../components/features/streams/StreamDrawer'
 import StreamDetailsDialog from '../components/StreamDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ExportDialog from '../components/ExportDialog'

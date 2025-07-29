@@ -1,4 +1,3 @@
-import React from 'react'
 import { GlobalSearchProvider } from '../contexts/GlobalSearchContext'
 import Layout from './Layout'
 import logger from '../utils/logger'

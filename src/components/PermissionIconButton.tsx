@@ -1,4 +1,3 @@
-import React from 'react'
 import { IconButton, IconButtonProps, Tooltip } from '@mui/material'
 import { useAuthStore } from '../stores/authStore'
 import { Resource, PermissionLevel } from '../types/permissions'
