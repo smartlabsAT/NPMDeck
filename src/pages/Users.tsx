@@ -37,6 +37,7 @@ import {
   Group as GroupIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
+import { getErrorMessage } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
 import UserDrawer from '../components/UserDrawer'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -86,8 +87,8 @@ const Users = () => {
       setError(null)
       const data = await usersApi.getAll(['permissions'], searchQuery)
       setUsers(data)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load users')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -122,8 +123,8 @@ const Users = () => {
     try {
       await usersApi.delete(userToDelete.id)
       await loadUsers()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete user')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -140,8 +141,8 @@ const Users = () => {
       localStorage.setItem('npm_token', response.token)
       localStorage.setItem('npm_user', JSON.stringify(response.user))
       window.location.href = '/'
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to login as user')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
     handleCloseMenu()
   }

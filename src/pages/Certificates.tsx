@@ -41,6 +41,8 @@ import {
   VpnKey as CertificateIcon,
 } from '@mui/icons-material'
 import { certificatesApi, Certificate } from '../api/certificates'
+import { getErrorMessage } from '../types/common'
+import { CertificateWithHosts } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData } from '../hooks/useFilteredData'
@@ -188,8 +190,8 @@ const Certificates = () => {
       setError(null)
       const data = await certificatesApi.getAll(['owner', 'proxy_hosts', 'redirection_hosts', 'dead_hosts'])
       setCertificates(data)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load certificates')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -208,8 +210,8 @@ const Certificates = () => {
   }
 
   const descendingComparator = (a: Certificate, b: Certificate, orderBy: OrderBy) => {
-    let aValue: any
-    let bValue: any
+    let aValue: unknown
+    let bValue: unknown
 
     switch (orderBy) {
       case 'nice_name':
@@ -232,8 +234,8 @@ const Certificates = () => {
         return 0
     }
 
-    if (bValue < aValue) return -1
-    if (bValue > aValue) return 1
+    if ((bValue as any) < (aValue as any)) return -1
+    if ((bValue as any) > (aValue as any)) return 1
     return 0
   }
 
@@ -308,8 +310,8 @@ const Certificates = () => {
     try {
       await certificatesApi.delete(certToDelete.id)
       await loadCertificates()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete certificate')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -321,8 +323,8 @@ const Certificates = () => {
     try {
       await certificatesApi.renew(cert.id)
       await loadCertificates()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to renew certificate')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setRenewingCerts(prev => {
         const newSet = new Set(prev)
@@ -343,8 +345,8 @@ const Certificates = () => {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to download certificate')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -417,9 +419,9 @@ const Certificates = () => {
 
   const getUsageCount = (cert: Certificate) => {
     // Count total usage across proxy hosts, redirection hosts, and dead hosts
-    const proxyCount = (cert as any).proxy_hosts?.length || 0
-    const redirectionCount = (cert as any).redirection_hosts?.length || 0
-    const deadCount = (cert as any).dead_hosts?.length || 0
+    const proxyCount = (cert as CertificateWithHosts).proxy_hosts?.length || 0
+    const redirectionCount = (cert as CertificateWithHosts).redirection_hosts?.length || 0
+    const deadCount = (cert as CertificateWithHosts).dead_hosts?.length || 0
     return proxyCount + redirectionCount + deadCount
   }
 

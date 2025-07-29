@@ -1,3 +1,4 @@
+import { getErrorMessage } from '../types/common'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
@@ -190,8 +191,8 @@ const ProxyHosts = () => {
         targetMap.get(target)!.push(redirect)
       })
       setRedirectionsByTarget(targetMap)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load hosts')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -206,8 +207,8 @@ const ProxyHosts = () => {
       }
       // Reload to get updated status
       await loadHosts()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to toggle host status')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -235,8 +236,8 @@ const ProxyHosts = () => {
     try {
       await proxyHostsApi.delete(hostToDelete.id)
       await loadHosts()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete proxy host')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -268,8 +269,8 @@ const ProxyHosts = () => {
   }
 
   const descendingComparator = (a: ProxyHost, b: ProxyHost, orderBy: OrderBy) => {
-    let aValue: any
-    let bValue: any
+    let aValue: unknown
+    let bValue: unknown
 
     switch (orderBy) {
       case 'status':
@@ -296,8 +297,8 @@ const ProxyHosts = () => {
         return 0
     }
 
-    if (bValue < aValue) return -1
-    if (bValue > aValue) return 1
+    if ((bValue as any) < (aValue as any)) return -1
+    if ((bValue as any) > (aValue as any)) return 1
     return 0
   }
 

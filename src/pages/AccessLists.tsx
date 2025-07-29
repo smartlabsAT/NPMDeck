@@ -37,6 +37,7 @@ import {
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { AccessList, accessListsApi } from '../api/accessLists'
+import { getErrorMessage } from '../types/common'
 import AccessListDrawer from '../components/features/access-lists/AccessListDrawer'
 import AccessListDetailsDialog from '../components/AccessListDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -103,8 +104,8 @@ export default function AccessLists() {
       setError(null)
       const data = await accessListsApi.getAll(['owner', 'items', 'clients'])
       setAccessLists(data)
-    } catch (err: any) {
-      setError(err.message || 'Failed to load access lists')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -130,8 +131,8 @@ export default function AccessLists() {
       await loadAccessLists()
       setDeleteDialogOpen(false)
       setAccessListToDelete(null)
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete access list')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -173,8 +174,8 @@ export default function AccessLists() {
 
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
-      let aValue: any
-      let bValue: any
+      let aValue: unknown
+      let bValue: unknown
 
       switch (orderBy) {
         case 'name':
@@ -198,9 +199,9 @@ export default function AccessLists() {
       }
 
       if (orderDirection === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+        return (aValue as any) < (bValue as any) ? -1 : (aValue as any) > (bValue as any) ? 1 : 0
       } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+        return (aValue as any) > (bValue as any) ? -1 : (aValue as any) < (bValue as any) ? 1 : 0
       }
     })
 

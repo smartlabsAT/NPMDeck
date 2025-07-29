@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { usersApi, User } from '../api/users'
+import { getErrorMessage } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
 
 interface UserPasswordDialogProps {
@@ -65,8 +66,8 @@ const UserPasswordDialog: React.FC<UserPasswordDialogProps> = ({ open, onClose, 
       })
       onSave()
       handleClose()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update password')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }

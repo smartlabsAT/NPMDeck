@@ -2,6 +2,7 @@ import React from 'react'
 import {
   TextField,
   FormControlLabel,
+  FormControl,
   Switch,
   Box,
   RadioGroup,
@@ -22,6 +23,7 @@ import {
   AccountTree as ChainIcon,
 } from '@mui/icons-material'
 import { Certificate, CreateCertificate, certificatesApi } from '../../../api/certificates'
+import { getErrorMessage } from '../../../types/common'
 import BaseDrawer from '../../base/BaseDrawer'
 import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
@@ -277,10 +279,10 @@ export default function CertificateDrawer({
     try {
       const result = await certificatesApi.testHttpReachability(data.domainNames)
       setTestResult(result)
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTestResult({ 
         reachable: false, 
-        error: err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to test domain reachability'
+        error: getErrorMessage(err)
       })
     } finally {
       setTestingDomains(false)

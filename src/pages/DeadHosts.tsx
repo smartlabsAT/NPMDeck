@@ -33,6 +33,7 @@ import {
   Visibility as ViewIcon,
 } from '@mui/icons-material'
 import { deadHostsApi, DeadHost } from '../api/deadHosts'
+import { getErrorMessage } from '../types/common'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { DeadHostDrawer } from '../components/features'
@@ -117,8 +118,8 @@ const DeadHosts = () => {
       setError(null)
       const data = await deadHostsApi.getAll(['owner', 'certificate'])
       setHosts(data)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load 404 hosts')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -133,8 +134,8 @@ const DeadHosts = () => {
       }
       // Reload to get updated status
       await loadHosts()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to toggle host status')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -162,8 +163,8 @@ const DeadHosts = () => {
     try {
       await deadHostsApi.delete(hostToDelete.id)
       await loadHosts()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete 404 host')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -180,8 +181,8 @@ const DeadHosts = () => {
   }
 
   const descendingComparator = (a: DeadHost, b: DeadHost, orderBy: OrderBy) => {
-    let aValue: any
-    let bValue: any
+    let aValue: unknown
+    let bValue: unknown
 
     switch (orderBy) {
       case 'status':
@@ -204,8 +205,8 @@ const DeadHosts = () => {
         return 0
     }
 
-    if (bValue < aValue) return -1
-    if (bValue > aValue) return 1
+    if ((bValue as any) < (aValue as any)) return -1
+    if ((bValue as any) > (aValue as any)) return 1
     return 0
   }
 

@@ -125,7 +125,7 @@ const AuditLog = () => {
     }
   }
 
-  const getActionColor = (action: string) => {
+  const getActionColor = (action: string): 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'default' => {
     switch (action) {
       case 'created':
         return 'success'
@@ -330,7 +330,7 @@ const AuditLog = () => {
                         <Chip 
                           label={entry.action} 
                           size="small" 
-                          color={getActionColor(entry.action) as any}
+                          color={getActionColor(entry.action)}
                           sx={{ mr: 1 }}
                         />
                         <Typography variant="body2" component="span">

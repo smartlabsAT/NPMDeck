@@ -38,6 +38,7 @@ import {
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
 import { Stream, streamsApi } from '../api/streams'
+import { getErrorMessage } from '../types/common'
 import StreamDrawer from '../components/features/streams/StreamDrawer'
 import StreamDetailsDialog from '../components/StreamDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -105,8 +106,8 @@ export default function Streams() {
       setError(null)
       const data = await streamsApi.getAll(['owner', 'certificate'])
       setStreams(data)
-    } catch (err: any) {
-      setError(err.message || 'Failed to load streams')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -132,8 +133,8 @@ export default function Streams() {
       await loadStreams()
       setDeleteDialogOpen(false)
       setStreamToDelete(null)
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete stream')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -145,8 +146,8 @@ export default function Streams() {
         await streamsApi.enable(stream.id)
       }
       await loadStreams()
-    } catch (err: any) {
-      setError(err.message || 'Failed to toggle stream status')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -188,8 +189,8 @@ export default function Streams() {
 
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
-      let aValue: any
-      let bValue: any
+      let aValue: unknown
+      let bValue: unknown
 
       switch (orderBy) {
         case 'incoming_port':
@@ -217,9 +218,9 @@ export default function Streams() {
       }
 
       if (orderDirection === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+        return (aValue as any) < (bValue as any) ? -1 : (aValue as any) > (bValue as any) ? 1 : 0
       } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+        return (aValue as any) > (bValue as any) ? -1 : (aValue as any) < (bValue as any) ? 1 : 0
       }
     })
 

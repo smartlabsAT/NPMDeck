@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import { useAuthStore } from '../stores/authStore'
 import api from '../api/config'
+import { getErrorMessage } from '../types/common'
 
 interface UserProfileModalProps {
   open: boolean
@@ -75,14 +76,8 @@ export default function UserProfileModal({ open, onClose, user }: UserProfileMod
       setTimeout(() => {
         onClose()
       }, 1500)
-    } catch (err: any) {
-      if (err.response?.data?.error?.message) {
-        setError(err.response.data.error.message)
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message)
-      } else {
-        setError('Failed to update profile')
-      }
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }

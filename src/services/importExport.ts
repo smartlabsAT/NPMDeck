@@ -4,6 +4,7 @@ import { DeadHost } from '../api/deadHosts'
 import { Stream } from '../api/streams'
 import { Certificate } from '../api/certificates'
 import { AccessList } from '../api/accessLists'
+import { ImportValidationData } from '../types/common'
 
 export type ExportType = 'proxy_host' | 'redirection_host' | 'dead_host' | 'stream' | 'certificate' | 'access_list' | 'bundle'
 
@@ -15,7 +16,7 @@ export interface ExportMetadata {
   export_source: string
 }
 
-export interface ExportData<T = any> {
+export interface ExportData<T = ProxyHost | RedirectionHost | DeadHost | Stream | Certificate | AccessList> {
   version: string
   exported_at: string
   type: ExportType
@@ -105,7 +106,7 @@ export class ImportExportService {
   }
 
   // Validate import data
-  static validateImportData(data: any): { valid: boolean; errors: string[] } {
+  static validateImportData(data: unknown): { valid: boolean; errors: string[] } {
     const errors: string[] = []
 
     if (!data || typeof data !== 'object') {
@@ -113,25 +114,27 @@ export class ImportExportService {
       return { valid: false, errors }
     }
 
-    if (!data.version) {
+    const validatedData = data as ImportValidationData
+
+    if (!validatedData.version) {
       errors.push('Missing version field')
     }
 
-    if (!data.type) {
+    if (!validatedData.type) {
       errors.push('Missing type field')
     }
 
-    if (!data.data) {
+    if (!validatedData.data) {
       errors.push('Missing data field')
     }
 
-    if (!data.exported_at) {
+    if (!validatedData.exported_at) {
       errors.push('Missing exported_at field')
     }
 
     // Version compatibility check
-    if (data.version && !this.isVersionCompatible(data.version)) {
-      errors.push(`Incompatible version: ${data.version}. Current version: ${this.CURRENT_VERSION}`)
+    if (validatedData.version && !this.isVersionCompatible(validatedData.version)) {
+      errors.push(`Incompatible version: ${validatedData.version}. Current version: ${this.CURRENT_VERSION}`)
     }
 
     return { valid: errors.length === 0, errors }
@@ -169,7 +172,7 @@ export class ImportExportService {
       return item
     }
 
-    const cleaned = { ...item } as any
+    const cleaned = { ...item } as Record<string, unknown>
 
     // Remove common sensitive fields
     delete cleaned.id
@@ -182,14 +185,14 @@ export class ImportExportService {
     switch (type) {
       case 'certificate':
         // Never export private keys
-        delete cleaned.meta?.certificate_key
-        delete cleaned.certificate_key
+        delete (cleaned as any).meta?.certificate_key
+        delete (cleaned as any).certificate_key
         break
         
       case 'access_list':
         // Optionally remove passwords
         if (cleaned.items && Array.isArray(cleaned.items)) {
-          cleaned.items = cleaned.items.map((item: any) => ({
+          cleaned.items = cleaned.items.map((item: Record<string, unknown>) => ({
             ...item,
             password: includeSensitive ? item.password : '<REDACTED>'
           }))
@@ -201,12 +204,12 @@ export class ImportExportService {
       case 'dead_host':
       case 'stream':
         // Remove nginx status
-        delete cleaned.meta?.nginx_online
-        delete cleaned.meta?.nginx_err
+        delete (cleaned as any).meta?.nginx_online
+        delete (cleaned as any).meta?.nginx_err
         break
     }
 
-    return cleaned
+    return cleaned as T
   }
 
   // Check version compatibility
@@ -219,7 +222,7 @@ export class ImportExportService {
 
   // Prepare item for import (remove/transform fields as needed)
   static prepareForImport<T>(item: T, type: ExportType): Partial<T> {
-    const prepared = { ...item } as any
+    const prepared = { ...item } as Record<string, unknown>
 
     // Remove fields that should not be imported
     delete prepared.id
@@ -227,8 +230,8 @@ export class ImportExportService {
     delete prepared.modified_on
     delete prepared.owner_user_id
     delete prepared.owner
-    delete prepared.meta?.nginx_online
-    delete prepared.meta?.nginx_err
+    delete (prepared as any).meta?.nginx_online
+    delete (prepared as any).meta?.nginx_err
 
     // Ensure required fields have default values if missing
     switch (type) {
@@ -261,13 +264,13 @@ export class ImportExportService {
         prepared.pass_auth = prepared.pass_auth ?? false
         // Clean items and clients to ensure they don't have IDs
         if (prepared.items && Array.isArray(prepared.items)) {
-          prepared.items = prepared.items.map((item: any) => ({
+          prepared.items = prepared.items.map((item: Record<string, unknown>) => ({
             username: item.username,
             password: item.password || ''
           }))
         }
         if (prepared.clients && Array.isArray(prepared.clients)) {
-          prepared.clients = prepared.clients.map((client: any) => ({
+          prepared.clients = prepared.clients.map((client: Record<string, unknown>) => ({
             address: client.address,
             directive: client.directive
           }))
@@ -275,6 +278,6 @@ export class ImportExportService {
         break
     }
 
-    return prepared
+    return prepared as Partial<T>
   }
 }
