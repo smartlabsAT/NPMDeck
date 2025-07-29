@@ -85,11 +85,15 @@ export default function DNSProviderSelector({
   error
 }: DNSProviderSelectorProps) {
   // Update credentials template when provider changes
+  const [lastProvider, setLastProvider] = React.useState(value)
+  
   React.useEffect(() => {
-    if (value && DNS_PROVIDERS[value]?.credentials) {
+    // Only update credentials when provider actually changes, not on every render
+    if (value && value !== lastProvider && DNS_PROVIDERS[value]?.credentials) {
+      setLastProvider(value)
       onCredentialsChange(DNS_PROVIDERS[value].credentials as string)
     }
-  }, [value, onCredentialsChange])
+  }, [value, lastProvider, onCredentialsChange])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

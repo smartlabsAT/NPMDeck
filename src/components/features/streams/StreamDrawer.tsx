@@ -270,7 +270,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       confirmClose={isDirty}
       width={600}
     >
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab
           data={data}
           setFieldValue={setFieldValue}
@@ -279,7 +279,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <SSLTab
           data={data}
           setFieldValue={setFieldValue}

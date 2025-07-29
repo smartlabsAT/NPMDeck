@@ -268,6 +268,15 @@ export default function CertificateDrawer({
     }
   })
 
+  // Memoize callbacks to prevent unnecessary re-renders in DNSProviderSelector
+  const handleDnsProviderChange = React.useCallback((provider: string) => {
+    setFieldValue('dnsProvider', provider)
+  }, [setFieldValue])
+  
+  const handleDnsCredentialsChange = React.useCallback((credentials: string) => {
+    setFieldValue('dnsProviderCredentials', credentials)
+  }, [setFieldValue])
+
   const handleTestDomains = async () => {
     if (!data || data.domainNames.length === 0) {
       return
@@ -330,7 +339,7 @@ export default function CertificateDrawer({
       confirmClose={isDirty}
       width={700}
     >
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab
           data={data}
           setFieldValue={setFieldValue}
@@ -338,7 +347,7 @@ export default function CertificateDrawer({
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <LetsEncryptTab
           data={data}
           setFieldValue={setFieldValue}
@@ -346,10 +355,12 @@ export default function CertificateDrawer({
           testingDomains={testingDomains}
           testResult={testResult}
           onTestDomains={handleTestDomains}
+          onDnsProviderChange={handleDnsProviderChange}
+          onDnsCredentialsChange={handleDnsCredentialsChange}
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={2}>
+      <TabPanel value={activeTab} index={2} keepMounted animation="none">
         <CustomCertificateTab
           data={data}
           setFieldValue={setFieldValue}
@@ -439,6 +450,8 @@ interface LetsEncryptTabProps {
   testingDomains: boolean
   testResult: { reachable: boolean; error?: string } | null
   onTestDomains: () => void
+  onDnsProviderChange: (provider: string) => void
+  onDnsCredentialsChange: (credentials: string) => void
 }
 
 function LetsEncryptTab({ 
@@ -447,7 +460,9 @@ function LetsEncryptTab({
   errors, 
   testingDomains, 
   testResult, 
-  onTestDomains 
+  onTestDomains,
+  onDnsProviderChange,
+  onDnsCredentialsChange 
 }: LetsEncryptTabProps) {
   if (data.provider !== 'letsencrypt') {
     return (
@@ -537,9 +552,9 @@ function LetsEncryptTab({
         <FormSection title="DNS Configuration" required>
           <DNSProviderSelector
             value={data.dnsProvider}
-            onChange={(provider) => setFieldValue('dnsProvider', provider)}
+            onChange={onDnsProviderChange}
             credentials={data.dnsProviderCredentials}
-            onCredentialsChange={(credentials) => setFieldValue('dnsProviderCredentials', credentials)}
+            onCredentialsChange={onDnsCredentialsChange}
             error={errors.dnsProvider || errors.dnsProviderCredentials}
           />
 

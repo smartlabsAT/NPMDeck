@@ -284,7 +284,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
       isDirty={form.isDirty}
       saveText={user ? 'Save Changes' : 'Create User'}
     >
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <FormSection title="User Details">
           <TextField
             {...form.getFieldProps('name')}
@@ -379,7 +379,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
       </TabPanel>
 
       {user && (
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={1} keepMounted animation="none">
           <FormSection title="Change Password">
             <Typography variant="body2" color="text.secondary" gutterBottom>
               Changing password for: <strong>{user.name}</strong>
@@ -429,7 +429,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
       )}
 
       {user && (
-        <TabPanel value={activeTab} index={2}>
+        <TabPanel value={activeTab} index={2} keepMounted animation="none">
           {isAdminUser && (
             <Alert severity="info" sx={{ mb: 2 }}>
               This user is an administrator and has full access to all features.

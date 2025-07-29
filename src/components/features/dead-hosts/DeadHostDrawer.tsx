@@ -186,7 +186,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       confirmClose={isDirty}
       width={600}
     >
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <GeneralTab
           data={data}
           setFieldValue={setFieldValue}
@@ -197,7 +197,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <AdvancedTab
           data={data}
           setFieldValue={setFieldValue}

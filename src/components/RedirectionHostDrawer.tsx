@@ -277,7 +277,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         saveDisabled={!form.isValid}
         saveText={host ? 'Save Changes' : 'Create'}
       >
-        <TabPanel value={activeTab} index={0}>
+        <TabPanel value={activeTab} index={0} keepMounted animation="none">
           <FormSection title="Source">
             <DomainInput
               value={form.data.domain_names}
@@ -373,7 +373,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
           </FormSection>
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={1} keepMounted animation="none">
           <Autocomplete
             value={certificates.find(c => c.id === form.data.certificate_id) || null}
             onChange={(_, newValue) => {
@@ -579,7 +579,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
           )}
         </TabPanel>
 
-        <TabPanel value={activeTab} index={2}>
+        <TabPanel value={activeTab} index={2} keepMounted animation="none">
           <Alert severity="warning" sx={{ mb: 2 }}>
             <Typography variant="body2">
               Advanced configuration allows you to add custom Nginx directives.

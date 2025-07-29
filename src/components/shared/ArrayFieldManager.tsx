@@ -116,7 +116,7 @@ export default function ArrayFieldManager<T = string>({
       
       return (
         <Fade
-          key={`${index}-${JSON.stringify(item)}`}
+          key={index}
           in={true}
           timeout={animationDuration}
         >
