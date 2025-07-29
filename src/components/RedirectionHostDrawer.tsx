@@ -28,7 +28,7 @@ import { RedirectionHost, CreateRedirectionHost, redirectionHostsApi } from '../
 import { Certificate, certificatesApi } from '../api/certificates'
 import BaseDrawer, { Tab } from './base/BaseDrawer'
 import { useDrawerForm } from '../hooks/useDrawerForm'
-import CertificateDrawer from './CertificateDrawer'
+import CertificateDrawer from './features/certificates/CertificateDrawer'
 import DomainInput from './DomainInput'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
@@ -216,7 +216,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
     try {
       const certs = await certificatesApi.getAll()
       setCertificates(certs)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load certificates:', err)
     }
   }

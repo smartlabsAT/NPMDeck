@@ -16,12 +16,21 @@ services:
       - ./public:/app/public
       - ./index.html:/app/index.html
       - ./vite.config.ts:/app/vite.config.ts
+      - ./.env.development:/app/.env
     environment:
       - NODE_ENV=development
       - NPM_API_URL=${NPM_API_URL:-http://host.docker.internal:81}
       - VITE_API_URL=/api
+      - DOCKER_NETWORK=npmdeck
+      - NPM_SERVICE_NAME=npm-backend
+      - CONTAINER_NAME=npmdeck-dev
     networks:
       - npmdeck
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Production-like environment
   prod:
@@ -31,29 +40,50 @@ services:
     container_name: npmdeck-prod
     ports:
       - "3000:3000"
+    volumes:
+      - ./.env.production:/app/.env
     environment:
       - NODE_ENV=production
       - NPM_API_URL=${NPM_API_URL:-http://npm-backend:81}
       - PORT=3000
+      - DOCKER_NETWORK=npmdeck
+      - NPM_SERVICE_NAME=npm-backend
+      - CONTAINER_NAME=npmdeck-prod
     networks:
       - npmdeck
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      - npm-backend
 
-  # Optional: Run with existing NPM backend
-  # npm-backend:
-  #   image: jc21/nginx-proxy-manager:latest
-  #   container_name: npm-backend
-  #   ports:
-  #     - "80:80"
-  #     - "81:81"
-  #     - "443:443"
-  #   environment:
-  #     DB_SQLITE_FILE: "/data/database.sqlite"
-  #   volumes:
-  #     - npm_data:/data
-  #     - npm_letsencrypt:/etc/letsencrypt
-  #   networks:
-  #     - npmDeck
+  # NPM Backend Service (uncomment to run with docker-compose)
+  npm-backend:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm-backend
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
+      DISABLE_IPV6: "true"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - npmdeck
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:81/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
 networks:
   npmdeck:

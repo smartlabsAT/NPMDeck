@@ -41,6 +41,7 @@ import {
   Visibility as ViewIcon,
 } from '@mui/icons-material'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
+import { getErrorMessage } from '../types/common'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
@@ -197,8 +198,8 @@ const RedirectionHosts = () => {
         })
       })
       setProxyHostsByDomain(domainMap)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load hosts')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -212,8 +213,8 @@ const RedirectionHosts = () => {
         await redirectionHostsApi.enable(host.id)
       }
       await loadHosts()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to toggle host status')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -241,8 +242,8 @@ const RedirectionHosts = () => {
     try {
       await redirectionHostsApi.delete(hostToDelete.id)
       await loadHosts()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete redirection host')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     }
   }
 
@@ -274,8 +275,8 @@ const RedirectionHosts = () => {
   }
 
   const descendingComparator = (a: RedirectionHost, b: RedirectionHost, orderBy: OrderBy) => {
-    let aValue: any
-    let bValue: any
+    let aValue: unknown
+    let bValue: unknown
 
     switch (orderBy) {
       case 'status':
@@ -302,8 +303,8 @@ const RedirectionHosts = () => {
         return 0
     }
 
-    if (bValue < aValue) return -1
-    if (bValue > aValue) return 1
+    if ((bValue as any) < (aValue as any)) return -1
+    if ((bValue as any) > (aValue as any)) return 1
     return 0
   }
 

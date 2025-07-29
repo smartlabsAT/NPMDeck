@@ -3,14 +3,14 @@
 const isDevelopment = import.meta.env.MODE === 'development'
 
 interface Logger {
-  log: (...args: any[]) => void
-  info: (...args: any[]) => void
-  warn: (...args: any[]) => void
-  error: (...args: any[]) => void
-  debug: (...args: any[]) => void
-  group: (...args: any[]) => void
+  log: (...args: unknown[]) => void
+  info: (...args: unknown[]) => void
+  warn: (...args: unknown[]) => void
+  error: (...args: unknown[]) => void
+  debug: (...args: unknown[]) => void
+  group: (...args: unknown[]) => void
   groupEnd: () => void
-  table: (data: any) => void
+  table: (data: Record<string, unknown> | unknown[]) => void
 }
 
 const noop = () => {}

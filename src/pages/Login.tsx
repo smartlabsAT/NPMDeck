@@ -11,6 +11,7 @@ import {
   CircularProgress
 } from '@mui/material'
 import { useAuthStore } from '../stores/authStore'
+import { getErrorMessage } from '../types/common'
 import UserProfileModal from '../components/UserProfileModal'
 
 const Login = () => {
@@ -59,13 +60,10 @@ const Login = () => {
       if (loginResult?.user?.email === 'admin@example.com') {
         setShowProfileModal(true)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Error is handled in the store, but also set local error as fallback
       console.error('Login error:', error)
-      const errorMessage = error?.response?.data?.error?.message || 
-                          error?.response?.data?.message || 
-                          error?.message || 
-                          'Login failed'
+      const errorMessage = getErrorMessage(error)
       setLocalError(errorMessage)
     }
   }

@@ -41,6 +41,9 @@ import { deadHostsApi } from '../api/deadHosts'
 import { streamsApi } from '../api/streams'
 import { certificatesApi } from '../api/certificates'
 import { accessListsApi } from '../api/accessLists'
+import { getErrorMessage } from '../types/common'
+import { ProxyHost } from '../api/proxyHosts'
+import { RedirectionHost } from '../api/redirectionHosts'
 
 interface ImportDialogProps {
   open: boolean
@@ -83,8 +86,8 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
         setSelectedItems(new Set(Array.from({ length: itemCount }, (_, i) => i)))
         
         setActiveStep(1)
-      } catch (error: any) {
-        setValidationErrors([error.message || 'Failed to parse file'])
+      } catch (error: unknown) {
+        setValidationErrors([getErrorMessage(error)])
       }
     }
   }, [])
@@ -134,9 +137,9 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
         }
         
         results.success++
-      } catch (error: any) {
+      } catch (error: unknown) {
         results.failed++
-        const errorMsg = error.response?.data?.error?.message || error.message || 'Unknown error'
+        const errorMsg = getErrorMessage(error)
         results.errors.push(`Item ${i + 1}: ${errorMsg}`)
       }
     }
@@ -288,7 +291,7 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
                     </ListItemIcon>
                     <ListItemText
                       primary={getItemDisplayName(item, index)}
-                      secondary={item.forward_host ? `→ ${item.forward_host}:${item.forward_port}` : undefined}
+                      secondary={(item as ProxyHost).forward_host ? `→ ${(item as ProxyHost).forward_host}:${(item as ProxyHost).forward_port}` : (item as RedirectionHost).forward_domain_name ? `→ ${(item as RedirectionHost).forward_domain_name}` : undefined}
                     />
                   </ListItem>
                 ))}

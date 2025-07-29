@@ -17,6 +17,7 @@ import {
   Divider,
 } from '@mui/material'
 import { usersApi, User } from '../api/users'
+import { getErrorMessage } from '../types/common'
 
 interface UserPermissionsDialogProps {
   open: boolean
@@ -85,8 +86,8 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({ open, onC
       await usersApi.updatePermissions(user.id, permissions)
       onSave()
       handleClose()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update permissions')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }

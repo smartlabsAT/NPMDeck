@@ -125,7 +125,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       setLoadingCertificates(true)
       const certs = await certificatesApi.getAll()
       setCertificates(certs)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load certificates:', err)
     } finally {
       setLoadingCertificates(false)
