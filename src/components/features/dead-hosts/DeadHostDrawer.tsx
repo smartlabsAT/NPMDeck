@@ -60,6 +60,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
     isDirty,
     isValid,
     getFieldProps,
+    resetForm,
   } = useDrawerForm<DeadHostFormData>({
     initialData: {
       domainNames: host?.domain_names || [],
@@ -106,6 +107,22 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       onClose()
     },
   })
+
+  // Reset form when host prop changes
+  React.useEffect(() => {
+    if (host && open) {
+      resetForm({
+        domainNames: host.domain_names || [],
+        certificateId: host.certificate_id || 0,
+        selectedCertificate: null,
+        sslForced: host.ssl_forced ?? false,
+        hstsEnabled: host.hsts_enabled ?? false,
+        hstsSubdomains: host.hsts_subdomains ?? false,
+        http2Support: host.http2_support ?? false,
+        advancedConfig: host.advanced_config || '',
+      })
+    }
+  }, [host?.id, open, resetForm])
 
   // Load certificates when drawer opens
   React.useEffect(() => {
