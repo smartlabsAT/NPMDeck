@@ -430,14 +430,14 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
 
         {/* Messages */}
         {(error || success) && (
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ px: 2, pt: 2, pb: 0 }}>
             {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity="error" sx={{ mb: 1 }}>
                 {error}
               </Alert>
             )}
             {success && (
-              <Alert severity="success" sx={{ mb: 2 }}>
+              <Alert severity="success" sx={{ mb: 1 }}>
                 {success}
               </Alert>
             )}
@@ -450,6 +450,7 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
             flex: 1,
             overflow: 'auto',
             p: 2,
+            pt: (error || success) ? 1 : 2,
           }}
         >
           {children}
