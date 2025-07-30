@@ -62,7 +62,15 @@ export default function CertificateDrawer({
   onSave, 
   initialProvider = 'letsencrypt' 
 }: CertificateDrawerProps) {
-  const [activeTab, setActiveTab] = React.useState(0)
+
+  // Determine initial tab - always start with Details tab
+  const getInitialTab = () => {
+    // Always start with Details tab (index 0) for consistency
+    // Users can then navigate to the appropriate provider tab
+    return 0
+  }
+  
+  const [activeTab, setActiveTab] = React.useState(getInitialTab)
   const [testingDomains, setTestingDomains] = React.useState(false)
   const [testResult, setTestResult] = React.useState<{ reachable: boolean; error?: string } | null>(null)
 
@@ -94,8 +102,7 @@ export default function CertificateDrawer({
     },
     fields: {
       provider: {
-        initialValue: 'letsencrypt' as 'letsencrypt' | 'other',
-        required: true
+        required: true, initialValue: undefined,
       },
       niceName: {
         initialValue: '',
@@ -277,6 +284,14 @@ export default function CertificateDrawer({
     setFieldValue('dnsProviderCredentials', credentials)
   }, [setFieldValue])
 
+  // Update provider when initialProvider changes (e.g., switching between Let's Encrypt and Custom)
+  React.useEffect(() => {
+    if (!certificate && open) {
+      console.log('useEffect: Updating provider from', data?.provider, 'to', initialProvider)
+      setFieldValue('provider', initialProvider)
+    }
+  }, [initialProvider, certificate, open, setFieldValue])
+
   const handleTestDomains = async () => {
     if (!data || data.domainNames.length === 0) {
       return
@@ -298,6 +313,11 @@ export default function CertificateDrawer({
     }
   }
 
+  // Determine the current provider - use data if available, otherwise use initial values
+  const currentProvider = data?.provider || certificate?.provider || initialProvider
+
+  
+  // Filter tabs based on provider type
   const tabs = [
     { 
       id: 'details', 
@@ -305,20 +325,18 @@ export default function CertificateDrawer({
       icon: <InfoIcon />,
       hasError: Boolean(errors.domainNames || errors.niceName)
     },
-    { 
+    ...(currentProvider === 'letsencrypt' ? [{
       id: 'letsencrypt', 
       label: "Let's Encrypt",
       icon: <VpnKeyIcon />,
-      disabled: data?.provider !== 'letsencrypt',
       hasError: Boolean(errors.letsencryptEmail || errors.letsencryptAgree || errors.dnsProvider || errors.dnsProviderCredentials)
-    },
-    { 
+    }] : []),
+    ...(currentProvider === 'other' ? [{
       id: 'custom', 
       label: 'Custom Certificate',
       icon: <UploadIcon />,
-      disabled: data?.provider !== 'other',
       hasError: Boolean(errors.certificateFile || errors.certificateKeyFile)
-    },
+    }] : []),
   ]
 
   return (
@@ -347,26 +365,30 @@ export default function CertificateDrawer({
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1} keepMounted animation="none">
-        <LetsEncryptTab
-          data={data}
-          setFieldValue={setFieldValue}
-          errors={errors}
-          testingDomains={testingDomains}
-          testResult={testResult}
-          onTestDomains={handleTestDomains}
-          onDnsProviderChange={handleDnsProviderChange}
-          onDnsCredentialsChange={handleDnsCredentialsChange}
-        />
-      </TabPanel>
+      {currentProvider === 'letsencrypt' && (
+        <TabPanel value={activeTab} index={1} keepMounted animation="none">
+          <LetsEncryptTab
+            data={data}
+            setFieldValue={setFieldValue}
+            errors={errors}
+            testingDomains={testingDomains}
+            testResult={testResult}
+            onTestDomains={handleTestDomains}
+            onDnsProviderChange={handleDnsProviderChange}
+            onDnsCredentialsChange={handleDnsCredentialsChange}
+          />
+        </TabPanel>
+      )}
 
-      <TabPanel value={activeTab} index={2} keepMounted animation="none">
-        <CustomCertificateTab
-          data={data}
-          setFieldValue={setFieldValue}
-          errors={errors}
-        />
-      </TabPanel>
+      {currentProvider === 'other' && (
+        <TabPanel value={activeTab} index={1} keepMounted animation="none">
+          <CustomCertificateTab
+            data={data}
+            setFieldValue={setFieldValue}
+            errors={errors}
+          />
+        </TabPanel>
+      )}
     </BaseDrawer>
   )
 }
