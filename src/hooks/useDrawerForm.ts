@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { getErrorMessage } from '../types/common';
 
 /**
  * Validation function type
@@ -330,7 +331,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
       
       onSuccess?.(formState.data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = getErrorMessage(error);
       setFormState((prev) => ({ ...prev, globalError: errorMessage }));
       onError?.(error instanceof Error ? error : new Error(errorMessage));
     } finally {
