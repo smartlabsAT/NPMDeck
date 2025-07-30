@@ -783,7 +783,10 @@ const Certificates = () => {
                           <Tooltip title="Renew">
                             <IconButton
                               size="small"
-                              onClick={() => handleRenew(cert)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleRenew(cert)
+                              }}
                               color="primary"
                               disabled={renewingCerts.has(cert.id)}
                             >
@@ -798,7 +801,10 @@ const Certificates = () => {
                         <Tooltip title="Download">
                           <IconButton
                             size="small"
-                            onClick={() => handleDownload(cert)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDownload(cert)
+                            }}
                           >
                             <DownloadIcon />
                           </IconButton>
@@ -808,7 +814,10 @@ const Certificates = () => {
                           permissionAction="edit"
                           size="small"
                           tooltipTitle="Edit"
-                          onClick={() => handleEdit(cert)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEdit(cert)
+                          }}
                           color="primary"
                         >
                           <EditIcon />
@@ -818,7 +827,10 @@ const Certificates = () => {
                           permissionAction="delete"
                           size="small"
                           tooltipTitle="Delete"
-                          onClick={() => handleDelete(cert)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(cert)
+                          }}
                           color="error"
                         >
                           <DeleteIcon />
