@@ -199,7 +199,19 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
   // Reset form when accessList changes
   React.useEffect(() => {
     if (open) {
-      resetForm()
+      resetForm({
+        name: accessList?.name || '',
+        satisfyAny: accessList?.satisfy_any || false,
+        passAuth: accessList?.pass_auth || false,
+        authItems: accessList?.items?.map(item => ({
+          username: item.username,
+          password: '', // Password not returned by API
+        })) || [{ username: '', password: '' }],
+        accessRules: accessList?.clients?.map(client => ({
+          address: client.address,
+          directive: client.directive,
+        })) || [{ address: '', directive: 'allow' }],
+      })
       setActiveTab(0)
     }
   }, [accessList, open, resetForm])
@@ -299,7 +311,6 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             defaultValue={{ address: '', directive: 'allow' }}
             addButtonText="Add Rule"
             emptyPlaceholder="No access rules defined. Add rules to control IP-based access."
-            minItems={1}
             ItemComponent={AccessRuleComponent}
           />
         </FormSection>

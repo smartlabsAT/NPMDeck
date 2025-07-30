@@ -79,6 +79,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     isDirty,
     isValid,
     getFieldProps,
+    resetForm,
   } = useDrawerForm<StreamFormData>({
     initialData: {
       incomingPort: stream?.incoming_port || '',
@@ -160,8 +161,18 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
   React.useEffect(() => {
     if (open) {
       loadCertificates()
+      // Reset form when opening with different stream or new stream
+      resetForm({
+        incomingPort: stream?.incoming_port || '',
+        forwardingHost: stream?.forwarding_host || '',
+        forwardingPort: stream?.forwarding_port || '',
+        tcpForwarding: stream?.tcp_forwarding ?? true,
+        udpForwarding: stream?.udp_forwarding ?? false,
+        certificateId: stream?.certificate_id || 0,
+        selectedCertificate: null,
+      })
     }
-  }, [open])
+  }, [open, stream, resetForm])
 
   // Set selected certificate after certificates are loaded
   React.useEffect(() => {
