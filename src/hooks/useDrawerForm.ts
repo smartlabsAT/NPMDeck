@@ -237,29 +237,24 @@ export const useDrawerForm = <T extends Record<string, any>>({
   const setFieldValue = useCallback((key: keyof T, value: any) => {
     setFormState((prev) => {
       const newData = { ...prev.data, [key]: value };
-      const fieldError = validateField(key, value, newData);
-      const newErrors = { ...prev.errors };
       
-      if (fieldError) {
-        newErrors[key] = fieldError;
-      } else {
-        delete newErrors[key];
-      }
+      // Run all validations including global validation
+      const allErrors = validateAllFields(newData);
       
       const isDirty = !isEqual(newData, initialDataRef.current);
-      const isValid = Object.keys(newErrors).length === 0;
+      const isValid = Object.keys(allErrors).length === 0;
       
       return {
         ...prev,
         data: newData,
-        errors: newErrors,
+        errors: allErrors,
         isDirty,
         isValid,
         touched: { ...prev.touched, [key]: true },
         globalError: null,
       };
     });
-  }, [validateField, isEqual]);
+  }, [validateAllFields, isEqual]);
 
   /**
    * Mark field as touched
@@ -414,6 +409,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
       disabled: formState.loading,
     };
   }, [fields, formState.data, formState.errors, formState.touched, formState.loading, setFieldValue, setFieldTouched, validateField]);
+
 
   /**
    * Cleanup on unmount

@@ -91,71 +91,26 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     },
     fields: {
       incomingPort: {
-        initialValue: '',
-        required: true,
-        requiredMessage: 'Incoming port is required',
-        validate: (value: string | number) => {
-          const port = typeof value === 'string' ? parseInt(value, 10) : value
-          if (isNaN(port) || port < 1 || port > 65535) {
-            return 'Incoming port must be between 1 and 65535'
-          }
-          return null
-        }
+        initialValue: stream?.incoming_port || '',
       },
       forwardingHost: {
-        initialValue: '',
-        required: true,
-        requiredMessage: 'Forwarding host is required',
+        initialValue: stream?.forwarding_host || '',
       },
       forwardingPort: {
-        initialValue: '',
-        required: true,
-        requiredMessage: 'Forwarding port is required',
-        validate: (value: string | number) => {
-          const port = typeof value === 'string' ? parseInt(value, 10) : value
-          if (isNaN(port) || port < 1 || port > 65535) {
-            return 'Forwarding port must be between 1 and 65535'
-          }
-          return null
-        }
+        initialValue: stream?.forwarding_port || '',
       },
       certificateId: {
-        initialValue: 0,
-        required: false
+        initialValue: stream?.certificate_id || 0,
       },
       selectedCertificate: {
         initialValue: null as Certificate | null,
-        required: false
       },
       tcpForwarding: {
-        initialValue: true,
-        required: false
+        initialValue: stream?.tcp_forwarding ?? true,
       },
       udpForwarding: {
-        initialValue: false,
-        required: false
+        initialValue: stream?.udp_forwarding ?? false,
       },
-    },
-    validate: (formData) => {
-      const validationErrors: Record<keyof StreamFormData, string> = {
-        incomingPort: '',
-        forwardingHost: '',
-        forwardingPort: '',
-        tcpForwarding: '',
-        udpForwarding: '',
-        certificateId: '',
-        selectedCertificate: ''
-      }
-      
-      let hasErrors = false
-      
-      if (!formData.tcpForwarding && !formData.udpForwarding) {
-        validationErrors.tcpForwarding = 'At least one forwarding type (TCP or UDP) must be enabled'
-        validationErrors.udpForwarding = 'At least one forwarding type (TCP or UDP) must be enabled'
-        hasErrors = true
-      }
-      
-      return hasErrors ? validationErrors : null
     },
     onSubmit: async (formData) => {
       const inPort = typeof formData.incomingPort === 'string' 
@@ -240,7 +195,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       id: 'details', 
       label: 'Details', 
       icon: <InfoIcon />,
-      hasError: Boolean(errors.incomingPort || errors.forwardingHost || errors.forwardingPort || errors.tcpForwarding || errors.udpForwarding)
+      hasError: false
     },
     { 
       id: 'ssl', 
@@ -265,7 +220,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       error={globalError}
       isDirty={isDirty}
       onSave={handleSubmit}
-      saveDisabled={!isValid}
+      saveDisabled={false}
       saveText={isEditMode ? 'Save Changes' : 'Create Stream'}
       confirmClose={isDirty}
       width={600}
@@ -315,7 +270,7 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
           type="number"
           required
           fullWidth
-          helperText={errors.incomingPort || "The port that will receive incoming connections"}
+          helperText="The port that will receive incoming connections"
           InputProps={{
             inputProps: { min: 1, max: 65535 }
           }}
@@ -329,7 +284,7 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             placeholder="192.168.1.1 or example.com"
             required
             sx={{ flex: 1 }}
-            helperText={errors.forwardingHost || "The destination host"}
+            helperText="The destination host"
           />
           <TextField
             {...getFieldProps('forwardingPort')}
@@ -340,7 +295,7 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             }}
             required
             sx={{ width: 150 }}
-            helperText={errors.forwardingPort || "The destination port"}
+            helperText="The destination port"
           />
         </Box>
       </FormSection>
@@ -369,11 +324,6 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             label="UDP Forwarding"
           />
         </Box>
-        {errors.tcpForwarding && (
-          <FormHelperText error sx={{ mt: 1 }}>
-            {errors.tcpForwarding}
-          </FormHelperText>
-        )}
       </FormSection>
     </Box>
   )

@@ -157,29 +157,6 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
         directive: client.directive,
       })) || [{ address: '', directive: 'allow' }],
     },
-    validate: (values) => {
-      const validationErrors: Record<string, string> = {}
-      
-      if (!values.name.trim()) {
-        validationErrors.name = 'Name is required'
-      }
-      
-      // Validate auth items if they exist
-      values.authItems.forEach((item, index) => {
-        if (item.username && !item.password && !accessList) {
-          validationErrors[`authItems.${index}.password`] = 'Password is required'
-        }
-      })
-      
-      // Validate access rules
-      values.accessRules.forEach((rule, index) => {
-        if (!rule.address.trim()) {
-          validationErrors[`accessRules.${index}.address`] = 'Address is required'
-        }
-      })
-      
-      return Object.keys(validationErrors).length > 0 ? validationErrors : null
-    },
     onSubmit: async (data) => {
       const payload: CreateAccessList | UpdateAccessList = {
         name: data.name,
@@ -252,8 +229,6 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             label="Name"
             value={data.name}
             onChange={(e) => setFieldValue('name', e.target.value)}
-            error={!!errors.name}
-            helperText={errors.name}
             fullWidth
             required
             placeholder="Enter a descriptive name"
@@ -305,11 +280,6 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             addButtonText="Add User"
             emptyPlaceholder="No users added yet. Add users to enable authentication."
             ItemComponent={AuthItemWithAccessList}
-            validateItem={(item) => {
-              if (!item.username) return 'Username is required'
-              if (!accessList && !item.password) return 'Password is required'
-              return null
-            }}
           />
         </FormSection>
       </TabPanel>
@@ -331,10 +301,6 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             emptyPlaceholder="No access rules defined. Add rules to control IP-based access."
             minItems={1}
             ItemComponent={AccessRuleComponent}
-            validateItem={(rule) => {
-              if (!rule.address.trim()) return 'IP address is required'
-              return null
-            }}
           />
         </FormSection>
       </TabPanel>

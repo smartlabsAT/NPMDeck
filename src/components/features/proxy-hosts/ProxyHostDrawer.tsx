@@ -118,36 +118,6 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       hstsSubdomains: host?.hsts_subdomains || false,
       advancedConfig: host?.advanced_config || '',
     },
-    fields: {
-      domainNames: {
-        initialValue: [],
-        required: true,
-        validate: (domains) => domains.length === 0 ? 'At least one domain name is required' : null
-      },
-      forwardHost: {
-        initialValue: '',
-        required: true,
-        validate: (host) => !host?.trim() ? 'Forward host is required' : null
-      },
-      forwardPort: {
-        initialValue: 80,
-        validate: (port) => {
-          if (port < 1 || port > 65535) {
-            return 'Forward port must be between 1 and 65535'
-          }
-          return null
-        }
-      },
-      certificateId: {
-        initialValue: 0,
-        validate: (certId, data) => {
-          if (data.sslEnabled && certId <= 0) {
-            return 'Please select an SSL certificate when SSL is enabled'
-          }
-          return null
-        }
-      },
-    },
     onSubmit: async (data) => {
       const payload: CreateProxyHost | UpdateProxyHost = {
         domain_names: data.domainNames,
@@ -181,8 +151,27 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
   React.useEffect(() => {
     if (open) {
       loadSelectorData()
+      // Reset form when opening with different host or new host
+      resetForm({
+        domainNames: host?.domain_names || [],
+        forwardScheme: host?.forward_scheme || 'http',
+        forwardHost: host?.forward_host || '',
+        forwardPort: host?.forward_port || 80,
+        cacheAssets: host?.caching_enabled || false,
+        blockExploits: host?.block_exploits || false,
+        websocketSupport: host?.allow_websocket_upgrade || false,
+        accessListId: host?.access_list_id || 0,
+        sslEnabled: (host?.certificate_id || 0) > 0,
+        certificateId: host?.certificate_id || 0,
+        selectedCertificate: null,
+        forceSSL: host?.ssl_forced || false,
+        http2Support: host?.http2_support || false,
+        hstsEnabled: host?.hsts_enabled || false,
+        hstsSubdomains: host?.hsts_subdomains || false,
+        advancedConfig: host?.advanced_config || '',
+      })
     }
-  }, [open])
+  }, [open, host, resetForm])
 
   // Set selected certificate after certificates load
   React.useEffect(() => {
@@ -231,21 +220,21 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       id: 'details', 
       label: 'Details', 
       icon: <InfoIcon />,
-      hasError: Boolean(errors.domainNames || errors.forwardHost || errors.forwardPort)
+      hasError: false
     },
     { 
       id: 'ssl', 
       label: 'SSL',
       icon: <LockIcon />,
       badge: data.sslEnabled ? 1 : 0,
-      hasError: Boolean(errors.certificateId)
+      hasError: false
     },
     { 
       id: 'advanced', 
       label: 'Advanced',
       icon: <CodeIcon />
     },
-  ], [errors.domainNames, errors.forwardHost, errors.forwardPort, errors.certificateId, data.sslEnabled])
+  ], [data.sslEnabled])
 
   return (
     <BaseDrawer
@@ -260,7 +249,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       error={globalError || undefined}
       isDirty={isDirty}
       onSave={handleSubmit}
-      saveDisabled={!isValid}
+      saveDisabled={false}
       saveText={isEditMode ? 'Save Changes' : 'Create'}
       confirmClose={isDirty}
       width={600}
@@ -314,12 +303,8 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadi
           value={data.domainNames}
           onChange={(domainNames) => setFieldValue('domainNames', domainNames)}
           helperText="Press Enter after each domain or paste multiple domains. Wildcards are supported."
-          error={Boolean(errors.domainNames)}
           required
         />
-        {errors.domainNames && (
-          <Alert severity="error" sx={{ mt: 1 }}>{errors.domainNames}</Alert>
-        )}
       </FormSection>
 
       <FormSection title="Forward Configuration" required>
@@ -341,8 +326,6 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadi
             value={data.forwardHost}
             onChange={(e) => setFieldValue('forwardHost', e.target.value)}
             placeholder="192.168.1.1 or example.com"
-            error={Boolean(errors.forwardHost)}
-            helperText={errors.forwardHost}
             required
             sx={{ flex: 1 }}
           />
@@ -354,8 +337,6 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadi
             InputProps={{
               inputProps: { min: 1, max: 65535 }
             }}
-            error={Boolean(errors.forwardPort)}
-            helperText={errors.forwardPort}
             required
             sx={{ width: 120 }}
           />
@@ -496,8 +477,6 @@ const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingD
                   {...params}
                   label="SSL Certificate"
                   placeholder="Search for a certificate..."
-                  error={Boolean(errors.certificateId)}
-                  helperText={errors.certificateId}
                   InputProps={{
                     ...params.InputProps,
                     startAdornment: (
