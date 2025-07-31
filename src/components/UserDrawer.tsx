@@ -157,31 +157,6 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
         certificates: user?.permissions?.certificates || 'manage',
       },
     },
-    fields: {
-      name: { initialValue: '', required: true },
-      nickname: { initialValue: '', required: true },
-      email: { initialValue: '', required: true },
-      new_password: {
-        initialValue: '',
-        validate: (value) => {
-          if (value && value.length < 6) return 'Password must be at least 6 characters'
-          return null
-        }
-      },
-      confirm_password: {
-        initialValue: '',
-        validate: (value, formData) => {
-          if (formData?.new_password && value !== formData.new_password) {
-            return 'Passwords do not match'
-          }
-          return null
-        }
-      },
-      permissions: { initialValue: {} },
-      is_disabled: { initialValue: false },
-      is_admin: { initialValue: false },
-      current_password: { initialValue: '' },
-    },
     onSubmit: async (data) => {
       if (user) {
         // Update existing user
@@ -247,8 +222,30 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
 
 
   useEffect(() => {
-    if (open) setActiveTab(0)
-  }, [open])
+    if (open) {
+      setActiveTab(0)
+      // Reset form when opening with different user or new user
+      form.resetForm({
+        name: user?.name || '',
+        nickname: user?.nickname || '',
+        email: user?.email || '',
+        is_disabled: user?.is_disabled || false,
+        is_admin: user?.roles?.includes('admin') || false,
+        current_password: '',
+        new_password: '',
+        confirm_password: '',
+        permissions: {
+          visibility: user?.permissions?.visibility || 'all',
+          proxy_hosts: user?.permissions?.proxy_hosts || 'manage',
+          redirection_hosts: user?.permissions?.redirection_hosts || 'manage',
+          dead_hosts: user?.permissions?.dead_hosts || 'manage',
+          streams: user?.permissions?.streams || 'manage',
+          access_lists: user?.permissions?.access_lists || 'manage',
+          certificates: user?.permissions?.certificates || 'manage',
+        },
+      })
+    }
+  }, [open, user, form.resetForm])
 
   const tabs: Tab[] = [
     {
