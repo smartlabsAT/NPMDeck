@@ -26,6 +26,7 @@ import BaseDrawer from '../../base/BaseDrawer'
 import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface StreamDrawerProps {
   open: boolean
@@ -48,6 +49,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
   const [activeTab, setActiveTab] = React.useState(0)
   const [certificates, setCertificates] = React.useState<Certificate[]>([])
   const [loadingCertificates, setLoadingCertificates] = React.useState(false)
+  const { showSuccess, showError } = useToast()
   
   const isEditMode = !!stream
 
@@ -113,6 +115,46 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
         initialValue: stream?.udp_forwarding ?? false,
       },
     },
+    validate: (data) => {
+      const errors: Partial<Record<keyof StreamFormData, string>> = {}
+      
+      // Incoming port validation
+      if (!data.incomingPort) {
+        errors.incomingPort = 'Incoming port is required'
+      } else {
+        const port = typeof data.incomingPort === 'string' 
+          ? parseInt(data.incomingPort, 10) 
+          : data.incomingPort
+        if (isNaN(port) || port < 1 || port > 65535) {
+          errors.incomingPort = 'Port must be between 1 and 65535'
+        }
+      }
+      
+      // Forwarding host validation
+      if (!data.forwardingHost) {
+        errors.forwardingHost = 'Forwarding host is required'
+      }
+      
+      // Forwarding port validation
+      if (!data.forwardingPort) {
+        errors.forwardingPort = 'Forwarding port is required'
+      } else {
+        const port = typeof data.forwardingPort === 'string' 
+          ? parseInt(data.forwardingPort, 10) 
+          : data.forwardingPort
+        if (isNaN(port) || port < 1 || port > 65535) {
+          errors.forwardingPort = 'Port must be between 1 and 65535'
+        }
+      }
+      
+      // At least one protocol must be selected
+      if (!data.tcpForwarding && !data.udpForwarding) {
+        errors.tcpForwarding = 'At least one protocol must be selected'
+        errors.udpForwarding = 'At least one protocol must be selected'
+      }
+      
+      return Object.keys(errors).length > 0 ? errors : null
+    },
     onSubmit: async (formData) => {
       const inPort = typeof formData.incomingPort === 'string' 
         ? parseInt(formData.incomingPort, 10) 
@@ -145,6 +187,14 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
 
       onSave()
       onClose()
+    },
+    onSuccess: (data) => {
+      const streamName = `${data.incomingPort}/${data.tcpForwarding ? 'TCP' : ''}${data.udpForwarding ? 'UDP' : ''}`
+      showSuccess('stream', isEditMode ? 'updated' : 'created', streamName)
+    },
+    onError: (error) => {
+      const streamName = data.incomingPort ? `${data.incomingPort}/${data.tcpForwarding ? 'TCP' : ''}${data.udpForwarding ? 'UDP' : ''}` : 'Stream'
+      showError('stream', isEditMode ? 'update' : 'create', error.message, streamName)
     },
     autoSave: {
       enabled: true,
@@ -206,7 +256,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       id: 'details', 
       label: 'Details', 
       icon: <InfoIcon />,
-      hasError: false
+      hasError: Boolean(errors.incomingPort || errors.forwardingHost || errors.forwardingPort || errors.tcpForwarding || errors.udpForwarding)
     },
     { 
       id: 'ssl', 
@@ -281,7 +331,8 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
           type="number"
           required
           fullWidth
-          helperText="The port that will receive incoming connections"
+          error={!!errors.incomingPort}
+          helperText={errors.incomingPort || "The port that will receive incoming connections"}
           InputProps={{
             inputProps: { min: 1, max: 65535 }
           }}
@@ -295,7 +346,8 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             placeholder="192.168.1.1 or example.com"
             required
             sx={{ flex: 1 }}
-            helperText="The destination host"
+            error={!!errors.forwardingHost}
+            helperText={errors.forwardingHost || "The destination host"}
           />
           <TextField
             {...getFieldProps('forwardingPort')}
@@ -306,14 +358,15 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             }}
             required
             sx={{ width: 150 }}
-            helperText="The destination port"
+            error={!!errors.forwardingPort}
+            helperText={errors.forwardingPort || "The destination port"}
           />
         </Box>
       </FormSection>
 
       <FormSection title="Forwarding Type" required>
-        <FormHelperText sx={{ mb: 2 }}>
-          Select at least one protocol to forward
+        <FormHelperText sx={{ mb: 2, color: errors.tcpForwarding ? 'error.main' : 'text.secondary' }}>
+          {errors.tcpForwarding || 'Select at least one protocol to forward'}
         </FormHelperText>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <FormControlLabel

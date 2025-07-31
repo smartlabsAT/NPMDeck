@@ -46,6 +46,7 @@ import ExportDialog from '../components/ExportDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
+import { useToast } from '../contexts/ToastContext'
 
 type OrderDirection = 'asc' | 'desc'
 type OrderBy = 'incoming_port' | 'forwarding_host' | 'status' | 'protocols' | 'created_on'
@@ -56,6 +57,7 @@ export default function Streams() {
   const location = useLocation()
   
   const { canManage: canManageStreams } = usePermissions()
+  const { showSuccess, showError } = useToast()
 
   // State
   const [streams, setStreams] = useState<Stream[]>([])
@@ -130,11 +132,15 @@ export default function Streams() {
 
     try {
       await streamsApi.delete(streamToDelete.id)
+      const streamName = `${streamToDelete.incoming_port}/${streamToDelete.tcp ? 'TCP' : ''}${streamToDelete.udp ? 'UDP' : ''}`
+      showSuccess('stream', 'deleted', streamName, streamToDelete.id)
       await loadStreams()
       setDeleteDialogOpen(false)
       setStreamToDelete(null)
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      const streamName = streamToDelete ? `${streamToDelete.incoming_port}/${streamToDelete.tcp ? 'TCP' : ''}${streamToDelete.udp ? 'UDP' : ''}` : undefined
+      showError('stream', 'delete', err instanceof Error ? err.message : 'Unknown error', streamName, streamToDelete?.id)
+      console.error('Failed to delete stream:', err)
     }
   }
 

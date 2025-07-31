@@ -42,6 +42,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
+import { useToast } from '../contexts/ToastContext'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'status' | 'domain_names' | 'ssl' | 'created_on'
@@ -60,6 +61,7 @@ const DeadHosts = () => {
   const [hostToDelete, setHostToDelete] = useState<DeadHost | null>(null)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [viewingHost, setViewingHost] = useState<DeadHost | null>(null)
+  const { showSuccess, showError } = useToast()
   const [order, setOrder] = useState<Order>('asc')
   const [orderBy, setOrderBy] = useState<OrderBy>('domain_names')
   
@@ -162,9 +164,13 @@ const DeadHosts = () => {
     
     try {
       await deadHostsApi.delete(hostToDelete.id)
+      showSuccess('dead-host', 'deleted', hostToDelete.domain_names[0] || `#${hostToDelete.id}`, hostToDelete.id)
       await loadHosts()
+      setDeleteDialogOpen(false)
+      setHostToDelete(null)
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      showError('dead-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
+      console.error('Failed to delete 404 host:', err)
     }
   }
 
