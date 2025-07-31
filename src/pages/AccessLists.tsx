@@ -45,6 +45,7 @@ import ExportDialog from '../components/ExportDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
+import { useToast } from '../contexts/ToastContext'
 
 type OrderDirection = 'asc' | 'desc'
 type OrderBy = 'name' | 'users' | 'rules' | 'created_on'
@@ -54,6 +55,7 @@ export default function AccessLists() {
   const { id } = useParams()
   const location = useLocation()
   const { canManage: canManageAccessLists } = usePermissions()
+  const { showSuccess, showError } = useToast()
 
   // State
   const [accessLists, setAccessLists] = useState<AccessList[]>([])
@@ -128,10 +130,12 @@ export default function AccessLists() {
 
     try {
       await accessListsApi.delete(accessListToDelete.id)
+      showSuccess('access-list', 'deleted', accessListToDelete.name, accessListToDelete.id)
       await loadAccessLists()
       setDeleteDialogOpen(false)
       setAccessListToDelete(null)
     } catch (err: unknown) {
+      showError('access-list', 'delete', err instanceof Error ? err.message : 'Unknown error', accessListToDelete.name, accessListToDelete.id)
       setError(getErrorMessage(err))
     }
   }

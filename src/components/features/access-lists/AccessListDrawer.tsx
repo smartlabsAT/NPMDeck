@@ -21,6 +21,7 @@ import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import ArrayFieldManager from '../../shared/ArrayFieldManager'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface AccessListDrawerProps {
   open: boolean
@@ -128,6 +129,8 @@ const AccessRuleComponent = React.memo(({ value, onChange, onDelete, index }: an
 
 export default function AccessListDrawer({ open, onClose, accessList, onSave }: AccessListDrawerProps) {
   const [activeTab, setActiveTab] = React.useState(0)
+  const { showSuccess, showError } = useToast()
+  const isEditMode = !!accessList
   
   // Create memoized component with accessList in closure
   const AuthItemWithAccessList = React.useCallback(
@@ -143,6 +146,8 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     errors,
     handleSubmit,
     resetForm,
+    isDirty,
+    isValid,
   } = useDrawerForm<AccessListFormData>({
     initialData: {
       name: accessList?.name || '',
@@ -156,6 +161,25 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
         address: client.address,
         directive: client.directive,
       })) || [{ address: '', directive: 'allow' }],
+    },
+    validate: (data) => {
+      const errors: Partial<Record<keyof AccessListFormData, string>> = {}
+      
+      // Name validation
+      if (!data.name || data.name.trim() === '') {
+        errors.name = 'Name is required'
+      }
+      
+      // At least one auth item or access rule is required
+      const hasValidAuthItems = data.authItems.some(item => item.username && item.password)
+      const hasValidAccessRules = data.accessRules.some(rule => rule.address)
+      
+      if (!hasValidAuthItems && !hasValidAccessRules) {
+        errors.authItems = 'At least one authorization item or access rule is required'
+        errors.accessRules = 'At least one authorization item or access rule is required'
+      }
+      
+      return Object.keys(errors).length > 0 ? errors : null
     },
     onSubmit: async (data) => {
       const payload: CreateAccessList | UpdateAccessList = {
@@ -172,16 +196,20 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
         await accessListsApi.create(payload)
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      showSuccess('access-list', isEditMode ? 'updated' : 'created', data.name)
       onSave()
       onClose()
+    },
+    onError: (error) => {
+      showError('access-list', isEditMode ? 'update' : 'create', error.message, data.name)
     },
   })
 
   const tabs = [
-    { id: 'details', label: 'Details', icon: <InfoIcon /> },
-    { id: 'authorization', label: 'Authorization', icon: <LockIcon /> },
-    { id: 'access', label: 'Access', icon: <SecurityIcon /> },
+    { id: 'details', label: 'Details', icon: <InfoIcon />, hasError: Boolean(errors.name) },
+    { id: 'authorization', label: 'Authorization', icon: <LockIcon />, hasError: Boolean(errors.authItems) },
+    { id: 'access', label: 'Access', icon: <SecurityIcon />, hasError: Boolean(errors.accessRules) },
   ]
 
   const handleAuthItemChange = (index: number, field: 'username' | 'password', value: string) => {
@@ -225,9 +253,13 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
-      onSave={() => handleSubmit()}
+      onSave={handleSubmit}
       loading={loading}
       error={globalError || undefined}
+      isDirty={isDirty}
+      saveDisabled={!isValid}
+      confirmClose={isDirty}
+      saveText={isEditMode ? 'Save Changes' : 'Create Access List'}
     >
       {/* Details Tab */}
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
@@ -244,6 +276,8 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             fullWidth
             required
             placeholder="Enter a descriptive name"
+            error={!!errors.name}
+            helperText={errors.name}
           />
         </FormSection>
 
@@ -287,11 +321,12 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             value={data.authItems}
             onChange={(value) => setFieldValue('authItems', value)}
             label="Authorization Users"
-            helperText="Add users that can authenticate against this access list"
+            helperText={errors.authItems || "Add users that can authenticate against this access list"}
             defaultValue={{ username: '', password: '' }}
             addButtonText="Add User"
             emptyPlaceholder="No users added yet. Add users to enable authentication."
             ItemComponent={AuthItemWithAccessList}
+            error={!!errors.authItems}
           />
         </FormSection>
       </TabPanel>
@@ -307,11 +342,12 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             value={data.accessRules}
             onChange={(value) => setFieldValue('accessRules', value)}
             label="Access Rules"
-            helperText="Define IP addresses and ranges that should be allowed or denied"
+            helperText={errors.accessRules || "Define IP addresses and ranges that should be allowed or denied"}
             defaultValue={{ address: '', directive: 'allow' }}
             addButtonText="Add Rule"
             emptyPlaceholder="No access rules defined. Add rules to control IP-based access."
             ItemComponent={AccessRuleComponent}
+            error={!!errors.accessRules}
           />
         </FormSection>
       </TabPanel>
