@@ -118,6 +118,31 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       hstsSubdomains: host?.hsts_subdomains || false,
       advancedConfig: host?.advanced_config || '',
     },
+    validate: (data) => {
+      const errors: Partial<Record<keyof ProxyHostFormData, string>> = {}
+      
+      // Domain names validation
+      if (!data.domainNames || data.domainNames.length === 0) {
+        errors.domainNames = 'At least one domain name is required'
+      }
+      
+      // Forward host validation
+      if (!data.forwardHost || data.forwardHost.trim() === '') {
+        errors.forwardHost = 'Forward host is required'
+      }
+      
+      // Forward port validation
+      if (!data.forwardPort || data.forwardPort < 1 || data.forwardPort > 65535) {
+        errors.forwardPort = 'Port must be between 1 and 65535'
+      }
+      
+      // SSL certificate validation
+      if (data.sslEnabled && !data.certificateId) {
+        errors.certificateId = 'SSL certificate is required when SSL is enabled'
+      }
+      
+      return Object.keys(errors).length > 0 ? errors : null
+    },
     onSubmit: async (data) => {
       const payload: CreateProxyHost | UpdateProxyHost = {
         domain_names: data.domainNames,
@@ -215,26 +240,35 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
     }
   }
 
-  const tabs = React.useMemo(() => [
-    { 
-      id: 'details', 
-      label: 'Details', 
-      icon: <InfoIcon />,
-      hasError: false
-    },
-    { 
-      id: 'ssl', 
-      label: 'SSL',
-      icon: <LockIcon />,
-      badge: data.sslEnabled ? 1 : 0,
-      hasError: false
-    },
-    { 
-      id: 'advanced', 
-      label: 'Advanced',
-      icon: <CodeIcon />
-    },
-  ], [data.sslEnabled])
+  const tabs = React.useMemo(() => {
+    // Check which fields belong to which tab
+    const detailsErrors = ['domainNames', 'forwardHost', 'forwardPort', 'accessListId'];
+    const sslErrors = ['certificateId'];
+    
+    const hasDetailsError = detailsErrors.some(field => errors[field as keyof ProxyHostFormData]);
+    const hasSslError = data.sslEnabled && sslErrors.some(field => errors[field as keyof ProxyHostFormData]);
+    
+    return [
+      { 
+        id: 'details', 
+        label: 'Details', 
+        icon: <InfoIcon />,
+        hasError: hasDetailsError
+      },
+      { 
+        id: 'ssl', 
+        label: 'SSL',
+        icon: <LockIcon />,
+        badge: data.sslEnabled ? 1 : 0,
+        hasError: hasSslError
+      },
+      { 
+        id: 'advanced', 
+        label: 'Advanced',
+        icon: <CodeIcon />
+      },
+    ];
+  }, [data.sslEnabled, errors])
 
   return (
     <BaseDrawer
@@ -302,7 +336,8 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadi
         <DomainInput
           value={data.domainNames}
           onChange={(domainNames) => setFieldValue('domainNames', domainNames)}
-          helperText="Press Enter after each domain or paste multiple domains. Wildcards are supported."
+          helperText={errors.domainNames || "Press Enter after each domain or paste multiple domains. Wildcards are supported."}
+          error={!!errors.domainNames}
           required
         />
       </FormSection>
@@ -326,6 +361,8 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadi
             value={data.forwardHost}
             onChange={(e) => setFieldValue('forwardHost', e.target.value)}
             placeholder="192.168.1.1 or example.com"
+            error={!!errors.forwardHost}
+            helperText={errors.forwardHost}
             required
             sx={{ flex: 1 }}
           />
@@ -337,6 +374,8 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadi
             InputProps={{
               inputProps: { min: 1, max: 65535 }
             }}
+            error={!!errors.forwardPort}
+            helperText={errors.forwardPort}
             required
             sx={{ width: 120 }}
           />
@@ -477,6 +516,8 @@ const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingD
                   {...params}
                   label="SSL Certificate"
                   placeholder="Search for a certificate..."
+                  error={!!errors.certificateId}
+                  helperText={errors.certificateId}
                   InputProps={{
                     ...params.InputProps,
                     startAdornment: (
