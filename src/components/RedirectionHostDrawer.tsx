@@ -32,6 +32,7 @@ import CertificateDrawer from './features/certificates/CertificateDrawer'
 import DomainInput from './DomainInput'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
+import { useToast } from '../contexts/ToastContext'
 
 interface RedirectionHostDrawerProps {
   open: boolean
@@ -67,6 +68,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
   const [activeTab, setActiveTab] = useState(0)
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [certificateDrawerOpen, setCertificateDrawerOpen] = useState(false)
+  const { showSuccess, showError } = useToast()
   
   // Helper functions for certificate status
   const getDaysUntilExpiry = (expiresOn: string | null) => {
@@ -178,6 +180,12 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
       
       onSave()
       onClose()
+    },
+    onSuccess: (data) => {
+      showSuccess('redirection-host', host ? 'updated' : 'created', data.domain_names[0] || `#${host?.id || 'new'}`)
+    },
+    onError: (error) => {
+      showError('redirection-host', host ? 'update' : 'create', error.message, data.domain_names[0])
     },
   })
 
