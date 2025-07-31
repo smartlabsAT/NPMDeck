@@ -35,6 +35,12 @@ import {
   Lock as AccessListIcon,
   Shield as CertificateIcon,
   Description as AuditIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  CheckCircle as EnabledIcon,
+  Cancel as DisabledIcon,
+  Refresh as RenewedIcon,
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { auditLogApi, AuditLogEntry } from '../api/auditLog'
@@ -144,6 +150,25 @@ const AuditLog = () => {
     }
   }
 
+  const getActionIcon = (action: string) => {
+    switch (action) {
+      case 'created':
+        return <AddIcon fontSize="small" />
+      case 'updated':
+        return <EditIcon fontSize="small" />
+      case 'deleted':
+        return <DeleteIcon fontSize="small" />
+      case 'enabled':
+        return <EnabledIcon fontSize="small" />
+      case 'disabled':
+        return <DisabledIcon fontSize="small" />
+      case 'renewed':
+        return <RenewedIcon fontSize="small" />
+      default:
+        return null
+    }
+  }
+
   const getObjectLink = (entry: AuditLogEntry): string => {
     switch (entry.object_type) {
       case 'proxy-host':
@@ -208,7 +233,15 @@ const AuditLog = () => {
         <Chip 
           label={`#${entry.object_id || '?'}`}
           size="small" 
-          sx={{ mx: 0.5, my: 0.25, cursor: 'pointer' }}
+          sx={{ 
+            mx: 0.5, 
+            my: 0.25, 
+            cursor: 'pointer',
+            '& .MuiChip-label': {
+              px: 1.5,
+              py: 0.5
+            }
+          }}
           onClick={() => handleChipClick(entry)}
         />
       )
@@ -219,7 +252,15 @@ const AuditLog = () => {
         key={index} 
         label={item} 
         size="small" 
-        sx={{ mx: 0.5, my: 0.25, cursor: 'pointer' }}
+        sx={{ 
+          mx: 0.5, 
+          my: 0.25, 
+          cursor: 'pointer',
+          '& .MuiChip-label': {
+            px: 1.5,
+            py: 0.5
+          }
+        }}
         onClick={() => handleChipClick(entry)}
       />
     ))
@@ -286,7 +327,9 @@ const AuditLog = () => {
               <TableRow>
                 <TableCell width="60">User</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Action</TableCell>
+                <TableCell width="150">Type</TableCell>
+                <TableCell width="120">Action</TableCell>
+                <TableCell>Entity</TableCell>
                 <TableCell>Date</TableCell>
                 <TableCell width="100" align="right">Actions</TableCell>
               </TableRow>
@@ -317,32 +360,36 @@ const AuditLog = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Box>
-                      <Box display="flex" alignItems="center" flexWrap="wrap">
-                        <Box 
-                          color={`${getObjectColor(entry.object_type)}.main`}
-                          display="flex"
-                          alignItems="center"
-                          mr={1}
-                        >
-                          {getObjectIcon(entry.object_type)}
-                        </Box>
-                        <Chip 
-                          label={entry.action} 
-                          size="small" 
-                          color={getActionColor(entry.action)}
-                          sx={{ mr: 1 }}
-                        />
-                        <Typography variant="body2" component="span">
-                          {entry.object_type.replace('-', ' ')}
-                        </Typography>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Box 
+                        color={`${getObjectColor(entry.object_type)}.main`}
+                        display="flex"
+                        alignItems="center"
+                      >
+                        {getObjectIcon(entry.object_type)}
                       </Box>
-                      <Box mt={0.5} display="flex" flexWrap="wrap">
-                        {getObjectDisplayName(entry)}
-                      </Box>
-                      <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
-                        {format(new Date(entry.created_on), 'MMM d, yyyy h:mm a')}
+                      <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                        {entry.object_type.replace('-', ' ')}
                       </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Box 
+                        color={`${getActionColor(entry.action)}.main`}
+                        display="flex"
+                        alignItems="center"
+                      >
+                        {getActionIcon(entry.action)}
+                      </Box>
+                      <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                        {entry.action}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" flexWrap="wrap" gap={0.5}>
+                      {getObjectDisplayName(entry)}
                     </Box>
                   </TableCell>
                   <TableCell>
