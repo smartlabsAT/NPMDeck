@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -9,6 +9,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   Typography,
   TextField,
   InputAdornment,
@@ -24,16 +25,19 @@ import {
   Button,
   Tooltip,
 } from '@mui/material'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import {
   Search as SearchIcon,
   Visibility as VisibilityIcon,
   Person as PersonIcon,
-  ElectricBolt as ProxyIcon,
-  Shuffle as RedirectionIcon,
-  Radio as StreamIcon,
-  PowerOff as DeadHostIcon,
-  Lock as AccessListIcon,
-  Shield as CertificateIcon,
+  SwapHoriz as ProxyIcon,
+  TrendingFlat as RedirectionIcon,
+  Stream as StreamIcon,
+  Block as DeadHostIcon,
+  Security as AccessListIcon,
+  VpnKey as CertificateIcon,
   Description as AuditIcon,
   Add as AddIcon,
   Edit as EditIcon,
@@ -49,35 +53,71 @@ import PageHeader from '../components/PageHeader'
 const AuditLog = () => {
   const navigate = useNavigate()
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [searchLoading, setSearchLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
   const [metaDialogOpen, setMetaDialogOpen] = useState(false)
+  
+  // Sorting state
+  const [orderBy, setOrderBy] = useState<keyof AuditLogEntry>('created_on')
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc')
+  
+  // Date filter state
+  const [dateFrom, setDateFrom] = useState<Date | null>(null)
+  const [dateTo, setDateTo] = useState<Date | null>(null)
 
-  const fetchAuditLogs = useCallback(async () => {
+  const fetchAuditLogs = useCallback(async (query?: string, isInitial = false) => {
     try {
-      setLoading(true)
+      if (isInitial) {
+        setInitialLoading(true)
+      } else {
+        setSearchLoading(true)
+      }
       setError(null)
       const data = await auditLogApi.getAll({ 
         expand: ['user'],
-        query: searchQuery || undefined
+        query: query || undefined
       })
       setLogs(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load audit logs')
     } finally {
-      setLoading(false)
+      if (isInitial) {
+        setInitialLoading(false)
+      } else {
+        setSearchLoading(false)
+      }
     }
+  }, [])
+
+  // Initial load
+  useEffect(() => {
+    fetchAuditLogs('', true)
+  }, [])
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timer)
   }, [searchQuery])
 
+  // Search when debounced query changes
   useEffect(() => {
-    fetchAuditLogs()
-  }, [fetchAuditLogs])
+    if (debouncedSearchQuery !== '' || searchQuery === '') {
+      fetchAuditLogs(debouncedSearchQuery)
+    }
+  }, [debouncedSearchQuery, fetchAuditLogs])
 
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault()
-    fetchAuditLogs()
+    // Form submission immediately triggers search without debounce
+    fetchAuditLogs(searchQuery)
   }
 
   const handleViewMeta = (entry: AuditLogEntry) => {
@@ -90,22 +130,77 @@ const AuditLog = () => {
     setSelectedEntry(null)
   }
 
+  const handleRequestSort = (property: keyof AuditLogEntry) => {
+    const isAsc = orderBy === property && order === 'asc'
+    setOrder(isAsc ? 'desc' : 'asc')
+    setOrderBy(property)
+  }
+
+  // Client-side sorting and filtering
+  const processedLogs = useMemo(() => {
+    let filteredLogs = [...logs]
+
+    // Apply date filter
+    if (dateFrom || dateTo) {
+      filteredLogs = filteredLogs.filter(log => {
+        const logDate = new Date(log.created_on)
+        if (dateFrom && logDate < dateFrom) return false
+        if (dateTo) {
+          // Set time to end of day for dateTo
+          const endOfDay = new Date(dateTo)
+          endOfDay.setHours(23, 59, 59, 999)
+          if (logDate > endOfDay) return false
+        }
+        return true
+      })
+    }
+
+    // Apply sorting
+    filteredLogs.sort((a, b) => {
+      let aValue: any = a[orderBy]
+      let bValue: any = b[orderBy]
+
+      // Special handling for nested properties
+      if (orderBy === 'user') {
+        aValue = a.user.name.toLowerCase()
+        bValue = b.user.name.toLowerCase()
+      } else if (orderBy === 'object_type') {
+        aValue = a.object_type.toLowerCase()
+        bValue = b.object_type.toLowerCase()
+      } else if (orderBy === 'action') {
+        aValue = a.action.toLowerCase()
+        bValue = b.action.toLowerCase()
+      }
+
+      if (aValue < bValue) {
+        return order === 'asc' ? -1 : 1
+      }
+      if (aValue > bValue) {
+        return order === 'asc' ? 1 : -1
+      }
+      return 0
+    })
+
+    return filteredLogs
+  }, [logs, dateFrom, dateTo, orderBy, order])
+
   const getObjectIcon = (objectType: string) => {
     switch (objectType) {
       case 'proxy-host':
-        return <ProxyIcon fontSize="small" />
+        return <ProxyIcon fontSize="small" sx={{ color: '#5eba00' }} />
       case 'redirection-host':
-        return <RedirectionIcon fontSize="small" />
+        return <RedirectionIcon fontSize="small" sx={{ color: '#f1c40f' }} />
       case 'stream':
-        return <StreamIcon fontSize="small" />
+      case 'stream-host':
+        return <StreamIcon fontSize="small" sx={{ color: '#467fcf' }} />
       case 'dead-host':
-        return <DeadHostIcon fontSize="small" />
+        return <DeadHostIcon fontSize="small" sx={{ color: '#cd201f' }} />
       case 'access-list':
-        return <AccessListIcon fontSize="small" />
+        return <AccessListIcon fontSize="small" sx={{ color: '#2bcbba' }} />
       case 'user':
         return <PersonIcon fontSize="small" />
       case 'certificate':
-        return <CertificateIcon fontSize="small" />
+        return <CertificateIcon fontSize="small" sx={{ color: '#467fcf' }} />
       default:
         return null
     }
@@ -114,18 +209,20 @@ const AuditLog = () => {
   const getObjectColor = (objectType: string) => {
     switch (objectType) {
       case 'proxy-host':
-        return 'success'
+        return '#5eba00'
       case 'redirection-host':
-        return 'warning'
+        return '#f1c40f'
       case 'stream':
-        return 'info'
+      case 'stream-host':
+        return '#467fcf'
       case 'dead-host':
-        return 'error'
+        return '#cd201f'
       case 'access-list':
+        return '#2bcbba'
       case 'user':
         return 'primary'
       case 'certificate':
-        return 'secondary'
+        return '#467fcf'
       default:
         return 'default'
     }
@@ -178,6 +275,7 @@ const AuditLog = () => {
       case 'dead-host':
         return `/hosts/404/${entry.object_id}/view`
       case 'stream':
+      case 'stream-host':
         return `/hosts/streams/${entry.object_id}/view`
       case 'access-list':
         return `/security/access-lists/${entry.object_id}/view`
@@ -209,6 +307,7 @@ const AuditLog = () => {
         }
         break
       case 'stream':
+      case 'stream-host':
         if (entry.meta.incoming_port) {
           items.push(`Port ${entry.meta.incoming_port}`)
         }
@@ -266,18 +365,10 @@ const AuditLog = () => {
     ))
   }
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
-      </Box>
-    )
-  }
-
-  if (error) {
-    return (
-      <Box p={3}>
-        <Alert severity="error">{error}</Alert>
       </Box>
     )
   }
@@ -292,32 +383,223 @@ const AuditLog = () => {
         />
       </Box>
 
+      {error && (
+        <Box mb={2}>
+          <Alert severity="error">{error}</Alert>
+        </Box>
+      )}
+
       <Paper sx={{ mb: 2, p: 2 }}>
         <form onSubmit={handleSearch}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search by user name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+            <TextField
+              sx={{ flex: 1, minWidth: 300 }}
+              size="medium"
+              variant="outlined"
+              placeholder="Search by user name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: searchLoading && (
+                  <InputAdornment position="end">
+                    <CircularProgress size={20} />
+                  </InputAdornment>
+                ),
+                sx: { height: 56 }
+              }}
+            />
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="From Date"
+                value={dateFrom}
+                onChange={(newValue) => setDateFrom(newValue)}
+                slotProps={{
+                  textField: {
+                    size: 'medium',
+                    sx: { width: 180 }
+                  },
+                  field: {
+                    clearable: true,
+                    onClear: () => setDateFrom(null)
+                  }
+                }}
+              />
+              <DatePicker
+                label="To Date"
+                value={dateTo}
+                onChange={(newValue) => setDateTo(newValue)}
+                slotProps={{
+                  textField: {
+                    size: 'medium',
+                    sx: { width: 180 }
+                  },
+                  field: {
+                    clearable: true,
+                    onClear: () => setDateTo(null)
+                  }
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
         </form>
       </Paper>
 
-      {logs.length === 0 ? (
+      {searchLoading && logs.length > 0 ? (
+        <Paper sx={{ position: 'relative', overflow: 'hidden' }}>
+          <Box 
+            sx={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              height: 3,
+              zIndex: 1
+            }}
+          >
+            <CircularProgress 
+              variant="indeterminate" 
+              sx={{ 
+                width: '100%',
+                height: 3,
+                '& .MuiCircularProgress-svg': {
+                  height: 3
+                }
+              }} 
+            />
+          </Box>
+          <TableContainer>
+            <Table sx={{ opacity: 0.6 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell width="60">User</TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={orderBy === 'user'}
+                      direction={orderBy === 'user' ? order : 'asc'}
+                      onClick={() => handleRequestSort('user')}
+                    >
+                      Name
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell width="150">
+                    <TableSortLabel
+                      active={orderBy === 'object_type'}
+                      direction={orderBy === 'object_type' ? order : 'asc'}
+                      onClick={() => handleRequestSort('object_type')}
+                    >
+                      Type
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell width="120">
+                    <TableSortLabel
+                      active={orderBy === 'action'}
+                      direction={orderBy === 'action' ? order : 'asc'}
+                      onClick={() => handleRequestSort('action')}
+                    >
+                      Action
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>Entity</TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={orderBy === 'created_on'}
+                      direction={orderBy === 'created_on' ? order : 'asc'}
+                      onClick={() => handleRequestSort('created_on')}
+                    >
+                      Date
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell width="100" align="right">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {processedLogs.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell>
+                      <Avatar
+                        src={entry.user.avatar || '/images/default-avatar.jpg'}
+                        sx={{ 
+                          width: 40, 
+                          height: 40,
+                          border: entry.user.is_disabled ? '2px solid red' : '2px solid green'
+                        }}
+                      >
+                        {entry.user.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                    </TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          textDecoration: entry.user.is_deleted ? 'line-through' : 'none'
+                        }}
+                      >
+                        {entry.user.name}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        {getObjectIcon(entry.object_type)}
+                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                          {entry.object_type.replace('-', ' ')}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Box 
+                          color={`${getActionColor(entry.action)}.main`}
+                          display="flex"
+                          alignItems="center"
+                        >
+                          {getActionIcon(entry.action)}
+                        </Box>
+                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                          {entry.action}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" flexWrap="wrap" gap={0.5}>
+                        {getObjectDisplayName(entry)}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {format(new Date(entry.created_on), 'MMM d, yyyy')}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {format(new Date(entry.created_on), 'h:mm a')}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="View metadata">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleViewMeta(entry)}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      ) : logs.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant="h6" gutterBottom>
             No audit logs found
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            System activity will appear here
+            {searchQuery ? 'Try a different search term' : 'System activity will appear here'}
           </Typography>
         </Paper>
       ) : (
@@ -326,16 +608,48 @@ const AuditLog = () => {
             <TableHead>
               <TableRow>
                 <TableCell width="60">User</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell width="150">Type</TableCell>
-                <TableCell width="120">Action</TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={orderBy === 'user'}
+                    direction={orderBy === 'user' ? order : 'asc'}
+                    onClick={() => handleRequestSort('user')}
+                  >
+                    Name
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell width="150">
+                  <TableSortLabel
+                    active={orderBy === 'object_type'}
+                    direction={orderBy === 'object_type' ? order : 'asc'}
+                    onClick={() => handleRequestSort('object_type')}
+                  >
+                    Type
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell width="120">
+                  <TableSortLabel
+                    active={orderBy === 'action'}
+                    direction={orderBy === 'action' ? order : 'asc'}
+                    onClick={() => handleRequestSort('action')}
+                  >
+                    Action
+                  </TableSortLabel>
+                </TableCell>
                 <TableCell>Entity</TableCell>
-                <TableCell>Date</TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={orderBy === 'created_on'}
+                    direction={orderBy === 'created_on' ? order : 'asc'}
+                    onClick={() => handleRequestSort('created_on')}
+                  >
+                    Date
+                  </TableSortLabel>
+                </TableCell>
                 <TableCell width="100" align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {logs.map((entry) => (
+              {processedLogs.map((entry) => (
                 <TableRow key={entry.id}>
                   <TableCell>
                     <Avatar
@@ -361,13 +675,7 @@ const AuditLog = () => {
                   </TableCell>
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Box 
-                        color={`${getObjectColor(entry.object_type)}.main`}
-                        display="flex"
-                        alignItems="center"
-                      >
-                        {getObjectIcon(entry.object_type)}
-                      </Box>
+                      {getObjectIcon(entry.object_type)}
                       <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
                         {entry.object_type.replace('-', ' ')}
                       </Typography>
