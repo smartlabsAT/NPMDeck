@@ -387,7 +387,10 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              backgroundColor: (theme) => 
+                theme.palette.mode === 'dark' 
+                  ? 'rgba(0, 0, 0, 0.8)' 
+                  : 'rgba(255, 255, 255, 0.8)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -432,7 +435,7 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
         {(error || success) && (
           <Box sx={{ px: 2, pt: 2, pb: 0 }}>
             {error && (
-              <Alert severity="error" sx={{ mb: 1 }}>
+              <Alert severity="error" sx={{ mb: 1, whiteSpace: 'pre-wrap' }}>
                 {error}
               </Alert>
             )}

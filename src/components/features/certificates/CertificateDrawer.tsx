@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   TextField,
   FormControlLabel,
@@ -63,6 +64,8 @@ export default function CertificateDrawer({
   initialProvider = 'letsencrypt' 
 }: CertificateDrawerProps) {
 
+  const navigate = useNavigate()
+
   // Determine initial tab - always start with Details tab
   const getInitialTab = () => {
     // Always start with Details tab (index 0) for consistency
@@ -73,6 +76,7 @@ export default function CertificateDrawer({
   const [activeTab, setActiveTab] = React.useState(getInitialTab)
   const [testingDomains, setTestingDomains] = React.useState(false)
   const [testResult, setTestResult] = React.useState<{ reachable: boolean; error?: string } | null>(null)
+  const [customError, setCustomError] = React.useState<string | null>(null)
 
   const isEditMode = !!certificate
 
@@ -85,6 +89,7 @@ export default function CertificateDrawer({
     handleSubmit,
     isDirty,
     isValid,
+    touched,
   } = useDrawerForm<CertificateFormData>({
     initialData: {
       provider: certificate?.provider || initialProvider,
@@ -140,21 +145,21 @@ export default function CertificateDrawer({
       },
       dnsProvider: {
         initialValue: '',
-        validate: (provider: string, data: any) => {
-          if (data.provider === 'letsencrypt' && data.dnsChallenge && !provider) {
-            return 'DNS provider is required when DNS challenge is enabled'
-          }
-          return null
-        }
+        // validate: (provider: string, data: any) => {
+        //   if (data.provider === 'letsencrypt' && data.dnsChallenge && !provider) {
+        //     return 'DNS provider is required when DNS challenge is enabled'
+        //   }
+        //   return null
+        // }
       },
       dnsProviderCredentials: {
         initialValue: '',
-        validate: (credentials: string, data: any) => {
-          if (data.provider === 'letsencrypt' && data.dnsChallenge && data.dnsProvider && !credentials) {
-            return 'DNS provider credentials are required'
-          }
-          return null
-        }
+        // validate: (credentials: string, data: any) => {
+        //   if (data.provider === 'letsencrypt' && data.dnsChallenge && data.dnsProvider && !credentials) {
+        //     return 'DNS provider credentials are required'
+        //   }
+        //   return null
+        // }
       },
       propagationSeconds: {
         initialValue: 120,
@@ -214,54 +219,97 @@ export default function CertificateDrawer({
         }
       }
 
-      if (isEditMode) {
-        // Update existing certificate
-        if (data.provider === 'letsencrypt') {
-          await certificatesApi.update(certificate.id, {
-            nice_name: payload.nice_name,
-            meta: payload.meta,
-          })
-        } else {
-          // For custom certificates, we can only update the nice name
-          await certificatesApi.update(certificate.id, {
-            nice_name: payload.nice_name,
-          })
-        }
-      } else {
-        // Create new certificate
-        if (data.provider === 'letsencrypt') {
-          await certificatesApi.create(payload)
-        } else {
-          // For custom certificates - validate and upload files
-          if (!data.certificateFile || !data.certificateKeyFile) {
-            throw new Error('Certificate and key files are required')
+      try {
+        if (isEditMode) {
+          // Update existing certificate
+          if (data.provider === 'letsencrypt') {
+            await certificatesApi.update(certificate.id, {
+              nice_name: payload.nice_name,
+              meta: payload.meta,
+            })
+          } else {
+            // For custom certificates, we can only update the nice name
+            await certificatesApi.update(certificate.id, {
+              nice_name: payload.nice_name,
+            })
           }
+        } else {
+          // Create new certificate
+          if (data.provider === 'letsencrypt') {
+            await certificatesApi.create(payload)
+          } else {
+            // For custom certificates - validate and upload files
+            // if (!data.certificateFile || !data.certificateKeyFile) {
+            //   throw new Error('Certificate and key files are required')
+            // }
 
-          // Validate certificate files
-          const validationResult = await certificatesApi.validateFiles({
-            certificate: data.certificateFile,
-            certificateKey: data.certificateKeyFile,
-            intermediateCertificate: data.intermediateCertificateFile || undefined
-          })
+            // Only validate and upload if files are provided
+            if (data.certificateFile && data.certificateKeyFile) {
+              // Validate certificate files
+              const validationResult = await certificatesApi.validateFiles({
+                certificate: data.certificateFile,
+                certificateKey: data.certificateKeyFile,
+                intermediateCertificate: data.intermediateCertificateFile || undefined
+              })
 
-          if (!validationResult || (!validationResult.certificate && !validationResult.certificate_key)) {
-            throw new Error('Invalid certificate files')
+              if (!validationResult || (!validationResult.certificate && !validationResult.certificate_key)) {
+                throw new Error('Invalid certificate files')
+              }
+
+              // Create certificate entry
+              const newCert = await certificatesApi.create(payload)
+
+              // Upload certificate files
+              await certificatesApi.upload(newCert.id, {
+                certificate: data.certificateFile,
+                certificateKey: data.certificateKeyFile,
+                intermediateCertificate: data.intermediateCertificateFile || undefined
+              })
+            } else {
+              // Create certificate entry without files - let API handle validation
+              await certificatesApi.create(payload)
+            }
           }
-
-          // Create certificate entry
-          const newCert = await certificatesApi.create(payload)
-
-          // Upload certificate files
-          await certificatesApi.upload(newCert.id, {
-            certificate: data.certificateFile,
-            certificateKey: data.certificateKeyFile,
-            intermediateCertificate: data.intermediateCertificateFile || undefined
-          })
         }
+
+        onSave()
+        onClose()
+      } catch (error: any) {
+        console.error('Certificate creation error:', error)
+        
+        // Check if it's a 500 error with debug info
+        if (error.response?.status === 500 && error.response?.data?.debug?.stack) {
+          // Switch to first tab
+          setActiveTab(0)
+          
+          // Extract all lines from stack and format them
+          const stack = error.response.data.debug.stack
+          let errorMessage = 'Certificate creation failed:\n\n'
+          
+          // Join all stack lines with line breaks, filtering out empty lines and stack traces
+          const stackLines = stack
+            .filter((line: string) => {
+              // Filter out empty lines
+              if (line.trim() === '') return false
+              // Filter out stack trace lines (lines that start with spaces followed by "at")
+              if (line.match(/^\s+at\s/)) return false
+              return true
+            })
+            .map((line: string) => line.replace('CommandError: ', ''))
+            .join('\n')
+          
+          errorMessage += stackLines
+          
+          // Set custom error to display
+          setCustomError(errorMessage)
+          
+          // Don't close the drawer on error - return early to prevent further processing
+          return
+        }
+        
+        // Re-throw other errors to be handled by the form
+        throw error
       }
-
-      onSave()
-      onClose()
     },
     autoSave: {
       enabled: true,
@@ -292,6 +340,13 @@ export default function CertificateDrawer({
     }
   }, [initialProvider, certificate, open, setFieldValue])
 
+  // Clear custom error when drawer closes
+  React.useEffect(() => {
+    if (!open) {
+      setCustomError(null)
+    }
+  }, [open])
+
   const handleTestDomains = async () => {
     if (!data || data.domainNames.length === 0) {
       return
@@ -313,6 +368,17 @@ export default function CertificateDrawer({
     }
   }
 
+  // Handle provider change and update route
+  const handleProviderChange = React.useCallback((newProvider: 'letsencrypt' | 'other') => {
+    setFieldValue('provider', newProvider)
+    
+    // Update the route when provider changes
+    if (!isEditMode) {
+      const newPath = `/security/certificates/new/${newProvider === 'letsencrypt' ? 'letsencrypt' : 'other'}`
+      navigate(newPath, { replace: true })
+    }
+  }, [setFieldValue, navigate, isEditMode])
+
   // Determine the current provider - use data if available, otherwise use initial values
   const currentProvider = data?.provider || certificate?.provider || initialProvider
 
@@ -323,19 +389,23 @@ export default function CertificateDrawer({
       id: 'details', 
       label: 'Details', 
       icon: <InfoIcon />,
-      hasError: Boolean(errors.domainNames || errors.niceName)
+      hasError: Boolean((errors.domainNames && touched.domainNames) || (errors.niceName && touched.niceName))
     },
     ...(currentProvider === 'letsencrypt' ? [{
       id: 'letsencrypt', 
       label: "Let's Encrypt",
       icon: <VpnKeyIcon />,
-      hasError: Boolean(errors.letsencryptEmail || errors.letsencryptAgree || errors.dnsProvider || errors.dnsProviderCredentials)
+      hasError: Boolean((errors.letsencryptEmail && touched.letsencryptEmail) || 
+                       (errors.letsencryptAgree && touched.letsencryptAgree) || 
+                       (errors.dnsProvider && touched.dnsProvider) || 
+                       (errors.dnsProviderCredentials && touched.dnsProviderCredentials))
     }] : []),
     ...(currentProvider === 'other' ? [{
       id: 'custom', 
       label: 'Custom Certificate',
       icon: <UploadIcon />,
-      hasError: Boolean(errors.certificateFile || errors.certificateKeyFile)
+      hasError: Boolean((errors.certificateFile && touched.certificateFile) || 
+                       (errors.certificateKeyFile && touched.certificateKeyFile))
     }] : []),
   ]
 
@@ -349,7 +419,7 @@ export default function CertificateDrawer({
       activeTab={activeTab}
       onTabChange={setActiveTab}
       loading={loading}
-      error={globalError || undefined}
+      error={customError || globalError || undefined}
       isDirty={isDirty}
       onSave={handleSubmit}
       saveDisabled={!isValid}
@@ -362,6 +432,8 @@ export default function CertificateDrawer({
           data={data}
           setFieldValue={setFieldValue}
           errors={errors}
+          touched={touched}
+          onProviderChange={handleProviderChange}
         />
       </TabPanel>
 
@@ -398,9 +470,11 @@ interface DetailsTabProps {
   data: CertificateFormData
   setFieldValue: (field: keyof CertificateFormData, value: any) => void
   errors: Record<string, string>
+  touched: Record<string, boolean>
+  onProviderChange: (provider: 'letsencrypt' | 'other') => void
 }
 
-function DetailsTab({ data, setFieldValue, errors }: DetailsTabProps) {
+function DetailsTab({ data, setFieldValue, errors, touched, onProviderChange }: DetailsTabProps) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="Certificate Details" required>
@@ -418,10 +492,10 @@ function DetailsTab({ data, setFieldValue, errors }: DetailsTabProps) {
           value={data.domainNames}
           onChange={(domainNames) => setFieldValue('domainNames', domainNames)}
           helperText="Enter the domain names this certificate should cover. Wildcards (*.example.com) are supported."
-          error={Boolean(errors.domainNames)}
+          error={Boolean(errors.domainNames && touched.domainNames)}
           required
         />
-        {errors.domainNames && (
+        {errors.domainNames && touched.domainNames && (
           <Alert severity="error" sx={{ mt: 1 }}>{errors.domainNames}</Alert>
         )}
       </FormSection>
@@ -431,7 +505,7 @@ function DetailsTab({ data, setFieldValue, errors }: DetailsTabProps) {
           <FormLabel component="legend">Provider Type</FormLabel>
           <RadioGroup
             value={data.provider}
-            onChange={(e) => setFieldValue('provider', e.target.value as 'letsencrypt' | 'other')}
+            onChange={(e) => onProviderChange(e.target.value as 'letsencrypt' | 'other')}
           >
             <FormControlLabel 
               value="letsencrypt" 
@@ -502,8 +576,8 @@ function LetsEncryptTab({
           type="email"
           value={data.letsencryptEmail}
           onChange={(e) => setFieldValue('letsencryptEmail', e.target.value)}
-          error={Boolean(errors.letsencryptEmail)}
-          helperText={errors.letsencryptEmail || "Used for important Let's Encrypt notifications"}
+          // error={Boolean(errors.letsencryptEmail)}
+          helperText={"Used for important Let's Encrypt notifications"} // errors.letsencryptEmail || 
           required
           fullWidth
         />
@@ -518,9 +592,9 @@ function LetsEncryptTab({
           label="I agree to the Let's Encrypt Subscriber Agreement"
           sx={{ mt: 1 }}
         />
-        {errors.letsencryptAgree && (
+        {/* {errors.letsencryptAgree && (
           <Alert severity="error" sx={{ mt: 1 }}>{errors.letsencryptAgree}</Alert>
-        )}
+        )} */}
       </FormSection>
 
       <FormSection title="Challenge Method">
@@ -577,7 +651,7 @@ function LetsEncryptTab({
             onChange={onDnsProviderChange}
             credentials={data.dnsProviderCredentials}
             onCredentialsChange={onDnsCredentialsChange}
-            error={errors.dnsProvider || errors.dnsProviderCredentials}
+            // error={errors.dnsProvider || errors.dnsProviderCredentials}
           />
 
           <TextField
@@ -622,7 +696,7 @@ function CustomCertificateTab({ data, setFieldValue, errors }: CustomCertificate
           accept=".pem,.crt,.cer"
           required
           validateType="certificate"
-          error={errors.certificateFile}
+          // error={errors.certificateFile}
           helperText="The SSL certificate file (should start with -----BEGIN CERTIFICATE-----)"
         />
 
@@ -634,7 +708,7 @@ function CustomCertificateTab({ data, setFieldValue, errors }: CustomCertificate
           accept=".key,.pem"
           required
           validateType="key"
-          error={errors.certificateKeyFile}
+          // error={errors.certificateKeyFile}
           helperText="The private key file (should start with -----BEGIN PRIVATE KEY----- or -----BEGIN RSA PRIVATE KEY-----)"
         />
 
