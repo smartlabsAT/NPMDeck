@@ -22,9 +22,15 @@ import {
   Delete as DeleteIcon,
   VisibilityOff as HiddenIcon,
   Visibility as ViewIcon,
-  Edit as ManageIcon,
+  Edit as EditIcon,
   Public as PublicIcon,
   PersonOutline as UserOnlyIcon,
+  Language as ProxyIcon,
+  TrendingFlat as RedirectIcon,
+  Block as BlockIcon,
+  Stream as StreamIcon,
+  Security as SecurityIcon,
+  VpnKey as CertificateIcon,
 } from '@mui/icons-material'
 import { usersApi, User, CreateUserPayload, UpdateUserPayload } from '../api/users'
 import { useAuthStore } from '../stores/authStore'
@@ -32,14 +38,13 @@ import BaseDrawer, { Tab } from './base/BaseDrawer'
 import { useDrawerForm } from '../hooks/useDrawerForm'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
+import { useToast } from '../contexts/ToastContext'
 
 interface UserDrawerProps {
   open: boolean
   onClose: () => void
   user: User | null
   onSave: () => void
-  onLoginAs?: (user: User) => void
-  onDelete?: (user: User) => void
 }
 
 type PermissionLevel = 'hidden' | 'view' | 'manage'
@@ -126,15 +131,16 @@ const PERMISSION_PRESETS: PermissionPreset[] = [
   },
 ]
 
-const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, onLoginAs, onDelete }) => {
+const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [selectedPreset, setSelectedPreset] = useState<string>('custom')
   const { user: currentUser } = useAuthStore()
+  const { showSuccess, showError } = useToast()
   
   const isCurrentUserAdmin = currentUser?.roles?.includes('admin')
   const isChangingOwnPassword = currentUser?.id === user?.id
-  const cannotDeleteSelf = currentUser?.id === user?.id
   const isAdminUser = user?.roles?.includes('admin')
+  const isEditMode = !!user
 
   // Form management
   const form = useDrawerForm<UserFormData>({
@@ -156,6 +162,42 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
         access_lists: user?.permissions?.access_lists || 'manage',
         certificates: user?.permissions?.certificates || 'manage',
       },
+    },
+    validate: (data) => {
+      const errors: Partial<Record<keyof UserFormData, string>> = {}
+      
+      // Name validation
+      if (!data.name || data.name.trim() === '') {
+        errors.name = 'Name is required'
+      }
+      
+      // Email validation
+      if (!data.email || data.email.trim() === '') {
+        errors.email = 'Email is required'
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        errors.email = 'Invalid email format'
+      }
+      
+      // Password validation (only for new users or if changing password)
+      if (!user && activeTab === 0) { // New user on details tab
+        if (!data.new_password) {
+          errors.new_password = 'Password is required for new users'
+        }
+      }
+      
+      if (data.new_password || data.confirm_password) {
+        if (data.new_password !== data.confirm_password) {
+          errors.confirm_password = 'Passwords do not match'
+        }
+        if (data.new_password && data.new_password.length < 8) {
+          errors.new_password = 'Password must be at least 8 characters'
+        }
+        if (isChangingOwnPassword && !data.current_password) {
+          errors.current_password = 'Current password is required'
+        }
+      }
+      
+      return Object.keys(errors).length > 0 ? errors : null
     },
     onSubmit: async (data) => {
       if (user) {
@@ -179,27 +221,45 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
       }
       onSave()
     },
+    onSuccess: (data) => {
+      showSuccess('user', isEditMode ? 'updated' : 'created', data.name || data.email)
+    },
+    onError: (error) => {
+      showError('user', isEditMode ? 'update' : 'create', error.message, data.name || data.email)
+    },
   })
 
   const handlePasswordSubmit = async () => {
     if (!user || !form.data.new_password) return
     
-    await usersApi.updatePassword(user.id, {
-      type: 'password',
-      current: isChangingOwnPassword ? form.data.current_password : undefined,
-      secret: form.data.new_password,
-    })
-    
-    // Reset password fields
-    form.setFieldValue('current_password', '')
-    form.setFieldValue('new_password', '')
-    form.setFieldValue('confirm_password', '')
+    try {
+      await usersApi.updatePassword(user.id, {
+        type: 'password',
+        current: isChangingOwnPassword ? form.data.current_password : undefined,
+        secret: form.data.new_password,
+      })
+      
+      showSuccess('user', 'password-changed', user.name || user.email)
+      
+      // Reset password fields
+      form.setFieldValue('current_password', '')
+      form.setFieldValue('new_password', '')
+      form.setFieldValue('confirm_password', '')
+    } catch (error) {
+      showError('user', 'password-change', error instanceof Error ? error.message : 'Unknown error', user.name || user.email)
+    }
   }
 
   const handlePermissionsSubmit = async () => {
     if (!user) return
-    await usersApi.updatePermissions(user.id, form.data.permissions)
-    onSave()
+    
+    try {
+      await usersApi.updatePermissions(user.id, form.data.permissions)
+      showSuccess('user', 'permissions-updated', user.name || user.email)
+      onSave()
+    } catch (error) {
+      showError('user', 'permissions-update', error instanceof Error ? error.message : 'Unknown error', user.name || user.email)
+    }
   }
 
   const handlePresetChange = (presetName: string) => {
@@ -216,7 +276,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
     switch (level) {
       case 'hidden': return <HiddenIcon fontSize="small" />
       case 'view': return <ViewIcon fontSize="small" />
-      case 'manage': return <ManageIcon fontSize="small" />
+      case 'manage': return <EditIcon fontSize="small" />
     }
   }
 
@@ -279,6 +339,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
       error={form.globalError || undefined}
       onSave={form.handleSubmit}
       isDirty={form.isDirty}
+      confirmClose={form.isDirty}
       saveText={user ? 'Save Changes' : 'Create User'}
     >
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
@@ -289,7 +350,8 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
             label="Full Name"
             margin="normal"
             required
-            helperText="The user's full name"
+            error={!!form.errors.name}
+            helperText={form.errors.name || "The user's full name"}
           />
 
           <TextField
@@ -297,8 +359,8 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
             fullWidth
             label="Nickname"
             margin="normal"
-            required
-            helperText="A short display name"
+            error={!!form.errors.nickname}
+            helperText={form.errors.nickname || "A short display name"}
           />
 
           <TextField
@@ -309,7 +371,8 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
             margin="normal"
             required
             disabled={user?.email === 'admin@example.com'}
-            helperText="Used for login and notifications"
+            error={!!form.errors.email}
+            helperText={form.errors.email || "Used for login and notifications"}
           />
 
           <FormControlLabel
@@ -346,33 +409,32 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
           )}
         </FormSection>
 
-        {user && (
-          <FormSection title="Actions">
-            <Box display="flex" gap={2}>
-              {!cannotDeleteSelf && !user.is_disabled && onLoginAs && (
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={() => { onLoginAs(user); onClose() }}
-                  startIcon={<LockIcon />}
-                >
-                  Sign in as User
-                </Button>
-              )}
-              {!cannotDeleteSelf && onDelete && (
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="error"
-                  onClick={() => { onDelete(user); onClose() }}
-                  startIcon={<DeleteIcon />}
-                >
-                  Delete User
-                </Button>
-              )}
-            </Box>
+        {!user && (
+          <FormSection title="Password">
+            <TextField
+              {...form.getFieldProps('new_password')}
+              fullWidth
+              type="password"
+              label="Password"
+              margin="normal"
+              required
+              error={!!form.errors.new_password}
+              helperText={form.errors.new_password || "Minimum 8 characters"}
+            />
+
+            <TextField
+              {...form.getFieldProps('confirm_password')}
+              fullWidth
+              type="password"
+              label="Confirm Password"
+              margin="normal"
+              required
+              error={!!form.errors.confirm_password}
+              helperText={form.errors.confirm_password}
+            />
           </FormSection>
         )}
+
       </TabPanel>
 
       {user && (
@@ -390,6 +452,8 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
                 label="Current Password"
                 margin="normal"
                 required
+                error={!!form.errors.current_password}
+                helperText={form.errors.current_password}
               />
             )}
 
@@ -400,7 +464,8 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
               label="New Password"
               margin="normal"
               required
-              helperText="Minimum 6 characters"
+              error={!!form.errors.new_password}
+              helperText={form.errors.new_password || "Minimum 8 characters"}
             />
 
             <TextField
@@ -410,6 +475,8 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
               label="Confirm New Password"
               margin="normal"
               required
+              error={!!form.errors.confirm_password}
+              helperText={form.errors.confirm_password}
             />
 
             <Button
@@ -444,7 +511,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
                 >
                   <MenuItem value="custom">
                     <Box display="flex" alignItems="center" gap={1}>
-                      <ManageIcon fontSize="small" />
+                      <EditIcon fontSize="small" />
                       <span>Custom Configuration</span>
                     </Box>
                   </MenuItem>
@@ -489,17 +556,17 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave, on
           <FormSection title="Feature Permissions">
             <Grid container spacing={2}>
               {[
-                { key: 'proxy_hosts', label: 'Proxy Hosts', icon: '🔀' },
-                { key: 'redirection_hosts', label: 'Redirection Hosts', icon: '↪️' },
-                { key: 'dead_hosts', label: '404 Hosts', icon: '🚫' },
-                { key: 'streams', label: 'Streams', icon: '🌊' },
-                { key: 'access_lists', label: 'Access Lists', icon: '🔐' },
-                { key: 'certificates', label: 'SSL Certificates', icon: '🔒' },
+                { key: 'proxy_hosts', label: 'Proxy Hosts', icon: <ProxyIcon sx={{ color: '#5eba00' }} /> },
+                { key: 'redirection_hosts', label: 'Redirection Hosts', icon: <RedirectIcon sx={{ color: '#f1c40f' }} /> },
+                { key: 'dead_hosts', label: '404 Hosts', icon: <BlockIcon sx={{ color: '#cd201f' }} /> },
+                { key: 'streams', label: 'Streams', icon: <StreamIcon sx={{ color: '#467fcf' }} /> },
+                { key: 'access_lists', label: 'Access Lists', icon: <SecurityIcon sx={{ color: '#2bcbba' }} /> },
+                { key: 'certificates', label: 'SSL Certificates', icon: <CertificateIcon sx={{ color: '#467fcf' }} /> },
               ].map(({ key, label, icon }) => (
                 <Grid item xs={12} key={key}>
                   <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap={1.5}>
-                      <Typography variant="h6">{icon}</Typography>
+                      {icon}
                       <Typography variant="body2" fontWeight="medium">
                         {label}
                       </Typography>

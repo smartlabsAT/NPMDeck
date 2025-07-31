@@ -17,23 +17,14 @@ import {
   CircularProgress,
   Alert,
   Avatar,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
 } from '@mui/material'
 import {
   Add as AddIcon,
   Search as SearchIcon,
-  MoreVert as MoreVertIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  
-  
   Login as LoginIcon,
   Person as PersonIcon,
-  
-  
   Group as GroupIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
@@ -42,6 +33,7 @@ import { useAuthStore } from '../stores/authStore'
 import UserDrawer from '../components/UserDrawer'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PageHeader from '../components/PageHeader'
+import { useToast } from '../contexts/ToastContext'
 
 const Users = () => {
   const { id } = useParams<{ id?: string }>()
@@ -54,10 +46,9 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [menuUser, setMenuUser] = useState<User | null>(null)
   
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
+  const { showSuccess, showError } = useToast()
   const isAdmin = currentUser?.roles?.includes('admin')
 
   useEffect(() => {
@@ -122,8 +113,12 @@ const Users = () => {
     
     try {
       await usersApi.delete(userToDelete.id)
+      showSuccess('user', 'deleted', userToDelete.name || userToDelete.email, userToDelete.id)
       await loadUsers()
+      setDeleteDialogOpen(false)
+      setUserToDelete(null)
     } catch (err: unknown) {
+      showError('user', 'delete', err instanceof Error ? err.message : 'Unknown error', userToDelete.name || userToDelete.email, userToDelete.id)
       setError(getErrorMessage(err))
     }
   }
@@ -144,17 +139,6 @@ const Users = () => {
     } catch (err: unknown) {
       setError(getErrorMessage(err))
     }
-    handleCloseMenu()
-  }
-
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, user: User) => {
-    setAnchorEl(event.currentTarget)
-    setMenuUser(user)
-  }
-
-  const handleCloseMenu = () => {
-    setAnchorEl(null)
-    setMenuUser(null)
   }
 
   const getRoleDisplay = (roles: string[]) => {
@@ -242,7 +226,7 @@ const Users = () => {
               <TableCell>
                 <Typography variant="subtitle2" fontWeight="bold">Roles</Typography>
               </TableCell>
-              <TableCell align="center" width={100}>
+              <TableCell align="right">
                 <Typography variant="subtitle2" fontWeight="bold">Actions</Typography>
               </TableCell>
             </TableRow>
@@ -299,16 +283,35 @@ const Users = () => {
                       {getRoleDisplay(user.roles)}
                     </Typography>
                   </TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleMenuClick(e, user)
-                      }}
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
+                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                    <Box display="flex" gap={0.5} justifyContent="flex-end">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRowClick(user)}
+                        title="Edit User"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      {currentUser?.id !== user.id && !user.is_disabled && (
+                        <IconButton
+                          size="small"
+                          onClick={() => handleLoginAs(user)}
+                          title="Sign in as User"
+                        >
+                          <LoginIcon />
+                        </IconButton>
+                      )}
+                      {currentUser?.id !== user.id && (
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDelete(user)}
+                          color="error"
+                          title="Delete User"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -317,42 +320,6 @@ const Users = () => {
         </Table>
       </TableContainer>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleCloseMenu}
-      >
-        <MenuItem onClick={() => {
-          if (menuUser) {
-            handleRowClick(menuUser)
-            handleCloseMenu()
-          }
-        }}>
-          <ListItemIcon>
-            <EditIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>View/Edit User</ListItemText>
-        </MenuItem>
-        {currentUser?.id !== menuUser?.id && !menuUser?.is_disabled && (
-          <MenuItem onClick={() => menuUser && handleLoginAs(menuUser)}>
-            <ListItemIcon>
-              <LoginIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Sign in as User</ListItemText>
-          </MenuItem>
-        )}
-        {currentUser?.id !== menuUser?.id && (
-          <>
-            <MenuItem divider />
-            <MenuItem onClick={() => menuUser && handleDelete(menuUser)}>
-              <ListItemIcon>
-                <DeleteIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText>Delete User</ListItemText>
-            </MenuItem>
-          </>
-        )}
-      </Menu>
 
       <UserDrawer
         open={drawerOpen}
@@ -364,8 +331,6 @@ const Users = () => {
         onSave={() => {
           loadUsers()
         }}
-        onLoginAs={handleLoginAs}
-        onDelete={handleDelete}
       />
 
       <ConfirmDialog
