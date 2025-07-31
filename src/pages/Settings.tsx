@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
   Typography,
@@ -398,7 +399,24 @@ const RESOURCE_ICONS: Record<string, React.ReactNode> = {
 
 const Settings = () => {
   const theme = useTheme()
-  const [activeTab, setActiveTab] = useState(0)
+  const { tab } = useParams<{ tab?: string }>()
+  const navigate = useNavigate()
+  
+  // Map tab names to indices
+  const tabNameToIndex: Record<string, number> = {
+    'default-site': 0,
+    'ui-preferences': 1
+  }
+  
+  // Get initial tab from URL or default to 0
+  const getInitialTab = () => {
+    if (tab && tabNameToIndex[tab] !== undefined) {
+      return tabNameToIndex[tab]
+    }
+    return 0
+  }
+  
+  const [activeTab, setActiveTab] = useState(getInitialTab())
   const [_settings, setSettings] = useState<Setting[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -424,6 +442,14 @@ const Settings = () => {
   useEffect(() => {
     fetchSettings()
   }, [])
+  
+  // Update active tab when URL changes
+  useEffect(() => {
+    const newTab = getInitialTab()
+    if (newTab !== activeTab) {
+      setActiveTab(newTab)
+    }
+  }, [tab])
 
   const fetchSettings = async () => {
     try {
@@ -534,7 +560,12 @@ const Settings = () => {
       <Paper>
         <Tabs
           value={activeTab}
-          onChange={(_, value) => setActiveTab(value)}
+          onChange={(_, value) => {
+            setActiveTab(value)
+            // Update URL based on tab
+            const tabNames = ['default-site', 'ui-preferences']
+            navigate(`/admin/settings/${tabNames[value]}`, { replace: true })
+          }}
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
           {tabs.map((tab, index) => (

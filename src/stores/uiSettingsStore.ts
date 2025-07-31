@@ -19,15 +19,18 @@ export const useUISettingsStore = create<UISettingsStore>()(
 
       // Actions
       setContainerPreference: (entity, operation, type) => {
-        set(state => ({
-          containerPreferences: {
-            ...state.containerPreferences,
-            [entity]: {
-              ...state.containerPreferences[entity],
-              [operation]: type
+        set(state => {
+          const newState = {
+            containerPreferences: {
+              ...state.containerPreferences,
+              [entity]: {
+                ...state.containerPreferences[entity],
+                [operation]: type
+              }
             }
           }
-        }))
+          return newState
+        })
       },
 
       setDrawerPosition: (position) => {
@@ -43,10 +46,14 @@ export const useUISettingsStore = create<UISettingsStore>()(
       },
 
       getContainerType: (entity, operation) => {
-        const prefs = get().containerPreferences[entity]
+        const state = get()
+        const prefs = state.containerPreferences[entity]
+
         if (!prefs || !prefs[operation]) {
-          return DEFAULT_UI_SETTINGS.containerPreferences[entity]?.[operation] || 'dialog'
+          const defaultValue = DEFAULT_UI_SETTINGS.containerPreferences[entity]?.[operation] || 'drawer'
+          return defaultValue
         }
+        
         return prefs[operation]
       }
     }),
