@@ -35,6 +35,7 @@ import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import DomainInput from '../../DomainInput'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface ProxyHostDrawerProps {
   open: boolean
@@ -67,6 +68,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
   const [accessLists, setAccessLists] = React.useState<AccessList[]>([])
   const [certificates, setCertificates] = React.useState<Certificate[]>([])
   const [loadingData, setLoadingData] = React.useState(false)
+  const { showSuccess, showError } = useToast()
 
   const isEditMode = !!host
 
@@ -169,6 +171,12 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
 
       onSave()
       onClose()
+    },
+    onSuccess: (data) => {
+      showSuccess('proxy-host', isEditMode ? 'updated' : 'created', data.domainNames[0] || `#${host?.id || 'new'}`)
+    },
+    onError: (error) => {
+      showError('proxy-host', isEditMode ? 'update' : 'create', error.message, data.domainNames[0])
     }
   })
 
@@ -235,6 +243,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       setCertificates(sortedCertificates)
     } catch (err) {
       console.error('Failed to load selector data:', err)
+      showError('proxy-host', 'load data', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoadingData(false)
     }

@@ -1,5 +1,34 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Snackbar, Alert, AlertColor, Slide, SlideProps } from '@mui/material';
+import { 
+  Snackbar, 
+  Alert, 
+  AlertColor, 
+  Slide, 
+  SlideProps, 
+  Box, 
+  Typography,
+  useTheme,
+  alpha
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Check as CheckIcon,
+  Error as ErrorIcon,
+  Info as InfoIcon,
+  Warning as WarningIcon,
+  // Entity icons
+  Language as ProxyIcon,
+  TrendingFlat as RedirectionIcon,
+  Block as DeadHostIcon,
+  Stream as StreamIcon,
+  Security as CertificateIcon,
+  Lock as AccessListIcon,
+  Person as UserIcon,
+  Settings as SettingsIcon,
+  History as AuditLogIcon,
+} from '@mui/icons-material';
 
 /**
  * Entity types for toast messages
@@ -16,6 +45,11 @@ export type EntityType =
   | 'audit-log';
 
 /**
+ * Action types
+ */
+export type ActionType = 'create' | 'update' | 'delete' | 'created' | 'updated' | 'deleted';
+
+/**
  * Toast message configuration
  */
 export interface ToastMessage {
@@ -25,6 +59,7 @@ export interface ToastMessage {
   entityType?: EntityType;
   entityName?: string;
   entityId?: number | string;
+  action?: ActionType;
   duration?: number;
 }
 
@@ -49,6 +84,41 @@ function SlideTransition(props: SlideProps) {
 }
 
 /**
+ * Get entity icon
+ */
+function getEntityIcon(entityType: EntityType) {
+  const icons: Record<EntityType, React.ElementType> = {
+    'proxy-host': ProxyIcon,
+    'redirection-host': RedirectionIcon,
+    'dead-host': DeadHostIcon,
+    'stream': StreamIcon,
+    'certificate': CertificateIcon,
+    'access-list': AccessListIcon,
+    'user': UserIcon,
+    'settings': SettingsIcon,
+    'audit-log': AuditLogIcon,
+  };
+  return icons[entityType] || InfoIcon;
+}
+
+/**
+ * Get action icon
+ */
+function getActionIcon(action?: ActionType) {
+  if (!action) return null;
+  
+  const icons: Record<ActionType, React.ElementType> = {
+    'create': AddIcon,
+    'created': AddIcon,
+    'update': EditIcon,
+    'updated': EditIcon,
+    'delete': DeleteIcon,
+    'deleted': DeleteIcon,
+  };
+  return icons[action] || null;
+}
+
+/**
  * Format entity type for display
  */
 function formatEntityType(entityType: EntityType): string {
@@ -64,6 +134,208 @@ function formatEntityType(entityType: EntityType): string {
     'audit-log': 'Audit Log',
   };
   return formats[entityType] || entityType;
+}
+
+/**
+ * Custom Toast Component
+ */
+export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMessage; onClose: () => void; demo?: boolean }) {
+  const theme = useTheme();
+  const EntityIcon = toast.entityType ? getEntityIcon(toast.entityType) : InfoIcon;
+  const ActionIcon = getActionIcon(toast.action);
+  
+  // Get severity icon
+  const getSeverityIcon = () => {
+    switch (toast.severity) {
+      case 'success':
+        return CheckIcon;
+      case 'error':
+        return ErrorIcon;
+      case 'warning':
+        return WarningIcon;
+      case 'info':
+      default:
+        return InfoIcon;
+    }
+  };
+  
+  const SeverityIcon = getSeverityIcon();
+
+  // For demo mode, just return the Alert without Snackbar wrapper
+  if (demo) {
+    return (
+      <Alert
+        onClose={onClose}
+        severity={toast.severity}
+        variant="filled"
+        sx={{ 
+          width: '100%', 
+          maxWidth: 500,
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? alpha(theme.palette[toast.severity].main, 0.9)
+            : theme.palette[toast.severity].main,
+          '& .MuiAlert-icon': {
+            display: 'none' // We'll use custom icon layout
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          {/* Icon section */}
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            flexShrink: 0,
+            mt: 0.25
+          }}>
+            {ActionIcon ? (
+              <Box sx={{ position: 'relative' }}>
+                <EntityIcon sx={{ fontSize: 24, opacity: 0.9 }} />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: -4,
+                    right: -4,
+                    backgroundColor: theme.palette.mode === 'dark'
+                      ? theme.palette.background.paper
+                      : 'white',
+                    borderRadius: '50%',
+                    width: 16,
+                    height: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <ActionIcon sx={{ fontSize: 12, color: theme.palette[toast.severity].main }} />
+                </Box>
+              </Box>
+            ) : (
+              <SeverityIcon sx={{ fontSize: 24 }} />
+            )}
+          </Box>
+          
+          {/* Content section */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {toast.entityType && (
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  opacity: 0.9,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  fontSize: '0.65rem',
+                  mb: 0.25
+                }}
+              >
+                {formatEntityType(toast.entityType)}
+              </Typography>
+            )}
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                wordBreak: 'break-word'
+              }}
+            >
+              {toast.message}
+            </Typography>
+          </Box>
+        </Box>
+      </Alert>
+    );
+  }
+
+  return (
+    <Snackbar
+      open={true}
+      autoHideDuration={toast.duration}
+      onClose={onClose}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      TransitionComponent={SlideTransition}
+      sx={{ mt: 8 }} // Add margin to avoid overlapping with header
+    >
+      <Alert
+        onClose={onClose}
+        severity={toast.severity}
+        variant="filled"
+        sx={{ 
+          width: '100%', 
+          maxWidth: 500,
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? alpha(theme.palette[toast.severity].main, 0.9)
+            : theme.palette[toast.severity].main,
+          '& .MuiAlert-icon': {
+            display: 'none' // We'll use custom icon layout
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          {/* Icon section */}
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            flexShrink: 0,
+            mt: 0.25
+          }}>
+            {ActionIcon ? (
+              <Box sx={{ position: 'relative' }}>
+                <EntityIcon sx={{ fontSize: 24, opacity: 0.9 }} />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: -4,
+                    right: -4,
+                    backgroundColor: theme.palette.mode === 'dark'
+                      ? theme.palette.background.paper
+                      : 'white',
+                    borderRadius: '50%',
+                    width: 16,
+                    height: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <ActionIcon sx={{ fontSize: 12, color: theme.palette[toast.severity].main }} />
+                </Box>
+              </Box>
+            ) : (
+              <SeverityIcon sx={{ fontSize: 24 }} />
+            )}
+          </Box>
+          
+          {/* Content section */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {toast.entityType && (
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  opacity: 0.9,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  fontSize: '0.65rem',
+                  mb: 0.25
+                }}
+              >
+                {formatEntityType(toast.entityType)}
+              </Typography>
+            )}
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                wordBreak: 'break-word'
+              }}
+            >
+              {toast.message}
+            </Typography>
+          </Box>
+        </Box>
+      </Alert>
+    </Snackbar>
+  );
 }
 
 /**
@@ -120,6 +392,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       entityType,
       entityName,
       entityId,
+      action: action as ActionType,
     });
   }, [showToast]);
 
@@ -148,6 +421,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       entityType,
       entityName,
       entityId,
+      action: action as ActionType,
       duration: 8000, // Longer duration for errors
     });
   }, [showToast]);
@@ -198,23 +472,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     >
       {children}
       {currentToast && (
-        <Snackbar
-          open={true}
-          autoHideDuration={currentToast.duration}
-          onClose={handleClose}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-          TransitionComponent={SlideTransition}
-          sx={{ mt: 8 }} // Add margin to avoid overlapping with header
-        >
-          <Alert
-            onClose={handleClose}
-            severity={currentToast.severity}
-            variant="filled"
-            sx={{ width: '100%', maxWidth: 500 }}
-          >
-            {currentToast.message}
-          </Alert>
-        </Snackbar>
+        <CustomToast 
+          toast={currentToast} 
+          onClose={handleClose} 
+        />
       )}
     </ToastContext.Provider>
   );
