@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { routes } from './routes'
 import { AuthInitializer } from './components/AuthInitializer'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { ToastProvider } from './contexts/ToastContext'
 import ErrorBoundary from './components/ErrorBoundary'
 
 const queryClient = new QueryClient({
@@ -25,9 +26,11 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <AuthInitializer>
-            <RouterProvider router={router} />
-          </AuthInitializer>
+          <ToastProvider>
+            <AuthInitializer>
+              <RouterProvider router={router} />
+            </AuthInitializer>
+          </ToastProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
