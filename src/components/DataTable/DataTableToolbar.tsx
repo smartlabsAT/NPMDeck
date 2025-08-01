@@ -8,17 +8,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Chip,
-  Stack,
-  IconButton,
-  Tooltip,
   SelectChangeEvent,
-  Typography,
+  IconButton,
 } from '@mui/material'
 import {
   Search as SearchIcon,
   Clear as ClearIcon,
-  FilterList as FilterIcon,
 } from '@mui/icons-material'
 import { Filter } from './types'
 
@@ -65,44 +60,63 @@ export default function DataTableToolbar({
   return (
     <Paper sx={{ mb: 2 }}>
       <Box p={2}>
-        <Stack spacing={2}>
-          {/* Search and Filters Row */}
-          <Box display="flex" gap={2} alignItems="center">
-            {searchable && (
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => onSearch(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchQuery && (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => onSearch('')}
-                        edge="end"
-                      >
-                        <ClearIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            )}
+        <Box display="flex" gap={2} alignItems="stretch">
+          {searchable && (
+            <TextField
+              variant="outlined"
+              size="small"
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => onSearch(e.target.value)}
+              sx={{ flex: 1 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => onSearch('')}
+                      edge="end"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          )}
 
-            {filters.map((filter) => (
-              <FormControl key={filter.id} sx={{ minWidth: 150 }} size="small">
+          {filters.map((filter) => {
+            const currentValue = activeFilters[filter.id] || filter.defaultValue || 'all'
+            const hasValue = currentValue !== 'all'
+            
+            return (
+              <FormControl key={filter.id} sx={{ width: 200, flexShrink: 0 }} size="small">
                 <InputLabel>{filter.label}</InputLabel>
                 <Select
-                  value={activeFilters[filter.id] || filter.defaultValue || 'all'}
+                  value={currentValue}
                   onChange={handleFilterChange(filter.id)}
                   label={filter.label}
+                  endAdornment={
+                    hasValue && (
+                      <InputAdornment position="end" sx={{ mr: 3 }}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onFilter(filter.id, '')
+                          }}
+                          sx={{ mr: -1 }}
+                        >
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }
                 >
                   <MenuItem value="all">All</MenuItem>
                   {filter.options?.map((option) => (
@@ -115,50 +129,9 @@ export default function DataTableToolbar({
                   ))}
                 </Select>
               </FormControl>
-            ))}
-
-            {hasActiveFilters && (
-              <Tooltip title="Clear all filters">
-                <IconButton onClick={onClearFilters} color="primary">
-                  <ClearIcon />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-
-          {/* Active Filters Display */}
-          {activeFilterCount > 0 && (
-            <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-              <FilterIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
-                Active filters:
-              </Typography>
-              {filters.map((filter) => {
-                const value = activeFilters[filter.id]
-                if (!value || value === 'all') return null
-
-                const option = filter.options?.find(opt => opt.value === value)
-                const label = option ? option.label : value
-
-                return (
-                  <Chip
-                    key={filter.id}
-                    label={`${filter.label}: ${label}`}
-                    size="small"
-                    onDelete={() => onFilter(filter.id, '')}
-                  />
-                )
-              })}
-              <Chip
-                label="Clear all"
-                size="small"
-                onClick={onClearFilters}
-                color="primary"
-                variant="outlined"
-              />
-            </Box>
-          )}
-        </Stack>
+            )
+          })}
+        </Box>
       </Box>
     </Paper>
   )

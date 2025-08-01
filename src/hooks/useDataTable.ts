@@ -42,7 +42,14 @@ export function useDataTable<T>(
         // Special handling for certain filters
         if (filterId === 'roles') {
           const roles = (item as any).roles as string[]
-          return roles.includes(filterValue)
+          if (filterValue === 'admin') {
+            return roles.includes('admin')
+          }
+          if (filterValue === 'user') {
+            // Non-admin users
+            return !roles.includes('admin')
+          }
+          return true
         }
         
         if (filterId === 'is_disabled') {
