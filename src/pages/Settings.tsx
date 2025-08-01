@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -60,6 +60,7 @@ import FormSection from '../components/shared/FormSection'
 import { useUISettingsStore } from '../stores/uiSettingsStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { EntityType, ContainerType, ENTITY_DISPLAY_NAMES } from '../types/uiSettings'
+import { useToast } from '../contexts/ToastContext'
 
 // HTML Templates
 const HTML_TEMPLATES = {
@@ -401,6 +402,7 @@ const Settings = () => {
   const theme = useTheme()
   const { tab } = useParams<{ tab?: string }>()
   const navigate = useNavigate()
+  const { showSuccess, showError } = useToast()
   
   // Map tab names to indices
   const tabNameToIndex: Record<string, number> = {
@@ -421,7 +423,6 @@ const Settings = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [defaultSiteType, setDefaultSiteType] = useState<string>('congratulations')
   const [defaultSiteHtml, setDefaultSiteHtml] = useState<string>(DEFAULT_HTML.html)
   
@@ -439,6 +440,48 @@ const Settings = () => {
   
   const { getVisibleResources, canManage } = usePermissions()
 
+  // Memoize the default site cards to prevent re-renders
+  const defaultSiteCards = useMemo(() => (
+    DEFAULT_SITE_OPTIONS.map((option) => (
+      <Card
+        key={option.value}
+        variant={defaultSiteType === option.value ? 'elevation' : 'outlined'}
+        elevation={defaultSiteType === option.value ? 3 : 1}
+        sx={{
+          cursor: 'pointer',
+          transition: 'border-color 0.2s, box-shadow 0.2s',
+          border: defaultSiteType === option.value ? `2px solid ${option.color}` : '2px solid transparent',
+          '&:hover': {
+            boxShadow: theme.shadows[4],
+          }
+        }}
+        onClick={() => setDefaultSiteType(option.value)}
+      >
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Box
+              sx={{
+                p: 1,
+                borderRadius: 2,
+                backgroundColor: `${option.color}20`,
+                color: option.color,
+                mr: 2
+              }}
+            >
+              {React.cloneElement(option.icon as React.ReactElement, { fontSize: 'large' })}
+            </Box>
+            <Typography variant="h6" component="div">
+              {option.label}
+            </Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            {option.description}
+          </Typography>
+        </CardContent>
+      </Card>
+    ))
+  ), [defaultSiteType, theme.shadows])
+
   useEffect(() => {
     fetchSettings()
   }, [])
@@ -451,9 +494,11 @@ const Settings = () => {
     }
   }, [tab])
 
-  const fetchSettings = async () => {
+  const fetchSettings = async (showLoader = true) => {
     try {
-      setLoading(true)
+      if (showLoader) {
+        setLoading(true)
+      }
       setError(null)
       const data = await settingsApi.getAll()
       setSettings(data)
@@ -474,15 +519,15 @@ const Settings = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load settings')
     } finally {
-      setLoading(false)
+      if (showLoader) {
+        setLoading(false)
+      }
     }
   }
 
   const handleSaveDefaultSite = async () => {
     try {
       setSaving(true)
-      setError(null)
-      setSuccessMessage(null)
       
       // For 'html' type, save with the HTML content
       if (defaultSiteType === 'html') {
@@ -497,17 +542,9 @@ const Settings = () => {
         await settingsApi.update('default-site', { value: defaultSiteType })
       }
       
-      setSuccessMessage('Default site settings saved successfully')
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
-      
-      // Refresh settings
-      await fetchSettings()
+      showSuccess('settings', 'updated', 'Default site')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save settings')
+      showError('settings', 'update', err instanceof Error ? err.message : 'Failed to save settings')
     } finally {
       setSaving(false)
     }
@@ -545,17 +582,6 @@ const Settings = () => {
         />
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {successMessage}
-        </Alert>
-      )}
 
       <Paper>
         <Tabs
@@ -582,52 +608,14 @@ const Settings = () => {
         </Tabs>
 
         {/* Default Site Tab */}
-        <TabPanel value={activeTab} index={0} padding={3}>
+        <TabPanel value={activeTab} index={0} padding={3} animation="none">
           <FormSection title="Choose Default Page" sx={{ mb: 4 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Select what visitors see when they access your server directly or via an unmatched domain
             </Typography>
             
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 2 }}>
-              {DEFAULT_SITE_OPTIONS.map((option) => (
-                <Card
-                  key={option.value}
-                  variant={defaultSiteType === option.value ? 'elevation' : 'outlined'}
-                  sx={{
-                    cursor: 'pointer',
-                    transition: 'all 0.3s',
-                    border: defaultSiteType === option.value ? `2px solid ${option.color}` : undefined,
-                    transform: defaultSiteType === option.value ? 'scale(1.02)' : 'scale(1)',
-                    '&:hover': {
-                      transform: 'scale(1.02)',
-                      boxShadow: theme.shadows[4],
-                    }
-                  }}
-                  onClick={() => setDefaultSiteType(option.value)}
-                >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Box
-                        sx={{
-                          p: 1,
-                          borderRadius: 2,
-                          backgroundColor: `${option.color}20`,
-                          color: option.color,
-                          mr: 2
-                        }}
-                      >
-                        {React.cloneElement(option.icon as React.ReactElement, { fontSize: 'large' })}
-                      </Box>
-                      <Typography variant="h6" component="div">
-                        {option.label}
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      {option.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
+              {defaultSiteCards}
             </Box>
           </FormSection>
 
@@ -662,8 +650,7 @@ const Settings = () => {
                 <Tooltip title="Copy HTML">
                   <IconButton size="small" onClick={() => {
                     navigator.clipboard.writeText(defaultSiteHtml)
-                    setSuccessMessage('HTML copied to clipboard')
-                    setTimeout(() => setSuccessMessage(null), 2000)
+                    showSuccess('settings', 'copied', 'HTML')
                   }}>
                     <CopyIcon />
                   </IconButton>
@@ -759,7 +746,7 @@ const Settings = () => {
         </TabPanel>
 
         {/* UI Preferences Tab */}
-        <TabPanel value={activeTab} index={1} padding={3}>
+        <TabPanel value={activeTab} index={1} padding={3} animation="none">
           <FormSection title="Container Display Preferences" sx={{ mb: 4 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Choose whether to use drawers or dialogs for different operations
@@ -784,10 +771,14 @@ const Settings = () => {
                       <TableRow key={resource}>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {React.cloneElement(RESOURCE_ICONS[entityKey] || <CodeIcon />, {
-                              fontSize: 'small',
-                              sx: { color: 'text.secondary' }
-                            })}
+                            {RESOURCE_ICONS[entityKey] ? (
+                              React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement, {
+                                fontSize: 'small',
+                                sx: { color: 'text.secondary' }
+                              })
+                            ) : (
+                              <CodeIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                            )}
                             {ENTITY_DISPLAY_NAMES[entityKey]}
                           </Box>
                         </TableCell>
