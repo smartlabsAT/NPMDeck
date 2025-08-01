@@ -422,6 +422,7 @@ export default function CertificateDrawer({
       open={open}
       onClose={onClose}
       title={isEditMode ? 'Edit Certificate' : 'Add SSL Certificate'}
+      titleIcon={<VpnKeyIcon sx={{ color: '#467fcf' }} />}
       subtitle={data?.niceName || data?.domainNames?.[0] || 'SSL Certificate'}
       tabs={tabs}
       activeTab={activeTab}

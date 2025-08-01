@@ -6,13 +6,16 @@ import {
   DialogActions,
   Button,
   CircularProgress,
+  Box,
 } from '@mui/material'
+import React from 'react'
 
 interface ConfirmDialogProps {
   open: boolean
   onClose: () => void
   onConfirm: () => void
   title: string
+  titleIcon?: React.ReactNode
   message: string
   confirmText?: string
   cancelText?: string
@@ -25,6 +28,7 @@ export default function ConfirmDialog({
   onClose,
   onConfirm,
   title,
+  titleIcon,
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
@@ -41,7 +45,16 @@ export default function ConfirmDialog({
 
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle>
+        {titleIcon ? (
+          <Box display="flex" alignItems="center" gap={1}>
+            {titleIcon}
+            {title}
+          </Box>
+        ) : (
+          title
+        )}
+      </DialogTitle>
       <DialogContent>
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>

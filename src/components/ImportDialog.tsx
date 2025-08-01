@@ -32,6 +32,7 @@ import {
   CloudUpload as CloudUploadIcon,
   Delete as DeleteIcon,
   Description as FileIcon,
+  FileUpload as FileUploadIcon,
 } from '@mui/icons-material'
 import { useDropzone } from 'react-dropzone'
 import { ImportExportService, ExportData, ImportOptions } from '../services/importExport'
@@ -195,7 +196,12 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Import Configuration</DialogTitle>
+      <DialogTitle>
+        <Box display="flex" alignItems="center" gap={1}>
+          <FileUploadIcon sx={{ color: '#467fcf' }} />
+          Import Configuration
+        </Box>
+      </DialogTitle>
       
       <DialogContent>
         <Stepper activeStep={activeStep} sx={{ mb: 3 }}>

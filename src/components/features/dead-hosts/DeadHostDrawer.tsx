@@ -184,7 +184,6 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
 
   const title = (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <BlockIcon sx={{ color: '#cd201f' }} />
       {isEditMode ? 'Edit 404 Host' : 'Create 404 Host'}
     </Box>
   )
@@ -194,6 +193,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       open={open}
       onClose={onClose}
       title={title}
+      titleIcon={<BlockIcon sx={{ color: '#cd201f' }} />}
       subtitle={data.domainNames.length > 0 ? data.domainNames.join(', ') : '404 Host Configuration'}
       tabs={tabs}
       activeTab={activeTab}

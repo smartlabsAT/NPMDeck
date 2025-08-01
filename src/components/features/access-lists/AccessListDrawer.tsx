@@ -249,6 +249,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       open={open}
       onClose={onClose}
       title={accessList ? 'Edit Access List' : 'Create Access List'}
+      titleIcon={<SecurityIcon sx={{ color: '#2bcbba' }} />}
       subtitle="Manage access control and authorization"
       tabs={tabs}
       activeTab={activeTab}

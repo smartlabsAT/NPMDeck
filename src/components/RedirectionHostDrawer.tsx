@@ -275,6 +275,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         open={open}
         onClose={onClose}
         title={host ? 'Edit Redirection Host' : 'Add Redirection Host'}
+        titleIcon={<RedirectIcon sx={{ color: '#f1c40f' }} />}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}

@@ -57,6 +57,8 @@ export interface BaseDrawerProps {
   onClose: () => void;
   /** Title displayed in the drawer header */
   title: React.ReactNode;
+  /** Optional icon for the title */
+  titleIcon?: React.ReactNode;
   /** Optional subtitle */
   subtitle?: React.ReactNode;
   /** Loading state */
@@ -139,6 +141,7 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
   open,
   onClose,
   title,
+  titleIcon,
   subtitle,
   loading = false,
   loadingMessage = 'Loading...',
@@ -343,17 +346,20 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
           }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              variant="h6"
-              component="h2"
-              sx={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {title}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {titleIcon}
+              <Typography
+                variant="h6"
+                component="h2"
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {title}
+              </Typography>
+            </Box>
             {subtitle && (
               <Typography
                 variant="body2"

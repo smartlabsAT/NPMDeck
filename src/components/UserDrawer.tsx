@@ -31,6 +31,7 @@ import {
   Stream as StreamIcon,
   Security as SecurityIcon,
   VpnKey as CertificateIcon,
+  Group as GroupIcon,
 } from '@mui/icons-material'
 import { usersApi, User, CreateUserPayload, UpdateUserPayload } from '../api/users'
 import { useAuthStore } from '../stores/authStore'
@@ -356,6 +357,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave }) 
       open={open}
       onClose={onClose}
       title={user ? `Edit User: ${user.name}` : 'New User'}
+      titleIcon={<GroupIcon sx={{ color: '#868e96' }} />}
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}

@@ -273,6 +273,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       open={open}
       onClose={onClose}
       title={titleContent}
+      titleIcon={<StreamIcon sx={{ color: '#467fcf' }} />}
       subtitle={data?.forwardingHost ? `${data.incomingPort} → ${data.forwardingHost}:${data.forwardingPort}` : 'Stream Configuration'}
       tabs={tabs}
       activeTab={activeTab}

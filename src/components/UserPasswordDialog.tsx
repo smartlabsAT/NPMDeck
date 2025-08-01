@@ -11,6 +11,7 @@ import {
   Box,
   Typography,
 } from '@mui/material'
+import { Lock as LockIcon } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
 import { getErrorMessage } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
@@ -77,7 +78,12 @@ const UserPasswordDialog: React.FC<UserPasswordDialogProps> = ({ open, onClose, 
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Change Password</DialogTitle>
+      <DialogTitle>
+        <Box display="flex" alignItems="center" gap={1}>
+          <LockIcon sx={{ color: '#868e96' }} />
+          Change Password
+        </Box>
+      </DialogTitle>
       <DialogContent>
         <Box sx={{ pt: 1 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>

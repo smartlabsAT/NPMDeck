@@ -1,20 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
   Typography,
-  TextField,
-  InputAdornment,
-  CircularProgress,
-  Alert,
   Avatar,
   Chip,
   IconButton,
@@ -24,12 +12,15 @@ import {
   DialogActions,
   Button,
   Tooltip,
+  Paper,
+  useTheme,
 } from '@mui/material'
-import { DatePicker } from '@mui/x-date-pickers/DatePicker'
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter'
+import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json'
+import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs'
+
+SyntaxHighlighter.registerLanguage('json', json)
 import {
-  Search as SearchIcon,
   Visibility as VisibilityIcon,
   Person as PersonIcon,
   SwapHoriz as ProxyIcon,
@@ -42,83 +33,50 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  CheckCircle as EnabledIcon,
-  Cancel as DisabledIcon,
-  Refresh as RenewedIcon,
+  PersonOutline as UserIcon,
+  Category as CategoryIcon,
+  PlayCircleOutline as ActionIcon,
+  Label as EntityIcon,
+  CalendarToday as DateIcon,
+  Settings as ActionsIcon,
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { auditLogApi, AuditLogEntry } from '../api/auditLog'
 import PageHeader from '../components/PageHeader'
+import { DataTable, TableColumn, Filter } from '../components/DataTable'
+import { useToast } from '../contexts/ToastContext'
+import ActionChip from '../components/shared/ActionChip'
 
 const AuditLog = () => {
   const navigate = useNavigate()
+  const theme = useTheme()
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [searchLoading, setSearchLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
   const [metaDialogOpen, setMetaDialogOpen] = useState(false)
-  
-  // Sorting state
-  const [orderBy, setOrderBy] = useState<keyof AuditLogEntry>('created_on')
-  const [order, setOrder] = useState<'asc' | 'desc'>('desc')
-  
-  // Date filter state
-  const [dateFrom, setDateFrom] = useState<Date | null>(null)
-  const [dateTo, setDateTo] = useState<Date | null>(null)
+  const { showError } = useToast()
 
-  const fetchAuditLogs = useCallback(async (query?: string, isInitial = false) => {
+  const fetchAuditLogs = useCallback(async () => {
     try {
-      if (isInitial) {
-        setInitialLoading(true)
-      } else {
-        setSearchLoading(true)
-      }
+      setLoading(true)
       setError(null)
       const data = await auditLogApi.getAll({ 
-        expand: ['user'],
-        query: query || undefined
+        expand: ['user']
       })
       setLogs(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load audit logs')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load audit logs'
+      setError(errorMessage)
+      showError('audit-log', 'load', errorMessage)
     } finally {
-      if (isInitial) {
-        setInitialLoading(false)
-      } else {
-        setSearchLoading(false)
-      }
+      setLoading(false)
     }
-  }, [])
+  }, [showError])
 
-  // Initial load
   useEffect(() => {
-    fetchAuditLogs('', true)
-  }, [])
-
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery)
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [searchQuery])
-
-  // Search when debounced query changes
-  useEffect(() => {
-    if (debouncedSearchQuery !== '' || searchQuery === '') {
-      fetchAuditLogs(debouncedSearchQuery)
-    }
-  }, [debouncedSearchQuery, fetchAuditLogs])
-
-  const handleSearch = (event: React.FormEvent) => {
-    event.preventDefault()
-    // Form submission immediately triggers search without debounce
-    fetchAuditLogs(searchQuery)
-  }
+    fetchAuditLogs()
+  }, [fetchAuditLogs])
 
   const handleViewMeta = (entry: AuditLogEntry) => {
     setSelectedEntry(entry)
@@ -129,60 +87,6 @@ const AuditLog = () => {
     setMetaDialogOpen(false)
     setSelectedEntry(null)
   }
-
-  const handleRequestSort = (property: keyof AuditLogEntry) => {
-    const isAsc = orderBy === property && order === 'asc'
-    setOrder(isAsc ? 'desc' : 'asc')
-    setOrderBy(property)
-  }
-
-  // Client-side sorting and filtering
-  const processedLogs = useMemo(() => {
-    let filteredLogs = [...logs]
-
-    // Apply date filter
-    if (dateFrom || dateTo) {
-      filteredLogs = filteredLogs.filter(log => {
-        const logDate = new Date(log.created_on)
-        if (dateFrom && logDate < dateFrom) return false
-        if (dateTo) {
-          // Set time to end of day for dateTo
-          const endOfDay = new Date(dateTo)
-          endOfDay.setHours(23, 59, 59, 999)
-          if (logDate > endOfDay) return false
-        }
-        return true
-      })
-    }
-
-    // Apply sorting
-    filteredLogs.sort((a, b) => {
-      let aValue: any = a[orderBy]
-      let bValue: any = b[orderBy]
-
-      // Special handling for nested properties
-      if (orderBy === 'user') {
-        aValue = a.user.name.toLowerCase()
-        bValue = b.user.name.toLowerCase()
-      } else if (orderBy === 'object_type') {
-        aValue = a.object_type.toLowerCase()
-        bValue = b.object_type.toLowerCase()
-      } else if (orderBy === 'action') {
-        aValue = a.action.toLowerCase()
-        bValue = b.action.toLowerCase()
-      }
-
-      if (aValue < bValue) {
-        return order === 'asc' ? -1 : 1
-      }
-      if (aValue > bValue) {
-        return order === 'asc' ? 1 : -1
-      }
-      return 0
-    })
-
-    return filteredLogs
-  }, [logs, dateFrom, dateTo, orderBy, order])
 
   const getObjectIcon = (objectType: string) => {
     switch (objectType) {
@@ -206,7 +110,7 @@ const AuditLog = () => {
     }
   }
 
-  const getObjectColor = (objectType: string) => {
+  const getObjectTypeColor = (objectType: string): string => {
     switch (objectType) {
       case 'proxy-host':
         return '#5eba00'
@@ -220,51 +124,14 @@ const AuditLog = () => {
       case 'access-list':
         return '#2bcbba'
       case 'user':
-        return 'primary'
+        return '#868e96'
       case 'certificate':
         return '#467fcf'
       default:
-        return 'default'
+        return '#868e96'
     }
   }
 
-  const getActionColor = (action: string): 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'default' => {
-    switch (action) {
-      case 'created':
-        return 'success'
-      case 'updated':
-        return 'info'
-      case 'deleted':
-        return 'error'
-      case 'enabled':
-        return 'success'
-      case 'disabled':
-        return 'warning'
-      case 'renewed':
-        return 'info'
-      default:
-        return 'default'
-    }
-  }
-
-  const getActionIcon = (action: string) => {
-    switch (action) {
-      case 'created':
-        return <AddIcon fontSize="small" />
-      case 'updated':
-        return <EditIcon fontSize="small" />
-      case 'deleted':
-        return <DeleteIcon fontSize="small" />
-      case 'enabled':
-        return <EnabledIcon fontSize="small" />
-      case 'disabled':
-        return <DisabledIcon fontSize="small" />
-      case 'renewed':
-        return <RenewedIcon fontSize="small" />
-      default:
-        return null
-    }
-  }
 
   const getObjectLink = (entry: AuditLogEntry): string => {
     switch (entry.object_type) {
@@ -365,13 +232,189 @@ const AuditLog = () => {
     ))
   }
 
-  if (initialLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    )
-  }
+  // Table column definitions
+  const columns: TableColumn<AuditLogEntry>[] = useMemo(() => [
+    {
+      id: 'user',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <PersonIcon fontSize="small" />
+          <span>User</span>
+        </Box>
+      ),
+      accessor: (entry) => entry.user.name,
+      sortable: true,
+      render: (_, entry) => (
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <Avatar
+            src={entry.user.avatar || '/images/default-avatar.jpg'}
+            sx={{ 
+              width: 40, 
+              height: 40,
+              border: entry.user.is_disabled ? '2px solid' : 'none',
+              borderColor: 'error.main'
+            }}
+          >
+            {entry.user.name.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography
+              variant="body2"
+              fontWeight="medium"
+              sx={{
+                textDecoration: entry.user.is_deleted ? 'line-through' : 'none'
+              }}
+            >
+              {entry.user.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {entry.user.email}
+            </Typography>
+          </Box>
+        </Box>
+      ),
+    },
+    {
+      id: 'object_type',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <CategoryIcon fontSize="small" />
+          <span>Type</span>
+        </Box>
+      ),
+      accessor: (entry) => entry.object_type,
+      sortable: true,
+      render: (_, entry) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          {getObjectIcon(entry.object_type)}
+          <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+            {entry.object_type.replace('-', ' ')}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      id: 'action',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <ActionIcon fontSize="small" />
+          <span>Action</span>
+        </Box>
+      ),
+      accessor: (entry) => entry.action,
+      sortable: true,
+      render: (_, entry) => (
+        <ActionChip action={entry.action as any} />
+      ),
+    },
+    {
+      id: 'entity',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <EntityIcon fontSize="small" />
+          <span>Entity</span>
+        </Box>
+      ),
+      accessor: (entry) => {
+        // For sorting, use the first domain name or name
+        if (entry.meta.domain_names?.[0]) return entry.meta.domain_names[0]
+        if (entry.meta.name) return entry.meta.name
+        if (entry.meta.nice_name) return entry.meta.nice_name
+        if (entry.meta.incoming_port) return `Port ${entry.meta.incoming_port}`
+        return `#${entry.object_id}`
+      },
+      render: (_, entry) => (
+        <Box display="flex" flexWrap="wrap" alignItems="center">
+          {getObjectDisplayName(entry)}
+        </Box>
+      ),
+    },
+    {
+      id: 'created_on',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <DateIcon fontSize="small" />
+          <span>Date</span>
+        </Box>
+      ),
+      accessor: (entry) => entry.created_on,
+      sortable: true,
+      render: (date) => (
+        <Box>
+          <Typography variant="body2">
+            {format(new Date(date), 'MMM d, yyyy')}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {format(new Date(date), 'h:mm a')}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      id: 'actions',
+      label: (
+        <Box display="flex" alignItems="center" justifyContent="flex-end" gap={0.5}>
+          <ActionsIcon fontSize="small" />
+          <span>Actions</span>
+        </Box>
+      ),
+      align: 'right',
+      accessor: () => null,
+      render: (_, entry) => (
+        <Tooltip title="View metadata">
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleViewMeta(entry)
+            }}
+          >
+            <VisibilityIcon />
+          </IconButton>
+        </Tooltip>
+      ),
+    },
+  ], [])
+
+  // Filter definitions
+  const filters: Filter[] = useMemo(() => [
+    {
+      id: 'object_type',
+      label: 'Type',
+      type: 'select',
+      options: [
+        { value: 'proxy-host', label: 'Proxy Host', icon: <ProxyIcon fontSize="small" /> },
+        { value: 'redirection-host', label: 'Redirection Host', icon: <RedirectionIcon fontSize="small" /> },
+        { value: 'stream', label: 'Stream', icon: <StreamIcon fontSize="small" /> },
+        { value: 'dead-host', label: '404 Host', icon: <DeadHostIcon fontSize="small" /> },
+        { value: 'access-list', label: 'Access List', icon: <AccessListIcon fontSize="small" /> },
+        { value: 'user', label: 'User', icon: <PersonIcon fontSize="small" /> },
+        { value: 'certificate', label: 'Certificate', icon: <CertificateIcon fontSize="small" /> },
+      ],
+    },
+    {
+      id: 'action',
+      label: 'Action',
+      type: 'select',
+      options: [
+        { value: 'created', label: 'Created', icon: <AddIcon fontSize="small" /> },
+        { value: 'updated', label: 'Updated', icon: <EditIcon fontSize="small" /> },
+        { value: 'deleted', label: 'Deleted', icon: <DeleteIcon fontSize="small" /> },
+        { value: 'enabled', label: 'Enabled', icon: <AddIcon fontSize="small" /> },
+        { value: 'disabled', label: 'Disabled', icon: <DeleteIcon fontSize="small" /> },
+        { value: 'renewed', label: 'Renewed', icon: <EditIcon fontSize="small" /> },
+      ],
+    },
+    {
+      id: 'user.is_disabled',
+      label: 'User Status',
+      type: 'select',
+      options: [
+        { value: 'false', label: 'Active Users', icon: <UserIcon fontSize="small" color="success" /> },
+        { value: 'true', label: 'Disabled Users', icon: <UserIcon fontSize="small" color="error" /> },
+      ],
+    },
+  ], [])
 
   return (
     <Box>
@@ -383,347 +426,21 @@ const AuditLog = () => {
         />
       </Box>
 
-      {error && (
-        <Box mb={2}>
-          <Alert severity="error">{error}</Alert>
-        </Box>
-      )}
-
-      <Paper sx={{ mb: 2, p: 2 }}>
-        <form onSubmit={handleSearch}>
-          <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-            <TextField
-              sx={{ flex: 1, minWidth: 300 }}
-              size="medium"
-              variant="outlined"
-              placeholder="Search by user name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-                endAdornment: searchLoading && (
-                  <InputAdornment position="end">
-                    <CircularProgress size={20} />
-                  </InputAdornment>
-                ),
-                sx: { height: 56 }
-              }}
-            />
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="From Date"
-                value={dateFrom}
-                onChange={(newValue) => setDateFrom(newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'medium',
-                    sx: { width: 180 }
-                  },
-                  field: {
-                    clearable: true,
-                    onClear: () => setDateFrom(null)
-                  }
-                }}
-              />
-              <DatePicker
-                label="To Date"
-                value={dateTo}
-                onChange={(newValue) => setDateTo(newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'medium',
-                    sx: { width: 180 }
-                  },
-                  field: {
-                    clearable: true,
-                    onClear: () => setDateTo(null)
-                  }
-                }}
-              />
-            </LocalizationProvider>
-          </Box>
-        </form>
-      </Paper>
-
-      {searchLoading && logs.length > 0 ? (
-        <Paper sx={{ position: 'relative', overflow: 'hidden' }}>
-          <Box 
-            sx={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              right: 0, 
-              height: 3,
-              zIndex: 1
-            }}
-          >
-            <CircularProgress 
-              variant="indeterminate" 
-              sx={{ 
-                width: '100%',
-                height: 3,
-                '& .MuiCircularProgress-svg': {
-                  height: 3
-                }
-              }} 
-            />
-          </Box>
-          <TableContainer>
-            <Table sx={{ opacity: 0.6 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell width="60">User</TableCell>
-                  <TableCell>
-                    <TableSortLabel
-                      active={orderBy === 'user'}
-                      direction={orderBy === 'user' ? order : 'asc'}
-                      onClick={() => handleRequestSort('user')}
-                    >
-                      Name
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell width="150">
-                    <TableSortLabel
-                      active={orderBy === 'object_type'}
-                      direction={orderBy === 'object_type' ? order : 'asc'}
-                      onClick={() => handleRequestSort('object_type')}
-                    >
-                      Type
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell width="120">
-                    <TableSortLabel
-                      active={orderBy === 'action'}
-                      direction={orderBy === 'action' ? order : 'asc'}
-                      onClick={() => handleRequestSort('action')}
-                    >
-                      Action
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell>Entity</TableCell>
-                  <TableCell>
-                    <TableSortLabel
-                      active={orderBy === 'created_on'}
-                      direction={orderBy === 'created_on' ? order : 'asc'}
-                      onClick={() => handleRequestSort('created_on')}
-                    >
-                      Date
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell width="100" align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {processedLogs.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell>
-                      <Avatar
-                        src={entry.user.avatar || '/images/default-avatar.jpg'}
-                        sx={{ 
-                          width: 40, 
-                          height: 40,
-                          border: entry.user.is_disabled ? '2px solid red' : '2px solid green'
-                        }}
-                      >
-                        {entry.user.name.charAt(0).toUpperCase()}
-                      </Avatar>
-                    </TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          textDecoration: entry.user.is_deleted ? 'line-through' : 'none'
-                        }}
-                      >
-                        {entry.user.name}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        {getObjectIcon(entry.object_type)}
-                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                          {entry.object_type.replace('-', ' ')}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Box 
-                          color={`${getActionColor(entry.action)}.main`}
-                          display="flex"
-                          alignItems="center"
-                        >
-                          {getActionIcon(entry.action)}
-                        </Box>
-                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                          {entry.action}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box display="flex" flexWrap="wrap" gap={0.5}>
-                        {getObjectDisplayName(entry)}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {format(new Date(entry.created_on), 'MMM d, yyyy')}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {format(new Date(entry.created_on), 'h:mm a')}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="View metadata">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleViewMeta(entry)}
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      ) : logs.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" gutterBottom>
-            No audit logs found
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {searchQuery ? 'Try a different search term' : 'System activity will appear here'}
-          </Typography>
-        </Paper>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell width="60">User</TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'user'}
-                    direction={orderBy === 'user' ? order : 'asc'}
-                    onClick={() => handleRequestSort('user')}
-                  >
-                    Name
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell width="150">
-                  <TableSortLabel
-                    active={orderBy === 'object_type'}
-                    direction={orderBy === 'object_type' ? order : 'asc'}
-                    onClick={() => handleRequestSort('object_type')}
-                  >
-                    Type
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell width="120">
-                  <TableSortLabel
-                    active={orderBy === 'action'}
-                    direction={orderBy === 'action' ? order : 'asc'}
-                    onClick={() => handleRequestSort('action')}
-                  >
-                    Action
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>Entity</TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'created_on'}
-                    direction={orderBy === 'created_on' ? order : 'asc'}
-                    onClick={() => handleRequestSort('created_on')}
-                  >
-                    Date
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell width="100" align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {processedLogs.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>
-                    <Avatar
-                      src={entry.user.avatar || '/images/default-avatar.jpg'}
-                      sx={{ 
-                        width: 40, 
-                        height: 40,
-                        border: entry.user.is_disabled ? '2px solid red' : '2px solid green'
-                      }}
-                    >
-                      {entry.user.name.charAt(0).toUpperCase()}
-                    </Avatar>
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        textDecoration: entry.user.is_deleted ? 'line-through' : 'none'
-                      }}
-                    >
-                      {entry.user.name}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      {getObjectIcon(entry.object_type)}
-                      <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                        {entry.object_type.replace('-', ' ')}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Box 
-                        color={`${getActionColor(entry.action)}.main`}
-                        display="flex"
-                        alignItems="center"
-                      >
-                        {getActionIcon(entry.action)}
-                      </Box>
-                      <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                        {entry.action}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" flexWrap="wrap" gap={0.5}>
-                      {getObjectDisplayName(entry)}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {format(new Date(entry.created_on), 'MMM d, yyyy')}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {format(new Date(entry.created_on), 'h:mm a')}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="View metadata">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleViewMeta(entry)}
-                      >
-                        <VisibilityIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <DataTable
+        data={logs}
+        columns={columns}
+        keyExtractor={(entry) => entry.id}
+        filters={filters}
+        searchPlaceholder="Search by user name, email, or entity..."
+        loading={loading}
+        error={error}
+        emptyMessage="No audit logs found."
+        defaultSortField="created_on"
+        defaultSortDirection="desc"
+        defaultRowsPerPage={50}
+        rowsPerPageOptions={[25, 50, 100, 200]}
+        stickyHeader
+      />
 
       <Dialog
         open={metaDialogOpen}
@@ -732,40 +449,67 @@ const AuditLog = () => {
         fullWidth
       >
         <DialogTitle>
-          Audit Log Metadata
+          <Box display="flex" alignItems="center" gap={1}>
+            <AuditIcon sx={{ color: '#495c68' }} />
+            Audit Log Details
+          </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           {selectedEntry && (
             <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Action Details
-              </Typography>
-              <Box mb={2}>
-                <Typography variant="body2">
-                  <strong>User:</strong> {selectedEntry.user.name} ({selectedEntry.user.email})
+              <Box mb={3}>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  Action Information
                 </Typography>
-                <Typography variant="body2">
-                  <strong>Action:</strong> {selectedEntry.action}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Object Type:</strong> {selectedEntry.object_type}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Object ID:</strong> {selectedEntry.object_id}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Date:</strong> {format(new Date(selectedEntry.created_on), 'PPpp')}
-                </Typography>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Box display="grid" gridTemplateColumns="200px 1fr" gap={1}>
+                    <Typography variant="body2" color="text.secondary">User:</Typography>
+                    <Typography variant="body2">
+                      {selectedEntry.user.name} ({selectedEntry.user.email})
+                    </Typography>
+                    
+                    <Typography variant="body2" color="text.secondary">Action:</Typography>
+                    <ActionChip action={selectedEntry.action as any} />
+                    
+                    <Typography variant="body2" color="text.secondary">Object Type:</Typography>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getObjectIcon(selectedEntry.object_type)}
+                      <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                        {selectedEntry.object_type.replace('-', ' ')}
+                      </Typography>
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary">Object ID:</Typography>
+                    <Typography variant="body2">{selectedEntry.object_id}</Typography>
+                    
+                    <Typography variant="body2" color="text.secondary">Date:</Typography>
+                    <Typography variant="body2">
+                      {format(new Date(selectedEntry.created_on), 'PPpp')}
+                    </Typography>
+                  </Box>
+                </Paper>
               </Box>
               
-              <Typography variant="subtitle2" gutterBottom>
-                Metadata
-              </Typography>
-              <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'grey.50' }}>
-                <pre style={{ margin: 0, fontSize: '0.875rem', overflow: 'auto' }}>
-                  {JSON.stringify(selectedEntry.meta, null, 2)}
-                </pre>
-              </Paper>
+              <Box>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  Metadata
+                </Typography>
+                <Paper variant="outlined" sx={{ p: 0, backgroundColor: 'action.hover', overflow: 'hidden' }}>
+                  <SyntaxHighlighter
+                    language="json"
+                    style={theme.palette.mode === 'dark' ? atomOneDark : atomOneLight}
+                    customStyle={{
+                      margin: 0,
+                      padding: '16px',
+                      backgroundColor: 'transparent',
+                      fontSize: '0.875rem',
+                    }}
+                    wrapLongLines={true}
+                  >
+                    {JSON.stringify(selectedEntry.meta, null, 2)}
+                  </SyntaxHighlighter>
+                </Paper>
+              </Box>
             </Box>
           )}
         </DialogContent>

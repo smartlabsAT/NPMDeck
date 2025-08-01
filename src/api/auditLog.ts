@@ -22,7 +22,7 @@ export interface AuditLogMeta {
 export interface AuditLogEntry {
   id: number
   user_id: number
-  object_type: 'proxy-host' | 'redirection-host' | 'stream' | 'dead-host' | 'access-list' | 'user' | 'certificate'
+  object_type: 'proxy-host' | 'redirection-host' | 'stream' | 'stream-host' | 'dead-host' | 'access-list' | 'user' | 'certificate'
   object_id: number
   action: 'created' | 'updated' | 'deleted' | 'enabled' | 'disabled' | 'renewed'
   meta: AuditLogMeta
