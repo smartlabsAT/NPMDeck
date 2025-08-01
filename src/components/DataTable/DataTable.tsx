@@ -145,9 +145,12 @@ export function DataTable<T>({
                       direction={sortField === column.id ? sortDirection : 'asc'}
                       onClick={() => handleSort(column.id)}
                     >
-                      <Typography variant="subtitle2" fontWeight="bold">
-                        {column.label}
-                      </Typography>
+                      <Box display="flex" alignItems="center" gap={0.5}>
+                        {column.icon}
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          {column.label}
+                        </Typography>
+                      </Box>
                       {sortField === column.id ? (
                         <Box component="span" sx={visuallyHidden}>
                           {sortDirection === 'desc' ? 'sorted descending' : 'sorted ascending'}
@@ -155,9 +158,12 @@ export function DataTable<T>({
                       ) : null}
                     </TableSortLabel>
                   ) : (
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      {column.label}
-                    </Typography>
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      {column.icon}
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {column.label}
+                      </Typography>
+                    </Box>
                   )}
                 </TableCell>
               ))}

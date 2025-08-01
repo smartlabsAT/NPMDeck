@@ -19,6 +19,11 @@ import {
   PersonOutline as UserIcon,
   Block as BlockIcon,
   Check as CheckIcon,
+  Email as EmailIcon,
+  Shield as ShieldIcon,
+  ToggleOn as StatusIcon,
+  CalendarToday as CalendarIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
 import { getErrorMessage } from '../types/common'
@@ -249,6 +254,7 @@ const Users = () => {
     {
       id: 'name',
       label: 'User',
+      icon: <PersonIcon />,
       accessor: (user) => user.name,
       sortable: true,
       render: (_, user) => (
@@ -265,12 +271,14 @@ const Users = () => {
     {
       id: 'email',
       label: 'Email',
+      icon: <EmailIcon />,
       accessor: (user) => user.email,
       sortable: true,
     },
     {
       id: 'roles',
       label: 'Role',
+      icon: <ShieldIcon />,
       accessor: (user) => user.roles,
       sortable: true,
       render: (roles) => (
@@ -285,6 +293,7 @@ const Users = () => {
     {
       id: 'status',
       label: 'Status',
+      icon: <StatusIcon />,
       accessor: (user) => user.is_disabled,
       sortable: true,
       render: (_, user) => (
@@ -299,6 +308,7 @@ const Users = () => {
     {
       id: 'created_on',
       label: 'Created',
+      icon: <CalendarIcon />,
       accessor: (user) => user.created_on,
       sortable: true,
       render: (date) => new Date(date).toLocaleDateString(),
@@ -314,6 +324,7 @@ const Users = () => {
     {
       id: 'actions',
       label: 'Actions',
+      icon: <SettingsIcon />,
       align: 'right',
       accessor: () => null,
       render: (_, user) => (

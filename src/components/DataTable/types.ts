@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 export interface TableColumn<T> {
   id: string
   label: string
+  icon?: ReactNode
   accessor: (item: T) => any
   sortable?: boolean
   width?: number | string
