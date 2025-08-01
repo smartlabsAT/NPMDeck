@@ -18,6 +18,9 @@ import {
   Security as SecurityIcon,
   Person as PersonIcon,
   NetworkCheck as NetworkIcon,
+  Settings as OptionsIcon,
+  CalendarToday as CreatedIcon,
+  MoreVert as ActionsIcon,
 } from '@mui/icons-material'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
@@ -205,6 +208,7 @@ export default function AccessLists() {
     {
       id: 'options',
       label: 'Options',
+      icon: <ActionsIcon fontSize="small" />,
       accessor: (item) => ({ satisfy_any: item.satisfy_any, pass_auth: item.pass_auth }),
       sortable: false,
       align: 'left',
@@ -222,6 +226,7 @@ export default function AccessLists() {
     {
       id: 'created_on',
       label: 'Created',
+      icon: <CreatedIcon fontSize="small" />,
       accessor: (item) => new Date(item.created_on).getTime(),
       sortable: true,
       align: 'left',
@@ -234,6 +239,7 @@ export default function AccessLists() {
     {
       id: 'actions',
       label: 'Actions',
+      icon: <OptionsIcon fontSize="small" />,
       accessor: (item) => item.id,
       sortable: false,
       align: 'right',

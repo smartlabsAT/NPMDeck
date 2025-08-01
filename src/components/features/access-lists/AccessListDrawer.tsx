@@ -225,7 +225,12 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       }
       
       // At least one auth item or access rule is required
-      const hasValidAuthItems = data.authItems.some(item => item.username && item.password)
+      const hasValidAuthItems = data.authItems.some(item => {
+        if (!item.username) return false
+        // In edit mode: password is optional (empty = keep existing)
+        // In create mode: password is required
+        return accessList ? true : !!item.password
+      })
       const hasValidAccessRules = data.accessRules.some(rule => rule.address)
       
       if (!hasValidAuthItems && !hasValidAccessRules) {
@@ -255,7 +260,11 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
         name: data.name,
         satisfy_any: data.satisfyAny,
         pass_auth: data.passAuth,
-        items: data.authItems.filter(item => item.username && item.password),
+        items: data.authItems.filter(item => {
+          // In edit mode: include items with username even without password
+          // In create mode: only include items with both username and password
+          return item.username && (accessList || item.password)
+        }),
         clients: data.accessRules.filter(rule => rule.address),
       }
 
