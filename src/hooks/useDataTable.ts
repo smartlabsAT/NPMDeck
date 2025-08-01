@@ -1,11 +1,12 @@
 import { useState, useMemo, useCallback } from 'react'
-import { UseDataTableOptions, UseDataTableReturn, TableColumn } from '../components/DataTable/types'
+import { UseDataTableOptions, UseDataTableReturn, TableColumn, DataGroup, GroupConfig } from '../components/DataTable/types'
 
 export function useDataTable<T>(
   data: T[],
   columns: TableColumn<T>[],
   keyExtractor: (item: T) => string | number,
-  options?: UseDataTableOptions
+  options?: UseDataTableOptions,
+  groupConfig?: GroupConfig<T>
 ): UseDataTableReturn<T> {
   // State
   const [sortField, setSortField] = useState<string | undefined>(options?.defaultSortField)
@@ -17,6 +18,8 @@ export function useDataTable<T>(
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<Record<string, any>>(options?.defaultFilters || {})
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
+  const [groupingEnabled, setGroupingEnabled] = useState(groupConfig?.defaultEnabled ?? false)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 
   // Filter data
   const filteredData = useMemo(() => {
@@ -102,6 +105,18 @@ export function useDataTable<T>(
           return true
         }
         
+        // Certificate specific filters
+        if (filterId === 'provider') {
+          const provider = (item as any).provider
+          if (filterValue === 'letsencrypt') {
+            return provider === 'letsencrypt'
+          }
+          if (filterValue === 'other') {
+            return provider !== 'letsencrypt'
+          }
+          return true
+        }
+        
         // Find column with matching filter ID
         const column = columns.find(col => col.id === filterId)
         if (!column) return true
@@ -142,12 +157,51 @@ export function useDataTable<T>(
     })
   }, [filteredData, sortField, sortDirection, columns])
 
+  // Group data if grouping is enabled
+  const groups = useMemo<DataGroup<T>[]>(() => {
+    if (!groupingEnabled || !groupConfig) return []
+
+    const groupMap = new Map<string, T[]>()
+    
+    // Group items
+    sortedData.forEach(item => {
+      const groupId = groupConfig.groupBy(item)
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, [])
+      }
+      groupMap.get(groupId)!.push(item)
+    })
+
+    // Convert to DataGroup array
+    return Array.from(groupMap.entries()).map(([groupId, items]) => ({
+      id: groupId,
+      label: groupConfig.groupLabel(groupId, items),
+      items,
+      isExpanded: groupConfig.defaultExpanded !== false ? 
+        (expandedGroups.has(groupId) ? false : true) : 
+        expandedGroups.has(groupId)
+    }))
+  }, [sortedData, groupingEnabled, groupConfig, expandedGroups])
+
   // Paginate data
   const paginatedData = useMemo(() => {
-    const start = page * rowsPerPage
-    const end = start + rowsPerPage
-    return sortedData.slice(start, end)
-  }, [sortedData, page, rowsPerPage])
+    if (groupingEnabled && groups.length > 0) {
+      // When grouping is enabled, we need to flatten the expanded groups
+      const flattenedItems: T[] = []
+      groups.forEach(group => {
+        if (group.isExpanded) {
+          flattenedItems.push(...group.items)
+        }
+      })
+      const start = page * rowsPerPage
+      const end = start + rowsPerPage
+      return flattenedItems.slice(start, end)
+    } else {
+      const start = page * rowsPerPage
+      const end = start + rowsPerPage
+      return sortedData.slice(start, end)
+    }
+  }, [sortedData, page, rowsPerPage, groupingEnabled, groups])
 
   // Selected items
   const selected = useMemo(() => {
@@ -240,6 +294,39 @@ export function useDataTable<T>(
     setSelectedIds(new Set())
   }, [])
 
+  const handleToggleGroup = useCallback((groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(groupId)) {
+        next.delete(groupId)
+      } else {
+        next.add(groupId)
+      }
+      return next
+    })
+  }, [])
+
+  const handleToggleAllGroups = useCallback((expanded: boolean) => {
+    if (expanded) {
+      setExpandedGroups(new Set())
+    } else {
+      const allGroupIds = groups.map(g => g.id)
+      setExpandedGroups(new Set(allGroupIds))
+    }
+  }, [groups])
+
+  const handleToggleGrouping = useCallback(() => {
+    setGroupingEnabled(prev => {
+      const newValue = !prev
+      // Save to localStorage if we have a groupConfig
+      if (groupConfig) {
+        localStorage.setItem('npm.certificates.groupByDomain', newValue.toString())
+      }
+      return newValue
+    })
+    setPage(0) // Reset to first page when toggling grouping
+  }, [groupConfig])
+
   const resetTable = useCallback(() => {
     setSortField(options?.defaultSortField)
     setSortDirection(options?.defaultSortDirection || 'asc')
@@ -248,7 +335,9 @@ export function useDataTable<T>(
     setSearchQuery('')
     setFilters(options?.defaultFilters || {})
     setSelectedIds(new Set())
-  }, [options])
+    setGroupingEnabled(groupConfig?.defaultEnabled ?? false)
+    setExpandedGroups(new Set())
+  }, [options, groupConfig])
 
   return {
     // State
@@ -259,10 +348,12 @@ export function useDataTable<T>(
     searchQuery,
     filters,
     selected,
+    groupingEnabled,
     
     // Computed
     processedData: sortedData,
     paginatedData,
+    groups,
     totalCount,
     selectedCount,
     isAllSelected,
@@ -278,6 +369,9 @@ export function useDataTable<T>(
     handleSelect,
     handleSelectAll,
     handleClearSelection,
+    handleToggleGroup,
+    handleToggleAllGroups,
+    handleToggleGrouping,
     
     // Reset
     resetTable

@@ -104,7 +104,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
 
   const handleNavigateToHost = (hostType: string, hostId: number) => {
     onClose()
-    navigate(`/hosts/${hostType}/${hostId}/edit`)
+    navigate(`/hosts/${hostType}/${hostId}/view`)
   }
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {

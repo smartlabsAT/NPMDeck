@@ -2,43 +2,30 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
   IconButton,
   Typography,
   Chip,
-  TextField,
-  InputAdornment,
   CircularProgress,
   Alert,
   Tooltip,
   Menu,
   MenuItem,
-  Switch,
-  FormControlLabel,
+  Container,
 } from '@mui/material'
 import {
   Add as AddIcon,
-  Search as SearchIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
   Lock as LockIcon,
   CloudDownload as DownloadIcon,
   Refresh as RefreshIcon,
   Visibility as ViewIcon,
   Warning as WarningIcon,
-  
-  ExpandMore as ExpandMoreIcon,
-  ChevronRight as ChevronRightIcon,
-  UnfoldMore as ExpandAllIcon,
-  UnfoldLess as CollapseAllIcon,
   VpnKey as CertificateIcon,
+  Folder as ProviderIcon,
+  Event as ExpiresIcon,
+  Dns as DomainIcon,
+  Apps as HostsIcon,
+  MoreVert as ActionsIcon,
 } from '@mui/icons-material'
 import { certificatesApi, Certificate } from '../api/certificates'
 import { getErrorMessage } from '../types/common'
@@ -53,16 +40,8 @@ import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
-
-type Order = 'asc' | 'desc'
-type OrderBy = 'nice_name' | 'domain_names' | 'provider' | 'expires_on'
-
-interface CertificateGroup {
-  id: string
-  domain: string
-  certificates: Certificate[]
-  isExpanded: boolean
-}
+import { DataTable } from '../components/DataTable'
+import { TableColumn, Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 
 // Helper to extract base domain for grouping
 const extractBaseDomain = (name: string): string => {
@@ -101,11 +80,6 @@ const extractBaseDomain = (name: string): string => {
   return name
 }
 
-// Generate stable group ID from domain
-const generateGroupId = (domain: string): string => {
-  return `cert-group-${domain.replace(/\./g, '-')}`
-}
-
 const Certificates = () => {
   const { id, provider } = useParams<{ id?: string; provider?: string }>()
   const navigate = useNavigate()
@@ -113,9 +87,6 @@ const Certificates = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [order, setOrder] = useState<Order>('asc')
-  const [orderBy, setOrderBy] = useState<OrderBy>('nice_name')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [certToDelete, setCertToDelete] = useState<Certificate | null>(null)
   const [renewingCerts, setRenewingCerts] = useState<Set<number>>(new Set())
@@ -125,14 +96,6 @@ const Certificates = () => {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [viewingCert, setViewingCert] = useState<Certificate | null>(null)
   const [initialProvider, setInitialProvider] = useState<'letsencrypt' | 'other'>('letsencrypt')
-  const [groupByDomain, setGroupByDomain] = useState<boolean>(() => {
-    const saved = localStorage.getItem('npm.certificates.groupByDomain')
-    return saved === 'true'
-  })
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
-    const saved = localStorage.getItem('npm.certificates.expandedGroups')
-    return saved ? JSON.parse(saved) : {}
-  })
   
   const { } = useAuthStore()
   const { } = usePermissions()
@@ -142,8 +105,30 @@ const Certificates = () => {
     loadCertificates()
   }, [])
 
+  // Save grouping preference when DataTable changes it
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // The DataTable will handle the storage internally through the groupConfig
+    }
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
   // Handle URL parameters for different actions
   useEffect(() => {
+    const loadCertificateForAction = async (certId: number) => {
+      try {
+        const cert = await certificatesApi.getById(certId, ['owner', 'proxy_hosts', 'redirection_hosts', 'dead_hosts'])
+        if (location.pathname.includes('/view')) {
+          setViewingCert(cert)
+          setDetailsDialogOpen(true)
+        }
+      } catch (err) {
+        showError('certificate', 'load', err instanceof Error ? err.message : 'Unknown error')
+        navigate('/security/certificates')
+      }
+    }
+
     if (location.pathname.includes('/new')) {
       // New certificate
       setEditingCert(null)
@@ -154,19 +139,9 @@ const Certificates = () => {
       } else {
         setInitialProvider('letsencrypt')
       }
-    } else if (id && certificates.length > 0) {
-      const cert = certificates.find(c => c.id === parseInt(id))
-      if (cert) {
-        if (location.pathname.includes('/edit')) {
-          // Edit certificate
-          setEditingCert(cert)
-          setDrawerOpen(true)
-        } else if (location.pathname.includes('/view')) {
-          // View certificate details
-          setViewingCert(cert)
-          setDetailsDialogOpen(true)
-        }
-      }
+    } else if (id) {
+      // Load specific certificate for edit/view
+      loadCertificateForAction(parseInt(id))
     } else {
       // No specific action in URL, close all dialogs
       setDrawerOpen(false)
@@ -174,17 +149,8 @@ const Certificates = () => {
       setEditingCert(null)
       setViewingCert(null)
     }
-  }, [id, provider, location.pathname, certificates])
+  }, [id, provider, location.pathname, navigate, showError])
 
-  // Save groupByDomain to localStorage
-  useEffect(() => {
-    localStorage.setItem('npm.certificates.groupByDomain', groupByDomain.toString())
-  }, [groupByDomain])
-
-  // Save expandedGroups to localStorage
-  useEffect(() => {
-    localStorage.setItem('npm.certificates.expandedGroups', JSON.stringify(expandedGroups))
-  }, [expandedGroups])
 
   const loadCertificates = async () => {
     try {
@@ -199,107 +165,8 @@ const Certificates = () => {
     }
   }
 
-  const handleRequestSort = (property: OrderBy) => {
-    const isAsc = orderBy === property && order === 'asc'
-    setOrder(isAsc ? 'desc' : 'asc')
-    setOrderBy(property)
-  }
-
-  const getComparator = (order: Order, orderBy: OrderBy): (a: Certificate, b: Certificate) => number => {
-    return order === 'desc'
-      ? (a, b) => descendingComparator(a, b, orderBy)
-      : (a, b) => -descendingComparator(a, b, orderBy)
-  }
-
-  const descendingComparator = (a: Certificate, b: Certificate, orderBy: OrderBy) => {
-    let aValue: unknown
-    let bValue: unknown
-
-    switch (orderBy) {
-      case 'nice_name':
-        aValue = a.nice_name || a.domain_names[0] || ''
-        bValue = b.nice_name || b.domain_names[0] || ''
-        break
-      case 'domain_names':
-        aValue = a.domain_names[0] || ''
-        bValue = b.domain_names[0] || ''
-        break
-      case 'provider':
-        aValue = a.provider
-        bValue = b.provider
-        break
-      case 'expires_on':
-        aValue = a.expires_on ? new Date(a.expires_on).getTime() : 0
-        bValue = b.expires_on ? new Date(b.expires_on).getTime() : 0
-        break
-      default:
-        return 0
-    }
-
-    if ((bValue as any) < (aValue as any)) return -1
-    if ((bValue as any) > (aValue as any)) return 1
-    return 0
-  }
-
-  // Apply visibility filtering first
+  // Apply visibility filtering
   const visibleCertificates = useFilteredData(certificates)
-  
-  // Then apply search filtering
-  const filteredCertificates = visibleCertificates.filter(cert => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    return (
-      (cert.nice_name && cert.nice_name.toLowerCase().includes(query)) ||
-      cert.domain_names.some(domain => domain.toLowerCase().includes(query)) ||
-      cert.provider.toLowerCase().includes(query)
-    )
-  })
-
-  const sortedCertificates = [...filteredCertificates].sort(getComparator(order, orderBy))
-
-  // Create certificate groups
-  const certificateGroups: CertificateGroup[] = []
-  const groupMap = new Map<string, CertificateGroup>()
-  
-  if (groupByDomain) {
-    sortedCertificates.forEach(cert => {
-      // Use the certificate's nice_name for grouping
-      const certName = cert.nice_name || cert.domain_names[0] || 'Unknown'
-      const baseDomain = extractBaseDomain(certName)
-      const groupId = generateGroupId(baseDomain)
-      
-      if (!groupMap.has(groupId)) {
-        const group: CertificateGroup = {
-          id: groupId,
-          domain: baseDomain,
-          certificates: [],
-          isExpanded: expandedGroups[groupId] !== false // Default to expanded
-        }
-        groupMap.set(groupId, group)
-        certificateGroups.push(group)
-      }
-      
-      groupMap.get(groupId)!.certificates.push(cert)
-    })
-    
-    // Sort groups based on current sort settings
-    if (orderBy === 'domain_names') {
-      certificateGroups.sort((a, b) => {
-        const compare = a.domain.localeCompare(b.domain)
-        return order === 'asc' ? compare : -compare
-      })
-    } else {
-      // For other sort fields, sort by the first certificate's value in each group
-      certificateGroups.sort((a, b) => {
-        const aCert = a.certificates[0]
-        const bCert = b.certificates[0]
-        if (!aCert || !bCert) return 0
-        
-        const comparator = descendingComparator(aCert, bCert, orderBy)
-        return order === 'desc' ? comparator : -comparator
-      })
-    }
-  }
 
   const handleDelete = (cert: Certificate) => {
     setCertToDelete(cert)
@@ -372,24 +239,7 @@ const Certificates = () => {
     navigate('/security/certificates/new/other')
   }
 
-  const handleEdit = (cert: Certificate) => {
-    navigate(`/security/certificates/${cert.id}/edit`)
-  }
 
-  const toggleGroupExpanded = (groupId: string) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }))
-  }
-
-  const toggleAllGroups = (expand: boolean) => {
-    const newExpanded: Record<string, boolean> = {}
-    certificateGroups.forEach(group => {
-      newExpanded[group.id] = expand
-    })
-    setExpandedGroups(newExpanded)
-  }
 
   const getDaysUntilExpiry = (expiresOn: string | null) => {
     if (!expiresOn) return null
@@ -433,35 +283,198 @@ const Certificates = () => {
     return proxyCount + redirectionCount + deadCount
   }
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+  // Column definitions for DataTable
+  const columns: TableColumn<Certificate>[] = [
+    {
+      id: 'nice_name',
+      label: 'Name',
+      icon: <CertificateIcon fontSize="small" />,
+      accessor: (item) => item.nice_name || item.domain_names[0] || '',
+      sortable: true,
+      render: (value, item) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography variant="body2" fontWeight="medium">
+            {item.nice_name || item.domain_names[0] || 'Unnamed Certificate'}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'provider',
+      label: 'Provider',
+      icon: <ProviderIcon fontSize="small" />,
+      accessor: (item) => item.provider,
+      sortable: true,
+      render: (value, item) => getProviderChip(item.provider)
+    },
+    {
+      id: 'expires_on',
+      label: 'Expires',
+      icon: <ExpiresIcon fontSize="small" />,
+      accessor: (item) => item.expires_on ? new Date(item.expires_on).getTime() : 0,
+      sortable: true,
+      render: (value, item) => getExpiryChip(item)
+    },
+    {
+      id: 'hosts_using',
+      label: 'Hosts Using',
+      icon: <HostsIcon fontSize="small" />,
+      accessor: (item) => getUsageCount(item),
+      sortable: true,
+      render: (value) => (
+        <Typography variant="body2" color="text.secondary">
+          {value} hosts
+        </Typography>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      icon: <ActionsIcon fontSize="small" />,
+      accessor: (item) => item.id,
+      sortable: false,
+      align: 'right',
+      render: (value, item) => (
+        <Box display="flex" gap={0.5} justifyContent="flex-end">
+          <Tooltip title="View Details">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleView(item)
+              }}
+            >
+              <ViewIcon />
+            </IconButton>
+          </Tooltip>
+          {item.provider === 'letsencrypt' && (
+            <Tooltip title="Renew">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleRenew(item)
+                }}
+                color="primary"
+                disabled={renewingCerts.has(item.id)}
+              >
+                {renewingCerts.has(item.id) ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <RefreshIcon />
+                )}
+              </IconButton>
+            </Tooltip>
+          )}
+          <Tooltip title="Download">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDownload(item)
+              }}
+            >
+              <DownloadIcon />
+            </IconButton>
+          </Tooltip>
+          <PermissionIconButton
+            resource="certificates"
+            permissionAction="delete"
+            size="small"
+            tooltipTitle="Delete"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDelete(item)
+            }}
+            color="error"
+          >
+            <DeleteIcon />
+          </PermissionIconButton>
+        </Box>
+      )
+    }
+  ]
+
+  // Group configuration
+  const groupConfig: GroupConfig<Certificate> = {
+    groupBy: (cert) => {
+      const certName = cert.nice_name || cert.domain_names[0] || 'Unknown'
+      return extractBaseDomain(certName)
+    },
+    groupLabel: (groupId) => 'Domain',
+    defaultEnabled: localStorage.getItem('npm.certificates.groupByDomain') === 'true',
+    defaultExpanded: true,
+    groupHeaderRender: (groupId, items, isExpanded) => (
+      <Box display="flex" alignItems="center" gap={1}>
+        <LockIcon fontSize="small" color="primary" />
+        <Typography variant="subtitle2" fontWeight="bold">
+          {groupId}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          ({items.length})
+        </Typography>
       </Box>
     )
   }
 
+  // Filter definitions
+  const filters: Filter[] = [
+    {
+      id: 'provider',
+      label: 'Provider',
+      type: 'select',
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'letsencrypt', label: "Let's Encrypt", icon: <LockIcon fontSize="small" /> },
+        { value: 'other', label: 'Custom' }
+      ]
+    }
+  ]
+
+  // Bulk actions
+  const bulkActions: BulkAction<Certificate>[] = [
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: <DeleteIcon />,
+      color: 'error',
+      confirmMessage: 'Are you sure you want to delete the selected certificates?',
+      action: async (items) => {
+        try {
+          await Promise.all(items.map(item => certificatesApi.delete(item.id)))
+          showSuccess('certificate', 'deleted', `${items.length} certificates`)
+          await loadCertificates()
+        } catch (err) {
+          showError('certificate', 'delete', err instanceof Error ? err.message : 'Unknown error')
+        }
+      }
+    }
+  ]
+
   return (
-    <Box>
-      <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <PageHeader
-          icon={<CertificateIcon sx={{ color: '#467fcf' }} />}
-          title="SSL Certificates"
-          description="Manage SSL certificates for secure HTTPS connections"
-        />
-        <>
-          <PermissionButton
-            resource="certificates"
-            permissionAction="create"
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={(e) => setAddMenuAnchor(e.currentTarget)}
-          >
-            Add SSL Certificate
-          </PermissionButton>
-          <Menu
-            anchorEl={addMenuAnchor}
+    <Container maxWidth={false}>
+      <Box py={3}>
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <PageHeader
+            icon={<CertificateIcon sx={{ color: '#467fcf' }} />}
+            title="SSL Certificates"
+            description="Manage SSL certificates for secure HTTPS connections"
+          />
+          <>
+            <PermissionButton
+              resource="certificates"
+              permissionAction="create"
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={(e) => setAddMenuAnchor(e.currentTarget)}
+            >
+              Add SSL Certificate
+            </PermissionButton>
+            <Menu
+              anchorEl={addMenuAnchor}
               open={Boolean(addMenuAnchor)}
               onClose={() => setAddMenuAnchor(null)}
             >
@@ -473,384 +486,32 @@ const Certificates = () => {
                 Custom
               </MenuItem>
             </Menu>
-        </>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      <Paper sx={{ mb: 2 }}>
-        <Box p={2}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search by certificate name, domain, or provider..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
+          </>
         </Box>
-      </Paper>
 
-      <Box mb={2} display="flex" justifyContent="space-between" alignItems="center">
-        <Box display="flex" alignItems="center" gap={2}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={groupByDomain}
-                onChange={(e) => setGroupByDomain(e.target.checked)}
-              />
-            }
-            label="Group by Domain"
-          />
-          {groupByDomain && certificateGroups.length > 0 && (
-            <>
-              <IconButton
-                size="small"
-                onClick={() => toggleAllGroups(true)}
-                title="Expand All"
-              >
-                <ExpandAllIcon />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => toggleAllGroups(false)}
-                title="Collapse All"
-              >
-                <CollapseAllIcon />
-              </IconButton>
-            </>
-          )}
-        </Box>
+        {/* DataTable */}
+        <DataTable
+          data={visibleCertificates}
+          columns={columns}
+          keyExtractor={(item) => item.id.toString()}
+          onRowClick={handleView}
+          bulkActions={bulkActions}
+          filters={filters}
+          searchPlaceholder="Search by certificate name, domain, or provider..."
+          loading={loading}
+          error={error}
+          emptyMessage="No SSL certificates configured yet"
+          defaultSortField="nice_name"
+          defaultSortDirection="asc"
+          searchable={true}
+          selectable={true}
+          showPagination={true}
+          defaultRowsPerPage={10}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          groupConfig={groupConfig}
+          showGroupToggle={true}
+        />
       </Box>
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'nice_name'}
-                  direction={orderBy === 'nice_name' ? order : 'asc'}
-                  onClick={() => handleRequestSort('nice_name')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">Name</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'domain_names'}
-                  direction={orderBy === 'domain_names' ? order : 'asc'}
-                  onClick={() => handleRequestSort('domain_names')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">Domain Names</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'provider'}
-                  direction={orderBy === 'provider' ? order : 'asc'}
-                  onClick={() => handleRequestSort('provider')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">Provider</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'expires_on'}
-                  direction={orderBy === 'expires_on' ? order : 'asc'}
-                  onClick={() => handleRequestSort('expires_on')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">Expires</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight="bold">Hosts Using</Typography>
-              </TableCell>
-              <TableCell align="right">
-                <Typography variant="subtitle2" fontWeight="bold">Actions</Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedCertificates.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                  {searchQuery ? 'No certificates found matching your search.' : 'No SSL certificates configured yet.'}
-                </TableCell>
-              </TableRow>
-            ) : groupByDomain ? (
-              // Grouped view
-              certificateGroups.map((group) => (
-                <React.Fragment key={group.id}>
-                  {/* Group header row */}
-                  <TableRow 
-                    sx={{ 
-                      backgroundColor: 'action.hover',
-                      cursor: 'pointer',
-                      '&:hover': { backgroundColor: 'action.selected' }
-                    }}
-                    onClick={() => toggleGroupExpanded(group.id)}
-                  >
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <IconButton size="small" sx={{ p: 0.5 }}>
-                          {group.isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
-                        </IconButton>
-                        <LockIcon fontSize="small" color="primary" />
-                        <Typography variant="subtitle2" fontWeight="bold">
-                          {group.domain} ({group.certificates.length})
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                  </TableRow>
-                  
-                  {/* Certificate rows */}
-                  {group.isExpanded && group.certificates.map((cert) => (
-                    <TableRow 
-                      key={cert.id}
-                      hover
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() => handleView(cert)}
-                    >
-                      <TableCell>
-                        <Box display="flex" alignItems="center" gap={1} pl={6}>
-                          <Box sx={{ 
-                            width: 2, 
-                            height: 20, 
-                            backgroundColor: 'divider',
-                            mr: 1 
-                          }} />
-                          <Typography 
-                            variant="body2" 
-                            fontWeight="medium"
-                          >
-                            {cert.nice_name || cert.domain_names[0] || 'Unnamed Certificate'}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          {cert.domain_names.slice(0, 2).map((domain, index) => (
-                            <Typography key={index} variant="body2" color="text.secondary">
-                              {domain}
-                            </Typography>
-                          ))}
-                          {cert.domain_names.length > 2 && (
-                            <Typography variant="body2" color="text.secondary">
-                              +{cert.domain_names.length - 2} more
-                            </Typography>
-                          )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>{getProviderChip(cert.provider)}</TableCell>
-                      <TableCell>{getExpiryChip(cert)}</TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {getUsageCount(cert)} hosts
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                          <Tooltip title="View Details">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleView(cert)}
-                            >
-                              <ViewIcon />
-                            </IconButton>
-                          </Tooltip>
-                            {cert.provider === 'letsencrypt' && (
-                              <Tooltip title="Renew">
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleRenew(cert)
-                                }}
-                                  color="primary"
-                                  disabled={renewingCerts.has(cert.id)}
-                                >
-                                  {renewingCerts.has(cert.id) ? (
-                                    <CircularProgress size={20} />
-                                  ) : (
-                                    <RefreshIcon />
-                                  )}
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            <Tooltip title="Download">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDownload(cert)
-                                }}
-                              >
-                                <DownloadIcon />
-                              </IconButton>
-                            </Tooltip>
-                          <PermissionIconButton
-                            resource="certificates"
-                            permissionAction="edit"
-                            size="small"
-                            tooltipTitle="Edit"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEdit(cert)
-                            }}
-                            color="primary"
-                          >
-                            <EditIcon />
-                          </PermissionIconButton>
-                          <PermissionIconButton
-                            resource="certificates"
-                            permissionAction="delete"
-                            size="small"
-                            tooltipTitle="Delete"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(cert)
-                            }}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </PermissionIconButton>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </React.Fragment>
-              ))
-            ) : (
-              // Flat view
-              sortedCertificates.map((cert) => (
-                <TableRow 
-                  key={cert.id}
-                  hover
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => handleView(cert)}
-                >
-                  <TableCell>
-                    <Typography 
-                      variant="body2" 
-                      fontWeight="medium"
-                    >
-                      {cert.nice_name || cert.domain_names[0] || 'Unnamed Certificate'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box>
-                      {cert.domain_names.slice(0, 2).map((domain, index) => (
-                        <Typography key={index} variant="body2" color="text.secondary">
-                          {domain}
-                        </Typography>
-                      ))}
-                      {cert.domain_names.length > 2 && (
-                        <Typography variant="body2" color="text.secondary">
-                          +{cert.domain_names.length - 2} more
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-                  <TableCell>{getProviderChip(cert.provider)}</TableCell>
-                  <TableCell>{getExpiryChip(cert)}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {getUsageCount(cert)} hosts
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                        <Tooltip title="View Details">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleView(cert)
-                            }}
-                          >
-                            <ViewIcon />
-                          </IconButton>
-                        </Tooltip>
-                        {cert.provider === 'letsencrypt' && (
-                          <Tooltip title="Renew">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleRenew(cert)
-                              }}
-                              color="primary"
-                              disabled={renewingCerts.has(cert.id)}
-                            >
-                              {renewingCerts.has(cert.id) ? (
-                                <CircularProgress size={20} />
-                              ) : (
-                                <RefreshIcon />
-                              )}
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        <Tooltip title="Download">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDownload(cert)
-                            }}
-                          >
-                            <DownloadIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <PermissionIconButton
-                          resource="certificates"
-                          permissionAction="edit"
-                          size="small"
-                          tooltipTitle="Edit"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleEdit(cert)
-                          }}
-                          color="primary"
-                        >
-                          <EditIcon />
-                        </PermissionIconButton>
-                        <PermissionIconButton
-                          resource="certificates"
-                          permissionAction="delete"
-                          size="small"
-                          tooltipTitle="Delete"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDelete(cert)
-                          }}
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </PermissionIconButton>
-                      </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
 
       <ConfirmDialog
         open={deleteDialogOpen}
@@ -883,11 +544,8 @@ const Certificates = () => {
           navigate('/security/certificates')
         }}
         certificate={viewingCert}
-        onEdit={(cert) => {
-          navigate(`/security/certificates/${cert.id}/edit`)
-        }}
       />
-    </Box>
+    </Container>
   )
 }
 

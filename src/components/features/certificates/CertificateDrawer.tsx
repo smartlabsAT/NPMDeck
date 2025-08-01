@@ -89,6 +89,7 @@ export default function CertificateDrawer({
     globalError,
     errors,
     handleSubmit,
+    resetForm,
     isDirty,
     isValid,
     touched,
@@ -340,6 +341,27 @@ export default function CertificateDrawer({
     setFieldValue('dnsProviderCredentials', credentials)
   }, [setFieldValue])
 
+  // Update form data when certificate prop changes (for edit mode)
+  React.useEffect(() => {
+    if (certificate && open) {
+      // Reset form with certificate data
+      resetForm({
+        provider: certificate.provider,
+        niceName: certificate.nice_name || '',
+        domainNames: certificate.domain_names || [],
+        letsencryptEmail: certificate.meta?.letsencrypt_email || '',
+        letsencryptAgree: certificate.meta?.letsencrypt_agree || false,
+        dnsChallenge: certificate.meta?.dns_challenge || false,
+        dnsProvider: certificate.meta?.dns_provider || '',
+        dnsProviderCredentials: certificate.meta?.dns_provider_credentials || '',
+        propagationSeconds: certificate.meta?.propagation_seconds || 120,
+        certificateFile: null,
+        certificateKeyFile: null,
+        intermediateCertificateFile: null,
+      })
+    }
+  }, [certificate, open, resetForm])
+
   // Update provider when initialProvider changes (e.g., switching between Let's Encrypt and Custom)
   React.useEffect(() => {
     if (!certificate && open) {
@@ -391,7 +413,7 @@ export default function CertificateDrawer({
   const currentProvider = data?.provider || certificate?.provider || initialProvider
 
   
-  // Filter tabs based on provider type
+  // Filter tabs based on provider type and edit mode
   const tabs = [
     { 
       id: 'details', 
@@ -399,7 +421,7 @@ export default function CertificateDrawer({
       icon: <InfoIcon />,
       hasError: Boolean((errors.domainNames && touched.domainNames) || (errors.niceName && touched.niceName))
     },
-    ...(currentProvider === 'letsencrypt' ? [{
+    ...(currentProvider === 'letsencrypt' && !isEditMode ? [{
       id: 'letsencrypt', 
       label: "Let's Encrypt",
       icon: <VpnKeyIcon />,
@@ -408,7 +430,7 @@ export default function CertificateDrawer({
                        (errors.dnsProvider && touched.dnsProvider) || 
                        (errors.dnsProviderCredentials && touched.dnsProviderCredentials))
     }] : []),
-    ...(currentProvider === 'other' ? [{
+    ...(currentProvider === 'other' && !isEditMode ? [{
       id: 'custom', 
       label: 'Custom Certificate',
       icon: <UploadIcon />,
@@ -443,10 +465,11 @@ export default function CertificateDrawer({
           errors={errors}
           touched={touched}
           onProviderChange={handleProviderChange}
+          isEditMode={isEditMode}
         />
       </TabPanel>
 
-      {currentProvider === 'letsencrypt' && (
+      {currentProvider === 'letsencrypt' && !isEditMode && (
         <TabPanel value={activeTab} index={1} keepMounted animation="none">
           <LetsEncryptTab
             data={data}
@@ -461,7 +484,7 @@ export default function CertificateDrawer({
         </TabPanel>
       )}
 
-      {currentProvider === 'other' && (
+      {currentProvider === 'other' && !isEditMode && (
         <TabPanel value={activeTab} index={1} keepMounted animation="none">
           <CustomCertificateTab
             data={data}
@@ -481,11 +504,17 @@ interface DetailsTabProps {
   errors: Record<string, string>
   touched: Record<string, boolean>
   onProviderChange: (provider: 'letsencrypt' | 'other') => void
+  isEditMode?: boolean
 }
 
-function DetailsTab({ data, setFieldValue, errors, touched, onProviderChange }: DetailsTabProps) {
+function DetailsTab({ data, setFieldValue, errors, touched, onProviderChange, isEditMode }: DetailsTabProps) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {isEditMode && (
+        <Alert severity="info" icon={<InfoIcon />}>
+          For existing certificates, only the name can be changed. Domain names and other certificate properties cannot be edited as the certificate is already signed.
+        </Alert>
+      )}
       <FormSection title="Certificate Details" required>
         <TextField
           label="Nice Name"
@@ -503,46 +532,49 @@ function DetailsTab({ data, setFieldValue, errors, touched, onProviderChange }: 
           helperText="Enter the domain names this certificate should cover. Wildcards (*.example.com) are supported."
           error={Boolean(errors.domainNames && touched.domainNames)}
           required
+          disabled={isEditMode}
         />
         {errors.domainNames && touched.domainNames && (
           <Alert severity="error" sx={{ mt: 1 }}>{errors.domainNames}</Alert>
         )}
       </FormSection>
 
-      <FormSection title="Certificate Provider" required>
-        <FormControl component="fieldset">
-          <FormLabel component="legend">Provider Type</FormLabel>
-          <RadioGroup
-            value={data.provider}
-            onChange={(e) => onProviderChange(e.target.value as 'letsencrypt' | 'other')}
-          >
-            <FormControlLabel 
-              value="letsencrypt" 
-              control={<Radio />} 
-              label="Let's Encrypt (Free, Automated)" 
-            />
-            <FormControlLabel 
-              value="other" 
-              control={<Radio />} 
-              label="Custom Certificate (Upload files)" 
-            />
-          </RadioGroup>
-        </FormControl>
+      {!isEditMode && (
+        <FormSection title="Certificate Provider" required>
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Provider Type</FormLabel>
+            <RadioGroup
+              value={data.provider}
+              onChange={(e) => onProviderChange(e.target.value as 'letsencrypt' | 'other')}
+            >
+              <FormControlLabel 
+                value="letsencrypt" 
+                control={<Radio />} 
+                label="Let's Encrypt (Free, Automated)" 
+              />
+              <FormControlLabel 
+                value="other" 
+                control={<Radio />} 
+                label="Custom Certificate (Upload files)" 
+              />
+            </RadioGroup>
+          </FormControl>
 
-        {data.provider === 'letsencrypt' && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            Let's Encrypt certificates are free and automatically renewed. 
-            Configure the settings in the Let's Encrypt tab.
-          </Alert>
-        )}
+          {data.provider === 'letsencrypt' && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Let's Encrypt certificates are free and automatically renewed. 
+              Configure the settings in the Let's Encrypt tab.
+            </Alert>
+          )}
 
-        {data.provider === 'other' && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            Upload your own certificate files. You'll need the certificate, 
-            private key, and optionally an intermediate certificate.
-          </Alert>
-        )}
-      </FormSection>
+          {data.provider === 'other' && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Upload your own certificate files. You'll need the certificate, 
+              private key, and optionally an intermediate certificate.
+            </Alert>
+          )}
+        </FormSection>
+      )}
     </Box>
   )
 }

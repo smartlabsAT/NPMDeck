@@ -14,7 +14,17 @@ import {
   Typography,
   Checkbox,
   TablePagination,
+  IconButton,
+  FormControlLabel,
+  Switch,
+  Collapse,
 } from '@mui/material'
+import {
+  ExpandMore as ExpandMoreIcon,
+  ChevronRight as ChevronRightIcon,
+  UnfoldMore as ExpandAllIcon,
+  UnfoldLess as CollapseAllIcon,
+} from '@mui/icons-material'
 import { visuallyHidden } from '@mui/utils'
 import { DataTableProps } from './types'
 import { useDataTable } from '../../hooks/useDataTable'
@@ -41,6 +51,8 @@ export function DataTable<T>({
   searchable = true,
   showPagination = true,
   dense = false,
+  groupConfig,
+  showGroupToggle = true,
 }: DataTableProps<T>) {
   const {
     sortField,
@@ -51,6 +63,8 @@ export function DataTable<T>({
     filters: activeFilters,
     selected,
     paginatedData,
+    groups,
+    groupingEnabled,
     totalCount,
     selectedCount,
     isAllSelected,
@@ -64,11 +78,14 @@ export function DataTable<T>({
     handleSelect,
     handleSelectAll,
     handleClearSelection,
+    handleToggleGroup,
+    handleToggleAllGroups,
+    handleToggleGrouping,
   } = useDataTable(data, columns, keyExtractor, {
     defaultSortField,
     defaultSortDirection,
     defaultRowsPerPage,
-  })
+  }, groupConfig)
 
   const showBulkActions = selectable && selectedCount > 0 && bulkActions.length > 0
   const hasActiveFilters = Object.values(activeFilters).some(
@@ -104,6 +121,40 @@ export function DataTable<T>({
         searchable={searchable}
         searchPlaceholder={searchPlaceholder}
       />
+
+      {groupConfig && showGroupToggle && (
+        <Box display="flex" justifyContent="space-between" alignItems="center" px={2} py={1}>
+          <Box display="flex" alignItems="center" gap={2}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={groupingEnabled}
+                  onChange={handleToggleGrouping}
+                />
+              }
+              label={`Group by ${groupConfig.groupLabel('', [])}`}
+            />
+            {groupingEnabled && groups.length > 0 && (
+              <>
+                <IconButton
+                  size="small"
+                  onClick={() => handleToggleAllGroups(true)}
+                  title="Expand All"
+                >
+                  <ExpandAllIcon />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => handleToggleAllGroups(false)}
+                  title="Collapse All"
+                >
+                  <CollapseAllIcon />
+                </IconButton>
+              </>
+            )}
+          </Box>
+        </Box>
+      )}
 
       {showBulkActions && (
         <DataTableBulkActions
@@ -170,7 +221,7 @@ export function DataTable<T>({
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedData.length === 0 ? (
+            {paginatedData.length === 0 && (!groupingEnabled || groups.length === 0) ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length + (selectable ? 1 : 0)}
@@ -184,7 +235,84 @@ export function DataTable<T>({
                   </Typography>
                 </TableCell>
               </TableRow>
+            ) : groupingEnabled && groups.length > 0 ? (
+              // Grouped view
+              groups.map((group) => (
+                <React.Fragment key={group.id}>
+                  {/* Group header row */}
+                  <TableRow
+                    sx={{
+                      backgroundColor: 'action.hover',
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: 'action.selected' }
+                    }}
+                    onClick={() => handleToggleGroup(group.id)}
+                  >
+                    <TableCell colSpan={columns.length + (selectable ? 1 : 0)}>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <IconButton size="small" sx={{ p: 0.5 }}>
+                          {group.isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+                        </IconButton>
+                        {groupConfig?.groupHeaderRender ? (
+                          groupConfig.groupHeaderRender(group.id, group.items, group.isExpanded)
+                        ) : (
+                          <>
+                            {group.label}
+                            <Typography variant="body2" color="text.secondary">
+                              ({group.items.length})
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Group items */}
+                  {group.isExpanded && group.items.map((item) => {
+                    const itemKey = keyExtractor(item)
+                    const isSelected = selected.some(
+                      selectedItem => keyExtractor(selectedItem) === itemKey
+                    )
+
+                    return (
+                      <TableRow
+                        key={itemKey}
+                        hover
+                        onClick={onRowClick ? () => onRowClick(item) : undefined}
+                        selected={isSelected}
+                        sx={{ 
+                          cursor: onRowClick ? 'pointer' : 'default',
+                          '& > td:first-of-type': {
+                            pl: 6 // Indent first cell for grouped items
+                          }
+                        }}
+                      >
+                        {selectable && (
+                          <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={isSelected}
+                              onChange={() => handleSelect(item)}
+                              inputProps={{
+                                'aria-label': `select item ${itemKey}`,
+                              }}
+                            />
+                          </TableCell>
+                        )}
+                        {columns.map((column) => {
+                          const value = column.accessor(item)
+                          return (
+                            <TableCell key={column.id} align={column.align || 'left'}>
+                              {column.render ? column.render(value, item) : value}
+                            </TableCell>
+                          )
+                        })}
+                      </TableRow>
+                    )
+                  })}
+                </React.Fragment>
+              ))
             ) : (
+              // Normal view
               paginatedData.map((item) => {
                 const itemKey = keyExtractor(item)
                 const isSelected = selected.some(

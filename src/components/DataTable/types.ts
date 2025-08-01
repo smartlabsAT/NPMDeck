@@ -36,6 +36,19 @@ export interface BulkAction<T> {
   disabled?: (items: T[]) => boolean
 }
 
+export interface GroupConfig<T> {
+  /** Function to determine which group an item belongs to */
+  groupBy: (item: T) => string
+  /** Function to get display name for a group */
+  groupLabel: (groupId: string, items: T[]) => ReactNode
+  /** Whether grouping is enabled by default */
+  defaultEnabled?: boolean
+  /** Whether groups are expanded by default */
+  defaultExpanded?: boolean
+  /** Custom group header renderer */
+  groupHeaderRender?: (groupId: string, items: T[], isExpanded: boolean) => ReactNode
+}
+
 export interface DataTableProps<T> {
   data: T[]
   columns: TableColumn<T>[]
@@ -56,6 +69,8 @@ export interface DataTableProps<T> {
   searchable?: boolean
   showPagination?: boolean
   dense?: boolean
+  groupConfig?: GroupConfig<T>
+  showGroupToggle?: boolean
 }
 
 export interface DataTableState {
@@ -66,6 +81,8 @@ export interface DataTableState {
   searchQuery: string
   filters: Record<string, any>
   selected: (string | number)[]
+  groupingEnabled: boolean
+  expandedGroups: Set<string>
 }
 
 export interface UseDataTableOptions {
@@ -73,6 +90,13 @@ export interface UseDataTableOptions {
   defaultSortDirection?: 'asc' | 'desc'
   defaultRowsPerPage?: number
   defaultFilters?: Record<string, any>
+}
+
+export interface DataGroup<T> {
+  id: string
+  label: ReactNode
+  items: T[]
+  isExpanded: boolean
 }
 
 export interface UseDataTableReturn<T> {
@@ -84,10 +108,12 @@ export interface UseDataTableReturn<T> {
   searchQuery: string
   filters: Record<string, any>
   selected: T[]
+  groupingEnabled: boolean
   
   // Computed
   processedData: T[]
   paginatedData: T[]
+  groups: DataGroup<T>[]
   totalCount: number
   selectedCount: number
   isAllSelected: boolean
@@ -103,6 +129,9 @@ export interface UseDataTableReturn<T> {
   handleSelect: (item: T) => void
   handleSelectAll: () => void
   handleClearSelection: () => void
+  handleToggleGroup: (groupId: string) => void
+  handleToggleAllGroups: (expanded: boolean) => void
+  handleToggleGrouping: () => void
   
   // Reset
   resetTable: () => void
