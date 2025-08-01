@@ -18,6 +18,7 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter(routes, {
   future: {
     v7_relativeSplatPath: true,
+    v7_startTransition: true,
   },
 })
 
@@ -28,7 +29,7 @@ function App() {
         <ThemeProvider>
           <ToastProvider>
             <AuthInitializer>
-              <RouterProvider router={router} />
+              <RouterProvider router={router} future={{ v7_startTransition: true }} />
             </AuthInitializer>
           </ToastProvider>
         </ThemeProvider>

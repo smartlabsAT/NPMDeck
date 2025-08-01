@@ -20,8 +20,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Select,
-  MenuItem,
   Chip,
   Divider,
   IconButton,
@@ -48,7 +46,10 @@ import {
   Stream as StreamIcon,
   VpnKey as CertificateIcon,
   Security as AccessListIcon,
-  Person as UserIcon,
+  Group as UserIcon,
+  Visibility as ViewIcon,
+  Edit as EditIcon,
+  Add as AddIcon,
 } from '@mui/icons-material'
 import Editor from 'react-simple-code-editor'
 import { highlight, languages } from 'prismjs/components/prism-core'
@@ -387,15 +388,15 @@ const DEFAULT_SITE_OPTIONS: DefaultSiteOption[] = [
   }
 ]
 
-// Resource icons mapping
+// Resource icons mapping with navigation colors
 const RESOURCE_ICONS: Record<string, React.ReactNode> = {
-  proxy_hosts: <ProxyIcon />,
-  redirection_hosts: <RedirectIcon />,
-  dead_hosts: <DeadIcon />,
-  streams: <StreamIcon />,
-  access_lists: <AccessListIcon />,
-  certificates: <CertificateIcon />,
-  users: <UserIcon />,
+  proxy_hosts: <ProxyIcon sx={{ color: '#5eba00' }} />,
+  redirection_hosts: <RedirectIcon sx={{ color: '#f1c40f' }} />,
+  dead_hosts: <DeadIcon sx={{ color: '#cd201f' }} />,
+  streams: <StreamIcon sx={{ color: '#467fcf' }} />,
+  access_lists: <AccessListIcon sx={{ color: '#2bcbba' }} />,
+  certificates: <CertificateIcon sx={{ color: '#467fcf' }} />,
+  users: <UserIcon sx={{ color: '#868e96' }} />,
 }
 
 const Settings = () => {
@@ -446,7 +447,7 @@ const Settings = () => {
       <Card
         key={option.value}
         variant={defaultSiteType === option.value ? 'elevation' : 'outlined'}
-        elevation={defaultSiteType === option.value ? 3 : 1}
+        elevation={defaultSiteType === option.value ? 3 : 0}
         sx={{
           cursor: 'pointer',
           transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -757,9 +758,24 @@ const Settings = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Resource</TableCell>
-                    <TableCell align="center">View Details</TableCell>
-                    <TableCell align="center">Edit</TableCell>
-                    <TableCell align="center">Create New</TableCell>
+                    <TableCell align="center">
+                      <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                        <ViewIcon fontSize="small" sx={{ color: '#467fcf' }} />
+                        View Details
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                        <EditIcon fontSize="small" sx={{ color: '#f59f00' }} />
+                        Edit
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                        <AddIcon fontSize="small" sx={{ color: '#5eba00' }} />
+                        Create New
+                      </Box>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -773,8 +789,7 @@ const Settings = () => {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {RESOURCE_ICONS[entityKey] ? (
                               React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement, {
-                                fontSize: 'small',
-                                sx: { color: 'text.secondary' }
+                                fontSize: 'small'
                               })
                             ) : (
                               <CodeIcon fontSize="small" sx={{ color: 'text.secondary' }} />
@@ -783,39 +798,57 @@ const Settings = () => {
                           </Box>
                         </TableCell>
                         <TableCell align="center">
-                          <Select
+                          <ToggleButtonGroup
                             size="small"
                             value={containerPreferences[entityKey]?.view || 'dialog'}
-                            onChange={(e) => setContainerPreference(entityKey, 'view', e.target.value as ContainerType)}
+                            exclusive
+                            onChange={(_, value) => value && setContainerPreference(entityKey, 'view', value as ContainerType)}
+                            sx={{ height: 32 }}
                           >
-                            <MenuItem value="dialog">Dialog</MenuItem>
-                            <MenuItem value="drawer">Drawer</MenuItem>
-                          </Select>
+                            <ToggleButton value="dialog" sx={{ px: 2 }}>
+                              Dialog
+                            </ToggleButton>
+                            <ToggleButton value="drawer" sx={{ px: 2 }}>
+                              Drawer
+                            </ToggleButton>
+                          </ToggleButtonGroup>
                         </TableCell>
                         <TableCell align="center">
                           {hasManagePermission ? (
-                            <Select
+                            <ToggleButtonGroup
                               size="small"
                               value={containerPreferences[entityKey]?.edit || 'drawer'}
-                              onChange={(e) => setContainerPreference(entityKey, 'edit', e.target.value as ContainerType)}
+                              exclusive
+                              onChange={(_, value) => value && setContainerPreference(entityKey, 'edit', value as ContainerType)}
+                              sx={{ height: 32 }}
                             >
-                              <MenuItem value="dialog">Dialog</MenuItem>
-                              <MenuItem value="drawer">Drawer</MenuItem>
-                            </Select>
+                              <ToggleButton value="dialog" sx={{ px: 2 }}>
+                                Dialog
+                              </ToggleButton>
+                              <ToggleButton value="drawer" sx={{ px: 2 }}>
+                                Drawer
+                              </ToggleButton>
+                            </ToggleButtonGroup>
                           ) : (
                             <Chip label="No Permission" size="small" variant="outlined" />
                           )}
                         </TableCell>
                         <TableCell align="center">
                           {hasManagePermission ? (
-                            <Select
+                            <ToggleButtonGroup
                               size="small"
                               value={containerPreferences[entityKey]?.create || 'drawer'}
-                              onChange={(e) => setContainerPreference(entityKey, 'create', e.target.value as ContainerType)}
+                              exclusive
+                              onChange={(_, value) => value && setContainerPreference(entityKey, 'create', value as ContainerType)}
+                              sx={{ height: 32 }}
                             >
-                              <MenuItem value="dialog">Dialog</MenuItem>
-                              <MenuItem value="drawer">Drawer</MenuItem>
-                            </Select>
+                              <ToggleButton value="dialog" sx={{ px: 2 }}>
+                                Dialog
+                              </ToggleButton>
+                              <ToggleButton value="drawer" sx={{ px: 2 }}>
+                                Drawer
+                              </ToggleButton>
+                            </ToggleButtonGroup>
                           ) : (
                             <Chip label="No Permission" size="small" variant="outlined" />
                           )}
