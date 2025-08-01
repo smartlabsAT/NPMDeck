@@ -19,6 +19,7 @@ import {
   Download as DownloadIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
+  FileDownload as FileDownloadIcon,
 } from '@mui/icons-material'
 import { ImportExportService, ExportType } from '../services/importExport'
 
@@ -84,7 +85,10 @@ export default function ExportDialog({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        Export {itemName}{isSingleItem ? '' : `s (${itemCount} items)`}
+        <Box display="flex" alignItems="center" gap={1}>
+          <FileDownloadIcon sx={{ color: '#467fcf' }} />
+          Export {itemName}{isSingleItem ? '' : `s (${itemCount} items)`}
+        </Box>
       </DialogTitle>
       
       <DialogContent>

@@ -32,6 +32,7 @@ import CertificateDrawer from './features/certificates/CertificateDrawer'
 import DomainInput from './DomainInput'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
+import { useToast } from '../contexts/ToastContext'
 
 interface RedirectionHostDrawerProps {
   open: boolean
@@ -67,6 +68,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
   const [activeTab, setActiveTab] = useState(0)
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [certificateDrawerOpen, setCertificateDrawerOpen] = useState(false)
+  const { showSuccess, showError } = useToast()
   
   // Helper functions for certificate status
   const getDaysUntilExpiry = (expiresOn: string | null) => {
@@ -179,6 +181,12 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
       onSave()
       onClose()
     },
+    onSuccess: (data) => {
+      showSuccess('redirection-host', host ? 'updated' : 'created', data.domain_names[0] || `#${host?.id || 'new'}`)
+    },
+    onError: (error) => {
+      showError('redirection-host', host ? 'update' : 'create', error.message, form.data.domain_names[0])
+    },
   })
 
   useEffect(() => {
@@ -267,6 +275,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         open={open}
         onClose={onClose}
         title={host ? 'Edit Redirection Host' : 'Add Redirection Host'}
+        titleIcon={<RedirectIcon sx={{ color: '#f1c40f' }} />}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -277,7 +286,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         saveDisabled={!form.isValid}
         saveText={host ? 'Save Changes' : 'Create'}
       >
-        <TabPanel value={activeTab} index={0}>
+        <TabPanel value={activeTab} index={0} keepMounted animation="none">
           <FormSection title="Source">
             <DomainInput
               value={form.data.domain_names}
@@ -373,7 +382,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
           </FormSection>
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={1} keepMounted animation="none">
           <Autocomplete
             value={certificates.find(c => c.id === form.data.certificate_id) || null}
             onChange={(_, newValue) => {
@@ -579,7 +588,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
           )}
         </TabPanel>
 
-        <TabPanel value={activeTab} index={2}>
+        <TabPanel value={activeTab} index={2} keepMounted animation="none">
           <Alert severity="warning" sx={{ mb: 2 }}>
             <Typography variant="body2">
               Advanced configuration allows you to add custom Nginx directives.

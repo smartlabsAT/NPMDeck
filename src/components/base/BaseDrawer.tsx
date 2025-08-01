@@ -57,6 +57,8 @@ export interface BaseDrawerProps {
   onClose: () => void;
   /** Title displayed in the drawer header */
   title: React.ReactNode;
+  /** Optional icon for the title */
+  titleIcon?: React.ReactNode;
   /** Optional subtitle */
   subtitle?: React.ReactNode;
   /** Loading state */
@@ -139,6 +141,7 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
   open,
   onClose,
   title,
+  titleIcon,
   subtitle,
   loading = false,
   loadingMessage = 'Loading...',
@@ -343,17 +346,20 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
           }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              variant="h6"
-              component="h2"
-              sx={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {title}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {titleIcon}
+              <Typography
+                variant="h6"
+                component="h2"
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {title}
+              </Typography>
+            </Box>
             {subtitle && (
               <Typography
                 variant="body2"
@@ -387,7 +393,10 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              backgroundColor: (theme) => 
+                theme.palette.mode === 'dark' 
+                  ? 'rgba(0, 0, 0, 0.8)' 
+                  : 'rgba(255, 255, 255, 0.8)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -430,14 +439,14 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
 
         {/* Messages */}
         {(error || success) && (
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ px: 2, pt: 2, pb: 0 }}>
             {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity="error" sx={{ mb: 1, whiteSpace: 'pre-wrap' }}>
                 {error}
               </Alert>
             )}
             {success && (
-              <Alert severity="success" sx={{ mb: 2 }}>
+              <Alert severity="success" sx={{ mb: 1 }}>
                 {success}
               </Alert>
             )}
@@ -450,6 +459,7 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
             flex: 1,
             overflow: 'auto',
             p: 2,
+            pt: (error || success) ? 1 : 2,
           }}
         >
           {children}

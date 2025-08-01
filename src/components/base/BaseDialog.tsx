@@ -304,6 +304,12 @@ export default function BaseDialog({
           ...(severity && {
             borderTop: `4px solid`,
             borderTopColor: severityColors.border,
+          }),
+          // Fixed height for non-fullscreen dialogs to prevent jumping
+          ...(!shouldFullScreen && {
+            height: '90vh',
+            maxHeight: '90vh',
+            minHeight: '90vh'
           })
         }
       }}
@@ -369,7 +375,16 @@ export default function BaseDialog({
       </DialogTitle>
 
       {/* Content */}
-      <DialogContent sx={{ p: 3, pt: subtitle ? 2 : 1, position: 'relative' }}>
+      <DialogContent sx={{ 
+        p: 3, 
+        pt: subtitle ? 2 : 1, 
+        position: 'relative',
+        // Make content scrollable for fixed height dialogs
+        ...(!shouldFullScreen && {
+          overflowY: 'auto',
+          maxHeight: 'calc(90vh - 200px)', // Account for header and actions
+        })
+      }}>
         {/* Loading Overlay */}
         {loading && (
           <Box

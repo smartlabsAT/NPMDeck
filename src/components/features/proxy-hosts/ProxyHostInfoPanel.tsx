@@ -12,6 +12,7 @@ import {
   Collapse,
   ListItemButton,
   Divider,
+  Alert,
 } from '@mui/material'
 import {
   CheckCircle as CheckIcon,
@@ -330,6 +331,26 @@ const ProxyHostInfoPanel: React.FC<ProxyHostInfoPanelProps> = ({
           )}
         </Grid>
       </Grid>
+
+      {/* Nginx Error */}
+      {host.meta.nginx_online === false && host.meta.nginx_err && (
+        <>
+          <Grid item xs={12}>
+            <Divider />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Alert severity="error">
+              <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+                Nginx Configuration Error
+              </Typography>
+              <Typography variant="body2" fontFamily="monospace" sx={{ whiteSpace: 'pre-wrap' }}>
+                {host.meta.nginx_err}
+              </Typography>
+            </Alert>
+          </Grid>
+        </>
+      )}
     </Grid>
   )
 }

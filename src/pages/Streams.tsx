@@ -46,6 +46,7 @@ import ExportDialog from '../components/ExportDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
+import { useToast } from '../contexts/ToastContext'
 
 type OrderDirection = 'asc' | 'desc'
 type OrderBy = 'incoming_port' | 'forwarding_host' | 'status' | 'protocols' | 'created_on'
@@ -56,6 +57,7 @@ export default function Streams() {
   const location = useLocation()
   
   const { canManage: canManageStreams } = usePermissions()
+  const { showSuccess, showError } = useToast()
 
   // State
   const [streams, setStreams] = useState<Stream[]>([])
@@ -66,6 +68,7 @@ export default function Streams() {
   const [orderDirection, setOrderDirection] = useState<OrderDirection>('asc')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [togglingStreams, setTogglingStreams] = useState<Set<number>>(new Set())
   
   // Dialogs
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -130,24 +133,44 @@ export default function Streams() {
 
     try {
       await streamsApi.delete(streamToDelete.id)
+      const streamName = `${streamToDelete.incoming_port}/${streamToDelete.tcp_forwarding ? 'TCP' : ''}${streamToDelete.udp_forwarding ? 'UDP' : ''}`
+      showSuccess('stream', 'deleted', streamName, streamToDelete.id)
       await loadStreams()
       setDeleteDialogOpen(false)
       setStreamToDelete(null)
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      const streamName = streamToDelete ? `${streamToDelete.incoming_port}/${streamToDelete.tcp_forwarding ? 'TCP' : ''}${streamToDelete.udp_forwarding ? 'UDP' : ''}` : undefined
+      showError('stream', 'delete', err instanceof Error ? err.message : 'Unknown error', streamName, streamToDelete?.id)
+      console.error('Failed to delete stream:', err)
     }
   }
 
   const handleToggleEnabled = async (stream: Stream) => {
+    // Add stream ID to toggling set
+    setTogglingStreams(prev => new Set(prev).add(stream.id))
+    
     try {
+      const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
+      
       if (stream.enabled) {
         await streamsApi.disable(stream.id)
+        showSuccess('stream', 'disabled', streamName, stream.id)
       } else {
         await streamsApi.enable(stream.id)
+        showSuccess('stream', 'enabled', streamName, stream.id)
       }
       await loadStreams()
     } catch (err: unknown) {
+      const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
+      showError('stream', stream.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', streamName, stream.id)
       setError(getErrorMessage(err))
+    } finally {
+      // Remove stream ID from toggling set
+      setTogglingStreams(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(stream.id)
+        return newSet
+      })
     }
   }
 
@@ -424,19 +447,28 @@ export default function Streams() {
                           <ViewIcon />
                         </IconButton>
                       </Tooltip>
-                      <PermissionIconButton
-                        resource="streams"
-                        permissionAction="edit"
-                        size="small"
-                        tooltipTitle={stream.enabled ? 'Disable' : 'Enable'}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleToggleEnabled(stream)
-                        }}
-                        color={stream.enabled ? 'default' : 'success'}
-                      >
-                        <PowerIcon />
-                      </PermissionIconButton>
+                      {togglingStreams.has(stream.id) ? (
+                        <IconButton
+                          size="small"
+                          disabled
+                        >
+                          <CircularProgress size={18} />
+                        </IconButton>
+                      ) : (
+                        <PermissionIconButton
+                          resource="streams"
+                          permissionAction="edit"
+                          size="small"
+                          tooltipTitle={stream.enabled ? 'Disable' : 'Enable'}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleEnabled(stream)
+                          }}
+                          color={stream.enabled ? 'default' : 'success'}
+                        >
+                          <PowerIcon />
+                        </PermissionIconButton>
+                      )}
                       <PermissionIconButton
                         resource="streams"
                         permissionAction="edit"

@@ -25,6 +25,11 @@ import {
 export type FormSectionSeverity = 'info' | 'warning' | 'error' | 'success'
 
 /**
+ * Variant styles for form sections
+ */
+export type FormSectionVariant = 'minimal' | 'compact' | 'default'
+
+/**
  * Props for the FormSection component
  */
 export interface FormSectionProps {
@@ -68,6 +73,8 @@ export interface FormSectionProps {
   elevation?: number
   /** Whether to show a subtle background */
   subtle?: boolean
+  /** Visual variant of the section */
+  variant?: FormSectionVariant
 }
 
 /**
@@ -130,6 +137,7 @@ export default function FormSection({
   disabled = false,
   elevation,
   subtle = false,
+  variant = 'minimal',
 }: FormSectionProps) {
   const theme = useTheme()
   const [expanded, setExpanded] = useState(defaultExpanded)
@@ -214,12 +222,169 @@ export default function FormSection({
   const colors = getSeverityColors()
   const severityIcon = getSeverityIcon()
 
+  // Get spacing based on variant
+  const getSpacing = () => {
+    switch (variant) {
+      case 'minimal':
+        return { mb: 2, headerPadding: 0, contentPadding: 0 }
+      case 'compact':
+        return { mb: 2, headerPadding: 1.5, contentPadding: 1.5 }
+      case 'default':
+        return { mb: 3, headerPadding: 2, contentPadding: 2 }
+    }
+  }
+
+  const spacing = getSpacing()
+
+  // Minimal variant - no Paper wrapper
+  if (variant === 'minimal') {
+    return (
+      <Box sx={{ mb: spacing.mb, ...sx }}>
+        {/* Header */}
+        <Box
+          sx={{
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            cursor: collapsible && !disabled && !loading ? 'pointer' : 'default',
+            opacity: disabled ? 0.6 : 1,
+          }}
+          onClick={handleToggle}
+          role={collapsible ? 'button' : undefined}
+          aria-expanded={collapsible ? expanded : undefined}
+          aria-controls={collapsible ? `section-content-${title}` : undefined}
+          tabIndex={collapsible && !disabled ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (collapsible && !disabled && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault()
+              handleToggle()
+            }
+          }}
+        >
+          {/* Icon */}
+          {(icon || severityIcon) && (
+            <Box sx={{ mr: 1.5, color: colors.icon, display: 'flex', alignItems: 'center' }}>
+              {severityIcon || icon}
+            </Box>
+          )}
+          
+          {/* Title and Description */}
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography
+              variant="subtitle1"
+              component="h3"
+              sx={{
+                fontWeight: 600,
+                color: colors.text,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+              }}
+            >
+              {title}
+              {required && (
+                <Typography
+                  component="span"
+                  sx={{ color: 'error.main' }}
+                  aria-label="required"
+                >
+                  *
+                </Typography>
+              )}
+              {/* Error Count Badge */}
+              {errorCount && errorCount > 0 && (
+                <Chip
+                  label={errorCount}
+                  size="small"
+                  color="error"
+                  sx={{ ml: 1, minWidth: 24, height: 20, fontSize: '0.75rem' }}
+                />
+              )}
+            </Typography>
+            
+            {description && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.25 }}
+              >
+                {description}
+              </Typography>
+            )}
+          </Box>
+
+          {/* Header Content */}
+          {headerContent && (
+            <Box sx={{ ml: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              {headerContent}
+            </Box>
+          )}
+
+          {/* Expand/Collapse Button */}
+          {collapsible && (
+            <IconButton
+              size="small"
+              sx={{ ml: 1 }}
+              disabled={disabled || loading}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleToggle()
+              }}
+              aria-label={expanded ? 'collapse section' : 'expand section'}
+            >
+              {loading ? (
+                <Box sx={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {expanded ? (
+                    collapseIcon || <ExpandLessIcon />
+                  ) : (
+                    expandIcon || <ExpandMoreIcon />
+                  )}
+                </Box>
+              ) : expanded ? (
+                collapseIcon || <ExpandLessIcon />
+              ) : (
+                expandIcon || <ExpandMoreIcon />
+              )}
+            </IconButton>
+          )}
+        </Box>
+
+        {/* Divider for minimal variant */}
+        <Divider sx={{ my: 0.5 }} />
+
+        {/* Content */}
+        {collapsible ? (
+          <Collapse 
+            in={expanded} 
+            timeout={animated ? 300 : 0}
+            id={`section-content-${title}`}
+          >
+            <Box>
+              {animated ? (
+                <Fade in={expanded} timeout={200}>
+                  <Box>{children}</Box>
+                </Fade>
+              ) : (
+                children
+              )}
+            </Box>
+          </Collapse>
+        ) : (
+          <Box>
+            {children}
+          </Box>
+        )}
+      </Box>
+    )
+  }
+
+  // Compact and Default variants - use Paper
   return (
     <Paper
       variant="outlined"
       elevation={elevation}
       sx={{
-        mb: 3,
+        mb: spacing.mb,
         borderColor: colors.border,
         backgroundColor: colors.background,
         opacity: disabled ? 0.6 : 1,
@@ -230,7 +395,7 @@ export default function FormSection({
       {/* Header */}
       <Box
         sx={{
-          p: 2,
+          p: spacing.headerPadding,
           display: 'flex',
           alignItems: 'center',
           cursor: collapsible && !disabled && !loading ? 'pointer' : 'default',
@@ -359,7 +524,7 @@ export default function FormSection({
           id={`section-content-${title}`}
         >
           <Divider />
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ p: spacing.contentPadding }}>
             {animated ? (
               <Fade in={expanded} timeout={200}>
                 <Box>{children}</Box>
@@ -372,7 +537,7 @@ export default function FormSection({
       ) : (
         <>
           <Divider />
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ p: spacing.contentPadding }}>
             {children}
           </Box>
         </>

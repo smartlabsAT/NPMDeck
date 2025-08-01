@@ -26,6 +26,7 @@ import {
   Add as AddIcon,
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
+  SwapHoriz as ProxyIcon,
 } from '@mui/icons-material'
 import { ProxyHost, CreateProxyHost, UpdateProxyHost, proxyHostsApi } from '../../../api/proxyHosts'
 import { AccessList, accessListsApi } from '../../../api/accessLists'
@@ -35,6 +36,7 @@ import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import DomainInput from '../../DomainInput'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface ProxyHostDrawerProps {
   open: boolean
@@ -67,6 +69,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
   const [accessLists, setAccessLists] = React.useState<AccessList[]>([])
   const [certificates, setCertificates] = React.useState<Certificate[]>([])
   const [loadingData, setLoadingData] = React.useState(false)
+  const { showSuccess, showError } = useToast()
 
   const isEditMode = !!host
 
@@ -96,6 +99,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
     errors,
     handleSubmit,
     resetForm,
+    markAsClean,
     isDirty,
     isValid,
   } = useDrawerForm<ProxyHostFormData>({
@@ -117,35 +121,30 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       hstsSubdomains: host?.hsts_subdomains || false,
       advancedConfig: host?.advanced_config || '',
     },
-    fields: {
-      domainNames: {
-        initialValue: [],
-        required: true,
-        validate: (domains) => domains.length === 0 ? 'At least one domain name is required' : null
-      },
-      forwardHost: {
-        initialValue: '',
-        required: true,
-        validate: (host) => !host?.trim() ? 'Forward host is required' : null
-      },
-      forwardPort: {
-        initialValue: 80,
-        validate: (port) => {
-          if (port < 1 || port > 65535) {
-            return 'Forward port must be between 1 and 65535'
-          }
-          return null
-        }
-      },
-      certificateId: {
-        initialValue: 0,
-        validate: (certId, data) => {
-          if (data.sslEnabled && certId <= 0) {
-            return 'Please select an SSL certificate when SSL is enabled'
-          }
-          return null
-        }
-      },
+    validate: (data) => {
+      const errors: Partial<Record<keyof ProxyHostFormData, string>> = {}
+      
+      // Domain names validation
+      if (!data.domainNames || data.domainNames.length === 0) {
+        errors.domainNames = 'At least one domain name is required'
+      }
+      
+      // Forward host validation
+      if (!data.forwardHost || data.forwardHost.trim() === '') {
+        errors.forwardHost = 'Forward host is required'
+      }
+      
+      // Forward port validation
+      if (!data.forwardPort || data.forwardPort < 1 || data.forwardPort > 65535) {
+        errors.forwardPort = 'Port must be between 1 and 65535'
+      }
+      
+      // SSL certificate validation
+      if (data.sslEnabled && !data.certificateId) {
+        errors.certificateId = 'SSL certificate is required when SSL is enabled'
+      }
+      
+      return Object.keys(errors).length > 0 ? errors : null
     },
     onSubmit: async (data) => {
       const payload: CreateProxyHost | UpdateProxyHost = {
@@ -174,15 +173,11 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       onSave()
       onClose()
     },
-    autoSave: {
-      enabled: true,
-      delay: 3000,
-      onAutoSave: async (data) => {
-        if (isEditMode && isDirty) {
-          // Auto-save draft for existing hosts
-          console.log('Auto-saving draft...', data)
-        }
-      }
+    onSuccess: (data) => {
+      showSuccess('proxy-host', isEditMode ? 'updated' : 'created', data.domainNames[0] || `#${host?.id || 'new'}`)
+    },
+    onError: (error) => {
+      showError('proxy-host', isEditMode ? 'update' : 'create', error.message, data.domainNames[0])
     }
   })
 
@@ -190,8 +185,27 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
   React.useEffect(() => {
     if (open) {
       loadSelectorData()
+      // Reset form when opening with different host or new host
+      resetForm({
+        domainNames: host?.domain_names || [],
+        forwardScheme: host?.forward_scheme || 'http',
+        forwardHost: host?.forward_host || '',
+        forwardPort: host?.forward_port || 80,
+        cacheAssets: host?.caching_enabled || false,
+        blockExploits: host?.block_exploits || false,
+        websocketSupport: host?.allow_websocket_upgrade || false,
+        accessListId: host?.access_list_id || 0,
+        sslEnabled: (host?.certificate_id || 0) > 0,
+        certificateId: host?.certificate_id || 0,
+        selectedCertificate: null,
+        forceSSL: host?.ssl_forced || false,
+        http2Support: host?.http2_support || false,
+        hstsEnabled: host?.hsts_enabled || false,
+        hstsSubdomains: host?.hsts_subdomains || false,
+        advancedConfig: host?.advanced_config || '',
+      })
     }
-  }, [open])
+  }, [open, host, resetForm])
 
   // Set selected certificate after certificates load
   React.useEffect(() => {
@@ -230,37 +244,48 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       setCertificates(sortedCertificates)
     } catch (err) {
       console.error('Failed to load selector data:', err)
+      showError('proxy-host', 'load data', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoadingData(false)
     }
   }
 
-  const tabs = [
-    { 
-      id: 'details', 
-      label: 'Details', 
-      icon: <InfoIcon />,
-      hasError: Boolean(errors.domainNames || errors.forwardHost || errors.forwardPort)
-    },
-    { 
-      id: 'ssl', 
-      label: 'SSL',
-      icon: <LockIcon />,
-      badge: data.sslEnabled ? 1 : 0,
-      hasError: Boolean(errors.certificateId)
-    },
-    { 
-      id: 'advanced', 
-      label: 'Advanced',
-      icon: <CodeIcon />
-    },
-  ]
+  const tabs = React.useMemo(() => {
+    // Check which fields belong to which tab
+    const detailsErrors = ['domainNames', 'forwardHost', 'forwardPort', 'accessListId'];
+    const sslErrors = ['certificateId'];
+    
+    const hasDetailsError = detailsErrors.some(field => errors[field as keyof ProxyHostFormData]);
+    const hasSslError = data.sslEnabled && sslErrors.some(field => errors[field as keyof ProxyHostFormData]);
+    
+    return [
+      { 
+        id: 'details', 
+        label: 'Details', 
+        icon: <InfoIcon />,
+        hasError: hasDetailsError
+      },
+      { 
+        id: 'ssl', 
+        label: 'SSL',
+        icon: <LockIcon />,
+        badge: data.sslEnabled ? 1 : 0,
+        hasError: hasSslError
+      },
+      { 
+        id: 'advanced', 
+        label: 'Advanced',
+        icon: <CodeIcon />
+      },
+    ];
+  }, [data.sslEnabled, errors])
 
   return (
     <BaseDrawer
       open={open}
       onClose={onClose}
       title={isEditMode ? 'Edit Proxy Host' : 'New Proxy Host'}
+      titleIcon={<ProxyIcon sx={{ color: '#5eba00' }} />}
       subtitle={data.domainNames?.[0] || 'Proxy host configuration'}
       tabs={tabs}
       activeTab={activeTab}
@@ -269,12 +294,12 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       error={globalError || undefined}
       isDirty={isDirty}
       onSave={handleSubmit}
-      saveDisabled={!isValid}
+      saveDisabled={false}
       saveText={isEditMode ? 'Save Changes' : 'Create'}
       confirmClose={isDirty}
       width={600}
     >
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab
           data={data}
           setFieldValue={setFieldValue}
@@ -284,7 +309,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <SSLTab
           data={data}
           setFieldValue={setFieldValue}
@@ -295,7 +320,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={2}>
+      <TabPanel value={activeTab} index={2} keepMounted animation="none">
         <AdvancedTab
           data={data}
           setFieldValue={setFieldValue}
@@ -315,20 +340,17 @@ interface DetailsTabProps {
   loadingData: boolean
 }
 
-function DetailsTab({ data, setFieldValue, errors, accessLists, loadingData }: DetailsTabProps) {
+const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadingData }: DetailsTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="Host Details" required>
         <DomainInput
           value={data.domainNames}
           onChange={(domainNames) => setFieldValue('domainNames', domainNames)}
-          helperText="Press Enter after each domain or paste multiple domains. Wildcards are supported."
-          error={Boolean(errors.domainNames)}
+          helperText={errors.domainNames || "Press Enter after each domain or paste multiple domains. Wildcards are supported."}
+          error={!!errors.domainNames}
           required
         />
-        {errors.domainNames && (
-          <Alert severity="error" sx={{ mt: 1 }}>{errors.domainNames}</Alert>
-        )}
       </FormSection>
 
       <FormSection title="Forward Configuration" required>
@@ -350,7 +372,7 @@ function DetailsTab({ data, setFieldValue, errors, accessLists, loadingData }: D
             value={data.forwardHost}
             onChange={(e) => setFieldValue('forwardHost', e.target.value)}
             placeholder="192.168.1.1 or example.com"
-            error={Boolean(errors.forwardHost)}
+            error={!!errors.forwardHost}
             helperText={errors.forwardHost}
             required
             sx={{ flex: 1 }}
@@ -363,7 +385,7 @@ function DetailsTab({ data, setFieldValue, errors, accessLists, loadingData }: D
             InputProps={{
               inputProps: { min: 1, max: 65535 }
             }}
-            error={Boolean(errors.forwardPort)}
+            error={!!errors.forwardPort}
             helperText={errors.forwardPort}
             required
             sx={{ width: 120 }}
@@ -429,7 +451,7 @@ function DetailsTab({ data, setFieldValue, errors, accessLists, loadingData }: D
       </FormSection>
     </Box>
   )
-}
+})
 
 // SSL Tab Component
 interface SSLTabProps {
@@ -441,7 +463,7 @@ interface SSLTabProps {
   getCertificateStatus: (cert: Certificate) => { color: 'error' | 'warning' | 'success', text: string, icon: any }
 }
 
-function SSLTab({ data, setFieldValue, errors, certificates, loadingData, getCertificateStatus }: SSLTabProps) {
+const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingData, getCertificateStatus }: SSLTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="SSL Configuration">
@@ -505,7 +527,7 @@ function SSLTab({ data, setFieldValue, errors, certificates, loadingData, getCer
                   {...params}
                   label="SSL Certificate"
                   placeholder="Search for a certificate..."
-                  error={Boolean(errors.certificateId)}
+                  error={!!errors.certificateId}
                   helperText={errors.certificateId}
                   InputProps={{
                     ...params.InputProps,
@@ -595,7 +617,7 @@ function SSLTab({ data, setFieldValue, errors, certificates, loadingData, getCer
       )}
     </Box>
   )
-}
+})
 
 // Advanced Tab Component
 interface AdvancedTabProps {
@@ -604,7 +626,7 @@ interface AdvancedTabProps {
   errors: Record<string, string>
 }
 
-function AdvancedTab({ data, setFieldValue, errors }: AdvancedTabProps) {
+const AdvancedTab = React.memo(({ data, setFieldValue, errors }: AdvancedTabProps) => {
   return (
     <FormSection title="Custom Configuration">
       <Alert severity="warning" sx={{ mb: 2 }}>
@@ -630,4 +652,4 @@ function AdvancedTab({ data, setFieldValue, errors }: AdvancedTabProps) {
       />
     </FormSection>
   )
-}
+})

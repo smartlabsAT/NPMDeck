@@ -1,19 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography,
-  TextField,
-  InputAdornment,
-  CircularProgress,
-  Alert,
   Avatar,
   Chip,
   IconButton,
@@ -23,56 +12,71 @@ import {
   DialogActions,
   Button,
   Tooltip,
+  Paper,
+  useTheme,
 } from '@mui/material'
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter'
+import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json'
+import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs'
+
+SyntaxHighlighter.registerLanguage('json', json)
 import {
-  Search as SearchIcon,
   Visibility as VisibilityIcon,
   Person as PersonIcon,
-  ElectricBolt as ProxyIcon,
-  Shuffle as RedirectionIcon,
-  Radio as StreamIcon,
-  PowerOff as DeadHostIcon,
-  Lock as AccessListIcon,
-  Shield as CertificateIcon,
+  SwapHoriz as ProxyIcon,
+  TrendingFlat as RedirectionIcon,
+  Stream as StreamIcon,
+  Block as DeadHostIcon,
+  Security as AccessListIcon,
+  VpnKey as CertificateIcon,
   Description as AuditIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  PersonOutline as UserIcon,
+  Category as CategoryIcon,
+  PlayCircleOutline as ActionIcon,
+  Label as EntityIcon,
+  CalendarToday as DateIcon,
+  Settings as ActionsIcon,
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { auditLogApi, AuditLogEntry } from '../api/auditLog'
 import PageHeader from '../components/PageHeader'
+import { DataTable, TableColumn, Filter } from '../components/DataTable'
+import { useToast } from '../contexts/ToastContext'
+import ActionChip from '../components/shared/ActionChip'
 
 const AuditLog = () => {
   const navigate = useNavigate()
+  const theme = useTheme()
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
   const [metaDialogOpen, setMetaDialogOpen] = useState(false)
+  const { showError } = useToast()
 
   const fetchAuditLogs = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
       const data = await auditLogApi.getAll({ 
-        expand: ['user'],
-        query: searchQuery || undefined
+        expand: ['user']
       })
       setLogs(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load audit logs')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load audit logs'
+      setError(errorMessage)
+      showError('audit-log', 'load', errorMessage)
     } finally {
       setLoading(false)
     }
-  }, [searchQuery])
+  }, [showError])
 
   useEffect(() => {
     fetchAuditLogs()
   }, [fetchAuditLogs])
-
-  const handleSearch = (event: React.FormEvent) => {
-    event.preventDefault()
-    fetchAuditLogs()
-  }
 
   const handleViewMeta = (entry: AuditLogEntry) => {
     setSelectedEntry(entry)
@@ -87,62 +91,47 @@ const AuditLog = () => {
   const getObjectIcon = (objectType: string) => {
     switch (objectType) {
       case 'proxy-host':
-        return <ProxyIcon fontSize="small" />
+        return <ProxyIcon fontSize="small" sx={{ color: '#5eba00' }} />
       case 'redirection-host':
-        return <RedirectionIcon fontSize="small" />
+        return <RedirectionIcon fontSize="small" sx={{ color: '#f1c40f' }} />
       case 'stream':
-        return <StreamIcon fontSize="small" />
+      case 'stream-host':
+        return <StreamIcon fontSize="small" sx={{ color: '#467fcf' }} />
       case 'dead-host':
-        return <DeadHostIcon fontSize="small" />
+        return <DeadHostIcon fontSize="small" sx={{ color: '#cd201f' }} />
       case 'access-list':
-        return <AccessListIcon fontSize="small" />
+        return <AccessListIcon fontSize="small" sx={{ color: '#2bcbba' }} />
       case 'user':
         return <PersonIcon fontSize="small" />
       case 'certificate':
-        return <CertificateIcon fontSize="small" />
+        return <CertificateIcon fontSize="small" sx={{ color: '#467fcf' }} />
       default:
         return null
     }
   }
 
-  const getObjectColor = (objectType: string) => {
+  const getObjectTypeColor = (objectType: string): string => {
     switch (objectType) {
       case 'proxy-host':
-        return 'success'
+        return '#5eba00'
       case 'redirection-host':
-        return 'warning'
+        return '#f1c40f'
       case 'stream':
-        return 'info'
+      case 'stream-host':
+        return '#467fcf'
       case 'dead-host':
-        return 'error'
+        return '#cd201f'
       case 'access-list':
+        return '#2bcbba'
       case 'user':
-        return 'primary'
+        return '#868e96'
       case 'certificate':
-        return 'secondary'
+        return '#467fcf'
       default:
-        return 'default'
+        return '#868e96'
     }
   }
 
-  const getActionColor = (action: string): 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'default' => {
-    switch (action) {
-      case 'created':
-        return 'success'
-      case 'updated':
-        return 'info'
-      case 'deleted':
-        return 'error'
-      case 'enabled':
-        return 'success'
-      case 'disabled':
-        return 'warning'
-      case 'renewed':
-        return 'info'
-      default:
-        return 'default'
-    }
-  }
 
   const getObjectLink = (entry: AuditLogEntry): string => {
     switch (entry.object_type) {
@@ -153,6 +142,7 @@ const AuditLog = () => {
       case 'dead-host':
         return `/hosts/404/${entry.object_id}/view`
       case 'stream':
+      case 'stream-host':
         return `/hosts/streams/${entry.object_id}/view`
       case 'access-list':
         return `/security/access-lists/${entry.object_id}/view`
@@ -184,6 +174,7 @@ const AuditLog = () => {
         }
         break
       case 'stream':
+      case 'stream-host':
         if (entry.meta.incoming_port) {
           items.push(`Port ${entry.meta.incoming_port}`)
         }
@@ -208,7 +199,15 @@ const AuditLog = () => {
         <Chip 
           label={`#${entry.object_id || '?'}`}
           size="small" 
-          sx={{ mx: 0.5, my: 0.25, cursor: 'pointer' }}
+          sx={{ 
+            mx: 0.5, 
+            my: 0.25, 
+            cursor: 'pointer',
+            '& .MuiChip-label': {
+              px: 1.5,
+              py: 0.5
+            }
+          }}
           onClick={() => handleChipClick(entry)}
         />
       )
@@ -219,27 +218,203 @@ const AuditLog = () => {
         key={index} 
         label={item} 
         size="small" 
-        sx={{ mx: 0.5, my: 0.25, cursor: 'pointer' }}
+        sx={{ 
+          mx: 0.5, 
+          my: 0.25, 
+          cursor: 'pointer',
+          '& .MuiChip-label': {
+            px: 1.5,
+            py: 0.5
+          }
+        }}
         onClick={() => handleChipClick(entry)}
       />
     ))
   }
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    )
-  }
+  // Table column definitions
+  const columns: TableColumn<AuditLogEntry>[] = useMemo(() => [
+    {
+      id: 'user',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <PersonIcon fontSize="small" />
+          <span>User</span>
+        </Box>
+      ),
+      accessor: (entry) => entry.user.name,
+      sortable: true,
+      render: (_, entry) => (
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <Avatar
+            src={entry.user.avatar || '/images/default-avatar.jpg'}
+            sx={{ 
+              width: 40, 
+              height: 40,
+              border: entry.user.is_disabled ? '2px solid' : 'none',
+              borderColor: 'error.main'
+            }}
+          >
+            {entry.user.name.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography
+              variant="body2"
+              fontWeight="medium"
+              sx={{
+                textDecoration: entry.user.is_deleted ? 'line-through' : 'none'
+              }}
+            >
+              {entry.user.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {entry.user.email}
+            </Typography>
+          </Box>
+        </Box>
+      ),
+    },
+    {
+      id: 'object_type',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <CategoryIcon fontSize="small" />
+          <span>Type</span>
+        </Box>
+      ),
+      accessor: (entry) => entry.object_type,
+      sortable: true,
+      render: (_, entry) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          {getObjectIcon(entry.object_type)}
+          <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+            {entry.object_type.replace('-', ' ')}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      id: 'action',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <ActionIcon fontSize="small" />
+          <span>Action</span>
+        </Box>
+      ),
+      accessor: (entry) => entry.action,
+      sortable: true,
+      render: (_, entry) => (
+        <ActionChip action={entry.action as any} />
+      ),
+    },
+    {
+      id: 'entity',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <EntityIcon fontSize="small" />
+          <span>Entity</span>
+        </Box>
+      ),
+      accessor: (entry) => {
+        // For sorting, use the first domain name or name
+        if (entry.meta.domain_names?.[0]) return entry.meta.domain_names[0]
+        if (entry.meta.name) return entry.meta.name
+        if (entry.meta.nice_name) return entry.meta.nice_name
+        if (entry.meta.incoming_port) return `Port ${entry.meta.incoming_port}`
+        return `#${entry.object_id}`
+      },
+      render: (_, entry) => (
+        <Box display="flex" flexWrap="wrap" alignItems="center">
+          {getObjectDisplayName(entry)}
+        </Box>
+      ),
+    },
+    {
+      id: 'created_on',
+      label: (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <DateIcon fontSize="small" />
+          <span>Date</span>
+        </Box>
+      ),
+      accessor: (entry) => entry.created_on,
+      sortable: true,
+      render: (date) => (
+        <Box>
+          <Typography variant="body2">
+            {format(new Date(date), 'MMM d, yyyy')}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {format(new Date(date), 'h:mm a')}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      id: 'actions',
+      label: (
+        <Box display="flex" alignItems="center" justifyContent="flex-end" gap={0.5}>
+          <ActionsIcon fontSize="small" />
+          <span>Actions</span>
+        </Box>
+      ),
+      align: 'right',
+      accessor: () => null,
+      render: (_, entry) => (
+        <Tooltip title="View metadata">
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleViewMeta(entry)
+            }}
+          >
+            <VisibilityIcon />
+          </IconButton>
+        </Tooltip>
+      ),
+    },
+  ], [])
 
-  if (error) {
-    return (
-      <Box p={3}>
-        <Alert severity="error">{error}</Alert>
-      </Box>
-    )
-  }
+  // Filter definitions
+  const filters: Filter[] = useMemo(() => [
+    {
+      id: 'object_type',
+      label: 'Type',
+      type: 'select',
+      options: [
+        { value: 'proxy-host', label: 'Proxy Host', icon: <ProxyIcon fontSize="small" /> },
+        { value: 'redirection-host', label: 'Redirection Host', icon: <RedirectionIcon fontSize="small" /> },
+        { value: 'stream', label: 'Stream', icon: <StreamIcon fontSize="small" /> },
+        { value: 'dead-host', label: '404 Host', icon: <DeadHostIcon fontSize="small" /> },
+        { value: 'access-list', label: 'Access List', icon: <AccessListIcon fontSize="small" /> },
+        { value: 'user', label: 'User', icon: <PersonIcon fontSize="small" /> },
+        { value: 'certificate', label: 'Certificate', icon: <CertificateIcon fontSize="small" /> },
+      ],
+    },
+    {
+      id: 'action',
+      label: 'Action',
+      type: 'select',
+      options: [
+        { value: 'created', label: 'Created', icon: <AddIcon fontSize="small" /> },
+        { value: 'updated', label: 'Updated', icon: <EditIcon fontSize="small" /> },
+        { value: 'deleted', label: 'Deleted', icon: <DeleteIcon fontSize="small" /> },
+        { value: 'enabled', label: 'Enabled', icon: <AddIcon fontSize="small" /> },
+        { value: 'disabled', label: 'Disabled', icon: <DeleteIcon fontSize="small" /> },
+        { value: 'renewed', label: 'Renewed', icon: <EditIcon fontSize="small" /> },
+      ],
+    },
+    {
+      id: 'user.is_disabled',
+      label: 'User Status',
+      type: 'select',
+      options: [
+        { value: 'false', label: 'Active Users', icon: <UserIcon fontSize="small" color="success" /> },
+        { value: 'true', label: 'Disabled Users', icon: <UserIcon fontSize="small" color="error" /> },
+      ],
+    },
+  ], [])
 
   return (
     <Box>
@@ -251,124 +426,21 @@ const AuditLog = () => {
         />
       </Box>
 
-      <Paper sx={{ mb: 2, p: 2 }}>
-        <form onSubmit={handleSearch}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search by user name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </form>
-      </Paper>
-
-      {logs.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" gutterBottom>
-            No audit logs found
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            System activity will appear here
-          </Typography>
-        </Paper>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell width="60">User</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Action</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell width="100" align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {logs.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>
-                    <Avatar
-                      src={entry.user.avatar || '/images/default-avatar.jpg'}
-                      sx={{ 
-                        width: 40, 
-                        height: 40,
-                        border: entry.user.is_disabled ? '2px solid red' : '2px solid green'
-                      }}
-                    >
-                      {entry.user.name.charAt(0).toUpperCase()}
-                    </Avatar>
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        textDecoration: entry.user.is_deleted ? 'line-through' : 'none'
-                      }}
-                    >
-                      {entry.user.name}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box>
-                      <Box display="flex" alignItems="center" flexWrap="wrap">
-                        <Box 
-                          color={`${getObjectColor(entry.object_type)}.main`}
-                          display="flex"
-                          alignItems="center"
-                          mr={1}
-                        >
-                          {getObjectIcon(entry.object_type)}
-                        </Box>
-                        <Chip 
-                          label={entry.action} 
-                          size="small" 
-                          color={getActionColor(entry.action)}
-                          sx={{ mr: 1 }}
-                        />
-                        <Typography variant="body2" component="span">
-                          {entry.object_type.replace('-', ' ')}
-                        </Typography>
-                      </Box>
-                      <Box mt={0.5} display="flex" flexWrap="wrap">
-                        {getObjectDisplayName(entry)}
-                      </Box>
-                      <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
-                        {format(new Date(entry.created_on), 'MMM d, yyyy h:mm a')}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {format(new Date(entry.created_on), 'MMM d, yyyy')}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {format(new Date(entry.created_on), 'h:mm a')}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="View metadata">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleViewMeta(entry)}
-                      >
-                        <VisibilityIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <DataTable
+        data={logs}
+        columns={columns}
+        keyExtractor={(entry) => entry.id}
+        filters={filters}
+        searchPlaceholder="Search by user name, email, or entity..."
+        loading={loading}
+        error={error}
+        emptyMessage="No audit logs found."
+        defaultSortField="created_on"
+        defaultSortDirection="desc"
+        defaultRowsPerPage={50}
+        rowsPerPageOptions={[25, 50, 100, 200]}
+        stickyHeader
+      />
 
       <Dialog
         open={metaDialogOpen}
@@ -377,40 +449,67 @@ const AuditLog = () => {
         fullWidth
       >
         <DialogTitle>
-          Audit Log Metadata
+          <Box display="flex" alignItems="center" gap={1}>
+            <AuditIcon sx={{ color: '#495c68' }} />
+            Audit Log Details
+          </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           {selectedEntry && (
             <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Action Details
-              </Typography>
-              <Box mb={2}>
-                <Typography variant="body2">
-                  <strong>User:</strong> {selectedEntry.user.name} ({selectedEntry.user.email})
+              <Box mb={3}>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  Action Information
                 </Typography>
-                <Typography variant="body2">
-                  <strong>Action:</strong> {selectedEntry.action}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Object Type:</strong> {selectedEntry.object_type}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Object ID:</strong> {selectedEntry.object_id}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Date:</strong> {format(new Date(selectedEntry.created_on), 'PPpp')}
-                </Typography>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Box display="grid" gridTemplateColumns="200px 1fr" gap={1}>
+                    <Typography variant="body2" color="text.secondary">User:</Typography>
+                    <Typography variant="body2">
+                      {selectedEntry.user.name} ({selectedEntry.user.email})
+                    </Typography>
+                    
+                    <Typography variant="body2" color="text.secondary">Action:</Typography>
+                    <ActionChip action={selectedEntry.action as any} />
+                    
+                    <Typography variant="body2" color="text.secondary">Object Type:</Typography>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {getObjectIcon(selectedEntry.object_type)}
+                      <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                        {selectedEntry.object_type.replace('-', ' ')}
+                      </Typography>
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary">Object ID:</Typography>
+                    <Typography variant="body2">{selectedEntry.object_id}</Typography>
+                    
+                    <Typography variant="body2" color="text.secondary">Date:</Typography>
+                    <Typography variant="body2">
+                      {format(new Date(selectedEntry.created_on), 'PPpp')}
+                    </Typography>
+                  </Box>
+                </Paper>
               </Box>
               
-              <Typography variant="subtitle2" gutterBottom>
-                Metadata
-              </Typography>
-              <Paper variant="outlined" sx={{ p: 2, backgroundColor: 'grey.50' }}>
-                <pre style={{ margin: 0, fontSize: '0.875rem', overflow: 'auto' }}>
-                  {JSON.stringify(selectedEntry.meta, null, 2)}
-                </pre>
-              </Paper>
+              <Box>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  Metadata
+                </Typography>
+                <Paper variant="outlined" sx={{ p: 0, backgroundColor: 'action.hover', overflow: 'hidden' }}>
+                  <SyntaxHighlighter
+                    language="json"
+                    style={theme.palette.mode === 'dark' ? atomOneDark : atomOneLight}
+                    customStyle={{
+                      margin: 0,
+                      padding: '16px',
+                      backgroundColor: 'transparent',
+                      fontSize: '0.875rem',
+                    }}
+                    wrapLongLines={true}
+                  >
+                    {JSON.stringify(selectedEntry.meta, null, 2)}
+                  </SyntaxHighlighter>
+                </Paper>
+              </Box>
             </Box>
           )}
         </DialogContent>

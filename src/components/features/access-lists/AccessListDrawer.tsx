@@ -21,6 +21,7 @@ import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import ArrayFieldManager from '../../shared/ArrayFieldManager'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface AccessListDrawerProps {
   open: boolean
@@ -47,8 +48,95 @@ interface AccessListFormData {
   accessRules: AccessRule[]
 }
 
+// Memoized components to prevent re-renders and focus loss
+const AuthItemComponent = React.memo(({ value, onChange, onDelete, index, accessList }: any) => (
+  <Paper
+    variant="outlined"
+    sx={{
+      p: 2,
+      display: 'flex',
+      gap: 2,
+      alignItems: 'flex-start'
+    }}
+  >
+    <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
+      <TextField
+        label="Username"
+        value={value.username}
+        onChange={(e) => {
+          onChange({ ...value, username: e.target.value })
+        }}
+        error={false}
+        helperText={undefined}
+        fullWidth
+        required
+      />
+      <TextField
+        label="Password"
+        type="password"
+        value={value.password}
+        onChange={(e) => {
+          onChange({ ...value, password: e.target.value })
+        }}
+        error={false}
+        helperText={undefined}
+        fullWidth
+        required={!accessList}
+        placeholder={accessList ? 'Leave blank to keep current password' : 'Enter password'}
+      />
+    </Box>
+  </Paper>
+))
+
+const AccessRuleComponent = React.memo(({ value, onChange, onDelete, index }: any) => (
+  <Paper
+    variant="outlined"
+    sx={{
+      p: 2,
+      display: 'flex',
+      gap: 2,
+      alignItems: 'flex-start'
+    }}
+  >
+    <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
+      <TextField
+        label="IP Address or Range"
+        value={value.address}
+        onChange={(e) => {
+          onChange({ ...value, address: e.target.value })
+        }}
+        error={false}
+        helperText="Examples: 192.168.1.0/24, 10.0.0.5, all"
+        fullWidth
+        required
+      />
+      <FormControl sx={{ minWidth: 120 }}>
+        <InputLabel>Action</InputLabel>
+        <Select
+          value={value.directive}
+          onChange={(e) => {
+            onChange({ ...value, directive: e.target.value })
+          }}
+          label="Action"
+        >
+          <MenuItem value="allow">Allow</MenuItem>
+          <MenuItem value="deny">Deny</MenuItem>
+        </Select>
+      </FormControl>
+    </Box>
+  </Paper>
+))
+
 export default function AccessListDrawer({ open, onClose, accessList, onSave }: AccessListDrawerProps) {
   const [activeTab, setActiveTab] = React.useState(0)
+  const { showSuccess, showError } = useToast()
+  const isEditMode = !!accessList
+  
+  // Create memoized component with accessList in closure
+  const AuthItemWithAccessList = React.useCallback(
+    (props: any) => <AuthItemComponent {...props} accessList={accessList} />,
+    [accessList]
+  )
 
   const {
     data,
@@ -58,6 +146,8 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     errors,
     handleSubmit,
     resetForm,
+    isDirty,
+    isValid,
   } = useDrawerForm<AccessListFormData>({
     initialData: {
       name: accessList?.name || '',
@@ -72,28 +162,24 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
         directive: client.directive,
       })) || [{ address: '', directive: 'allow' }],
     },
-    validate: (values) => {
-      const validationErrors: Record<string, string> = {}
+    validate: (data) => {
+      const errors: Partial<Record<keyof AccessListFormData, string>> = {}
       
-      if (!values.name.trim()) {
-        validationErrors.name = 'Name is required'
+      // Name validation
+      if (!data.name || data.name.trim() === '') {
+        errors.name = 'Name is required'
       }
       
-      // Validate auth items if they exist
-      values.authItems.forEach((item, index) => {
-        if (item.username && !item.password && !accessList) {
-          validationErrors[`authItems.${index}.password`] = 'Password is required'
-        }
-      })
+      // At least one auth item or access rule is required
+      const hasValidAuthItems = data.authItems.some(item => item.username && item.password)
+      const hasValidAccessRules = data.accessRules.some(rule => rule.address)
       
-      // Validate access rules
-      values.accessRules.forEach((rule, index) => {
-        if (!rule.address.trim()) {
-          validationErrors[`accessRules.${index}.address`] = 'Address is required'
-        }
-      })
+      if (!hasValidAuthItems && !hasValidAccessRules) {
+        errors.authItems = 'At least one authorization item or access rule is required'
+        errors.accessRules = 'At least one authorization item or access rule is required'
+      }
       
-      return Object.keys(validationErrors).length > 0 ? validationErrors : null
+      return Object.keys(errors).length > 0 ? errors : null
     },
     onSubmit: async (data) => {
       const payload: CreateAccessList | UpdateAccessList = {
@@ -110,16 +196,20 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
         await accessListsApi.create(payload)
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      showSuccess('access-list', isEditMode ? 'updated' : 'created', data.name)
       onSave()
       onClose()
+    },
+    onError: (error) => {
+      showError('access-list', isEditMode ? 'update' : 'create', error.message, data.name)
     },
   })
 
   const tabs = [
-    { id: 'details', label: 'Details', icon: <InfoIcon /> },
-    { id: 'authorization', label: 'Authorization', icon: <LockIcon /> },
-    { id: 'access', label: 'Access', icon: <SecurityIcon /> },
+    { id: 'details', label: 'Details', icon: <InfoIcon />, hasError: Boolean(errors.name) },
+    { id: 'authorization', label: 'Authorization', icon: <LockIcon />, hasError: Boolean(errors.authItems) },
+    { id: 'access', label: 'Access', icon: <SecurityIcon />, hasError: Boolean(errors.accessRules) },
   ]
 
   const handleAuthItemChange = (index: number, field: 'username' | 'password', value: string) => {
@@ -137,7 +227,19 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
   // Reset form when accessList changes
   React.useEffect(() => {
     if (open) {
-      resetForm()
+      resetForm({
+        name: accessList?.name || '',
+        satisfyAny: accessList?.satisfy_any || false,
+        passAuth: accessList?.pass_auth || false,
+        authItems: accessList?.items?.map(item => ({
+          username: item.username,
+          password: '', // Password not returned by API
+        })) || [{ username: '', password: '' }],
+        accessRules: accessList?.clients?.map(client => ({
+          address: client.address,
+          directive: client.directive,
+        })) || [{ address: '', directive: 'allow' }],
+      })
       setActiveTab(0)
     }
   }, [accessList, open, resetForm])
@@ -147,16 +249,21 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       open={open}
       onClose={onClose}
       title={accessList ? 'Edit Access List' : 'Create Access List'}
+      titleIcon={<SecurityIcon sx={{ color: '#2bcbba' }} />}
       subtitle="Manage access control and authorization"
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
-      onSave={() => handleSubmit()}
+      onSave={handleSubmit}
       loading={loading}
       error={globalError || undefined}
+      isDirty={isDirty}
+      saveDisabled={!isValid}
+      confirmClose={isDirty}
+      saveText={isEditMode ? 'Save Changes' : 'Create Access List'}
     >
       {/* Details Tab */}
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <FormSection
           title="Basic Information"
           description="Configure the basic settings for this access list"
@@ -167,11 +274,11 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             label="Name"
             value={data.name}
             onChange={(e) => setFieldValue('name', e.target.value)}
-            error={!!errors.name}
-            helperText={errors.name}
             fullWidth
             required
             placeholder="Enter a descriptive name"
+            error={!!errors.name}
+            helperText={errors.name}
           />
         </FormSection>
 
@@ -205,7 +312,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       </TabPanel>
 
       {/* Authorization Tab */}
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <FormSection
           title="Authorization Users"
           description="Add users that can authenticate against this access list"
@@ -215,59 +322,18 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             value={data.authItems}
             onChange={(value) => setFieldValue('authItems', value)}
             label="Authorization Users"
-            helperText="Add users that can authenticate against this access list"
+            helperText={errors.authItems || "Add users that can authenticate against this access list"}
             defaultValue={{ username: '', password: '' }}
             addButtonText="Add User"
             emptyPlaceholder="No users added yet. Add users to enable authentication."
-            ItemComponent={({ value, onChange, onDelete, index }) => (
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  gap: 2,
-                  alignItems: 'flex-start'
-                }}
-              >
-                <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
-                  <TextField
-                    label="Username"
-                    value={value.username}
-                    onChange={(e) => {
-                      onChange({ ...value, username: e.target.value })
-                    }}
-                    error={false}
-                    helperText={undefined}
-                    fullWidth
-                    required
-                  />
-                  <TextField
-                    label="Password"
-                    type="password"
-                    value={value.password}
-                    onChange={(e) => {
-                      onChange({ ...value, password: e.target.value })
-                    }}
-                    error={false}
-                    helperText={undefined}
-                    fullWidth
-                    required={!accessList}
-                    placeholder={accessList ? 'Leave blank to keep current password' : 'Enter password'}
-                  />
-                </Box>
-              </Paper>
-            )}
-            validateItem={(item) => {
-              if (!item.username) return 'Username is required'
-              if (!accessList && !item.password) return 'Password is required'
-              return null
-            }}
+            ItemComponent={AuthItemWithAccessList}
+            error={!!errors.authItems}
           />
         </FormSection>
       </TabPanel>
 
       {/* Access Tab */}
-      <TabPanel value={activeTab} index={2}>
+      <TabPanel value={activeTab} index={2} keepMounted animation="none">
         <FormSection
           title="Access Rules"
           description="Define IP addresses and ranges that should be allowed or denied"
@@ -277,54 +343,12 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             value={data.accessRules}
             onChange={(value) => setFieldValue('accessRules', value)}
             label="Access Rules"
-            helperText="Define IP addresses and ranges that should be allowed or denied"
+            helperText={errors.accessRules || "Define IP addresses and ranges that should be allowed or denied"}
             defaultValue={{ address: '', directive: 'allow' }}
             addButtonText="Add Rule"
             emptyPlaceholder="No access rules defined. Add rules to control IP-based access."
-            minItems={1}
-            ItemComponent={({ value, onChange, onDelete, index }) => (
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  gap: 2,
-                  alignItems: 'flex-start'
-                }}
-              >
-                <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
-                  <TextField
-                    label="IP Address or Range"
-                    value={value.address}
-                    onChange={(e) => {
-                      onChange({ ...value, address: e.target.value })
-                    }}
-                    error={false}
-                    helperText={'e.g., 192.168.1.0/24 or 10.0.0.1'}
-                    fullWidth
-                    required
-                    placeholder="192.168.1.0/24"
-                  />
-                  <FormControl sx={{ minWidth: 120 }}>
-                    <InputLabel>Action</InputLabel>
-                    <Select
-                      value={value.directive}
-                      label="Action"
-                      onChange={(e) => {
-                        onChange({ ...value, directive: e.target.value as 'allow' | 'deny' })
-                      }}
-                    >
-                      <MenuItem value="allow">Allow</MenuItem>
-                      <MenuItem value="deny">Deny</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-              </Paper>
-            )}
-            validateItem={(rule) => {
-              if (!rule.address.trim()) return 'IP address is required'
-              return null
-            }}
+            ItemComponent={AccessRuleComponent}
+            error={!!errors.accessRules}
           />
         </FormSection>
       </TabPanel>

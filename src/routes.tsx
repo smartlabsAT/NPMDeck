@@ -340,6 +340,14 @@ export const routes = [
           </ProtectedRoute>
         ),
       },
+      {
+        path: 'admin/settings/:tab',
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            {withSuspense(Settings)}
+          </ProtectedRoute>
+        ),
+      },
       /* {
         path: 'tools/import-export',
         element: (

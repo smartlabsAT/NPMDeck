@@ -1,4 +1,4 @@
-import { useState, useTransition } from 'react'
+import React, { useState, useTransition } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   AppBar,
@@ -36,9 +36,8 @@ import {
   ExpandLess,
   ExpandMore,
   AccountCircle,
-  TrendingFlat,
-  // ImportExport as ImportExportIcon,
-  ChevronRight
+  TrendingFlat, // ImportExport as ImportExportIcon,
+  ChevronRight, Tune as PreferencesIcon,
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
@@ -144,7 +143,7 @@ const Layout = () => {
       children: [
         { text: 'Users', icon: <Group />, path: '/admin/users' },
         { text: 'Audit Log', icon: <Description />, path: '/admin/audit-log' },
-        { text: 'Settings', icon: <Settings />, path: '/admin/settings' }
+        { text: 'Settings', icon: <PreferencesIcon sx={{ color: '#6c757d' }} />, path: '/admin/settings' }
       ]
     }
   ]

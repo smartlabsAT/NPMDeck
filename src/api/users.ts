@@ -19,6 +19,7 @@ export interface User {
   }
   created_on: string
   modified_on: string
+  last_login?: string
 }
 
 export interface CreateUserPayload {
@@ -26,7 +27,7 @@ export interface CreateUserPayload {
   nickname: string
   email: string
   is_disabled?: boolean
-  permissions?: User['permissions']
+  roles?: string[]
 }
 
 export interface UpdateUserPayload extends Partial<CreateUserPayload> {}

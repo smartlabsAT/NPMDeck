@@ -51,6 +51,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import PermissionButton from '../components/PermissionButton'
 import PageHeader from '../components/PageHeader'
 import PermissionIconButton from '../components/PermissionIconButton'
+import { useToast } from '../contexts/ToastContext'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'status' | 'domain_names' | 'forward_host' | 'ssl' | 'access'
@@ -98,6 +99,7 @@ const ProxyHosts = () => {
   const [hostToDelete, setHostToDelete] = useState<ProxyHost | null>(null)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [viewingHost, setViewingHost] = useState<ProxyHost | null>(null)
+  const { showSuccess, showError } = useToast()
   const [order, setOrder] = useState<Order>('asc')
   const [orderBy, setOrderBy] = useState<OrderBy>('domain_names')
   const [groupByDomain, setGroupByDomain] = useState<boolean>(() => {
@@ -235,9 +237,13 @@ const ProxyHosts = () => {
     
     try {
       await proxyHostsApi.delete(hostToDelete.id)
+      showSuccess('proxy-host', 'deleted', hostToDelete.domain_names[0] || `#${hostToDelete.id}`, hostToDelete.id)
       await loadHosts()
+      setDeleteDialogOpen(false)
+      setHostToDelete(null)
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      showError('proxy-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
+      console.error('Failed to delete host:', err)
     }
   }
 

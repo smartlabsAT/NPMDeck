@@ -24,6 +24,7 @@ import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import DomainInput from '../../DomainInput'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface DeadHostDrawerProps {
   open: boolean
@@ -47,6 +48,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
   const [activeTab, setActiveTab] = React.useState(0)
   const [certificates, setCertificates] = React.useState<Certificate[]>([])
   const [loadingCertificates, setLoadingCertificates] = React.useState(false)
+  const { showSuccess, showError } = useToast()
   
   const isEditMode = !!host
 
@@ -60,6 +62,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
     isDirty,
     isValid,
     getFieldProps,
+    resetForm,
   } = useDrawerForm<DeadHostFormData>({
     initialData: {
       domainNames: host?.domain_names || [],
@@ -71,19 +74,15 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       http2Support: host?.http2_support ?? false,
       advancedConfig: host?.advanced_config || '',
     },
-    fields: {
-      domainNames: {
-        initialValue: [],
-        required: true,
-        requiredMessage: 'At least one domain name is required',
-      },
-      certificateId: { initialValue: 0 },
-      selectedCertificate: { initialValue: null },
-      sslForced: { initialValue: false },
-      hstsEnabled: { initialValue: false },
-      hstsSubdomains: { initialValue: false },
-      http2Support: { initialValue: false },
-      advancedConfig: { initialValue: '' },
+    validate: (data) => {
+      const errors: Partial<Record<keyof DeadHostFormData, string>> = {}
+      
+      // Domain names validation
+      if (!data.domainNames || data.domainNames.length === 0) {
+        errors.domainNames = 'At least one domain name is required'
+      }
+      
+      return Object.keys(errors).length > 0 ? errors : null
     },
     onSubmit: async (formData) => {
       const dataToSend: CreateDeadHost | UpdateDeadHost = {
@@ -105,7 +104,29 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       onSave()
       onClose()
     },
+    onSuccess: (data) => {
+      showSuccess('dead-host', isEditMode ? 'updated' : 'created', data.domainNames[0] || `#${host?.id || 'new'}`)
+    },
+    onError: (error) => {
+      showError('dead-host', isEditMode ? 'update' : 'create', error.message, data.domainNames[0])
+    },
   })
+
+  // Reset form when host prop changes
+  React.useEffect(() => {
+    if (host && open) {
+      resetForm({
+        domainNames: host.domain_names || [],
+        certificateId: host.certificate_id || 0,
+        selectedCertificate: null,
+        sslForced: host.ssl_forced ?? false,
+        hstsEnabled: host.hsts_enabled ?? false,
+        hstsSubdomains: host.hsts_subdomains ?? false,
+        http2Support: host.http2_support ?? false,
+        advancedConfig: host.advanced_config || '',
+      })
+    }
+  }, [host?.id, open, resetForm])
 
   // Load certificates when drawer opens
   React.useEffect(() => {
@@ -163,7 +184,6 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
 
   const title = (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <BlockIcon sx={{ color: '#cd201f' }} />
       {isEditMode ? 'Edit 404 Host' : 'Create 404 Host'}
     </Box>
   )
@@ -173,6 +193,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       open={open}
       onClose={onClose}
       title={title}
+      titleIcon={<BlockIcon sx={{ color: '#cd201f' }} />}
       subtitle={data.domainNames.length > 0 ? data.domainNames.join(', ') : '404 Host Configuration'}
       tabs={tabs}
       activeTab={activeTab}
@@ -186,7 +207,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       confirmClose={isDirty}
       width={600}
     >
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <GeneralTab
           data={data}
           setFieldValue={setFieldValue}
@@ -197,7 +218,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <AdvancedTab
           data={data}
           setFieldValue={setFieldValue}

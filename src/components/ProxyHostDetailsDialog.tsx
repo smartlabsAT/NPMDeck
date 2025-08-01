@@ -14,6 +14,7 @@ import {
   Settings as SettingsIcon,
   Link as LinkIcon,
   Security as SecurityIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material'
 import { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
@@ -84,15 +85,18 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
       const pathParts = location.pathname.split('/')
       const tabIndex = pathParts[pathParts.length - 1]
       switch (tabIndex) {
-        case 'advanced':
+        case 'ssl':
           setActiveTab(1)
           break
-        case 'connections':
+        case 'advanced':
           setActiveTab(2)
+          break
+        case 'connections':
+          setActiveTab(3)
           break
         case 'access':
           if (host?.access_list) {
-            setActiveTab(3)
+            setActiveTab(4)
           }
           break
         default:
@@ -111,7 +115,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
 
   // Load access list details when access tab is active
   useEffect(() => {
-    if (activeTab === 3 && open && host?.access_list?.id) {
+    if (activeTab === 4 && open && host?.access_list?.id) {
       loadAccessListDetails()
     }
   }, [activeTab, open, host?.access_list?.id])
@@ -167,7 +171,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
   }
 
   const handleNavigateToAccess = () => {
-    setActiveTab(3)
+    setActiveTab(4)
     navigate(`/hosts/proxy/${host!.id}/view/access`, { replace: true })
   }
 
@@ -194,7 +198,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
     if (host) {
-      const tabs = ['overview', 'advanced', 'connections']
+      const tabs = ['overview', 'ssl', 'advanced', 'connections']
       if (host.access_list) {
         tabs.push('access')
       }
@@ -233,6 +237,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTab} onChange={handleTabChange} aria-label="proxy host details tabs">
           <Tab label="Overview" icon={<InfoIcon />} iconPosition="start" />
+          <Tab label="SSL Certificate" icon={<LockIcon />} iconPosition="start" />
           <Tab label="Advanced" icon={<SettingsIcon />} iconPosition="start" />
           <Tab 
             label={
@@ -266,18 +271,20 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
             onCopyToClipboard={copyToClipboard}
             onNavigateToAccess={handleNavigateToAccess}
           />
-          <ProxyHostSSLPanel
-            host={host}
-            onNavigateToCertificate={handleNavigateToCertificate}
-            onNavigateToAccess={handleNavigateToAccess}
-          />
         </TabPanel>
 
         <TabPanel value={activeTab} index={1}>
-          <ProxyHostAdvancedPanel host={host} />
+          <ProxyHostSSLPanel
+            host={host}
+            onNavigateToCertificate={handleNavigateToCertificate}
+          />
         </TabPanel>
 
         <TabPanel value={activeTab} index={2}>
+          <ProxyHostAdvancedPanel host={host} />
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={3}>
           <ProxyHostConnectionsPanel
             linkedRedirections={linkedRedirections}
             loadingConnections={loadingConnections}
@@ -287,7 +294,7 @@ const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
         </TabPanel>
 
         {host.access_list && (
-          <TabPanel value={activeTab} index={3}>
+          <TabPanel value={activeTab} index={4}>
             <ProxyHostAccessPanel
               host={host}
               fullAccessList={fullAccessList}

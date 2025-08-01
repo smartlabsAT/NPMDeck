@@ -16,6 +16,7 @@ import {
   Typography,
   Divider,
 } from '@mui/material'
+import { Security as SecurityIcon } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
 import { getErrorMessage } from '../types/common'
 
@@ -106,7 +107,12 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({ open, onC
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Edit Permissions</DialogTitle>
+      <DialogTitle>
+        <Box display="flex" alignItems="center" gap={1}>
+          <SecurityIcon sx={{ color: '#868e96' }} />
+          Edit Permissions
+        </Box>
+      </DialogTitle>
       <DialogContent>
         <Box sx={{ pt: 1 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>

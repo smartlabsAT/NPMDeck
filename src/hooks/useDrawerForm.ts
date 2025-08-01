@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { getErrorMessage } from '../types/common';
 
 /**
  * Validation function type
@@ -74,6 +75,8 @@ export interface FormState<T> {
   isValid: boolean;
   /** Auto-save status */
   autoSaveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  /** Whether form has been submitted at least once */
+  hasSubmitted: boolean;
 }
 
 /**
@@ -154,6 +157,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
     touched: {},
     isValid: true,
     autoSaveStatus: 'idle',
+    hasSubmitted: false,
   }));
 
   // Refs for managing side effects
@@ -215,9 +219,16 @@ export const useDrawerForm = <T extends Record<string, any>>({
         ? updates(prev.data)
         : { ...prev.data, ...updates };
       
-      const errors = validateAllFields(newData);
+      // Validate if form has been submitted before
+      let errors = prev.errors;
+      let isValid = prev.isValid;
+      
+      if (prev.hasSubmitted) {
+        errors = validateAllFields(newData);
+        isValid = Object.keys(errors).length === 0;
+      }
+      
       const isDirty = !isEqual(newData, initialDataRef.current);
-      const isValid = Object.keys(errors).length === 0;
       
       return {
         ...prev,
@@ -228,7 +239,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
         globalError: null,
       };
     });
-  }, [validateAllFields, isEqual]);
+  }, [isEqual, validateAllFields]);
 
   /**
    * Update a single field value
@@ -236,29 +247,29 @@ export const useDrawerForm = <T extends Record<string, any>>({
   const setFieldValue = useCallback((key: keyof T, value: any) => {
     setFormState((prev) => {
       const newData = { ...prev.data, [key]: value };
-      const fieldError = validateField(key, value, newData);
-      const newErrors = { ...prev.errors };
       
-      if (fieldError) {
-        newErrors[key] = fieldError;
-      } else {
-        delete newErrors[key];
+      // Validate if form has been submitted before
+      let errors = prev.errors;
+      let isValid = prev.isValid;
+      
+      if (prev.hasSubmitted) {
+        errors = validateAllFields(newData);
+        isValid = Object.keys(errors).length === 0;
       }
       
       const isDirty = !isEqual(newData, initialDataRef.current);
-      const isValid = Object.keys(newErrors).length === 0;
       
       return {
         ...prev,
         data: newData,
-        errors: newErrors,
+        errors,
         isDirty,
         isValid,
         touched: { ...prev.touched, [key]: true },
         globalError: null,
       };
     });
-  }, [validateField, isEqual]);
+  }, [isEqual, validateAllFields]);
 
   /**
    * Mark field as touched
@@ -288,8 +299,17 @@ export const useDrawerForm = <T extends Record<string, any>>({
       touched: {},
       isValid: true,
       autoSaveStatus: 'idle',
+      hasSubmitted: false,
     });
   }, []);
+
+  /**
+   * Mark form as clean by updating initial data reference
+   */
+  const markAsClean = useCallback(() => {
+    initialDataRef.current = { ...formState.data };
+    setFormState((prev) => ({ ...prev, isDirty: false }));
+  }, [formState.data]);
 
   /**
    * Handle form submission
@@ -303,7 +323,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
     
     const errors = validateAllFields(formState.data);
     if (Object.keys(errors).length > 0) {
-      setFormState((prev) => ({ ...prev, errors, isValid: false }));
+      setFormState((prev) => ({ ...prev, errors, isValid: false, hasSubmitted: true }));
       return;
     }
     
@@ -322,7 +342,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
       
       onSuccess?.(formState.data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = getErrorMessage(error);
       setFormState((prev) => ({ ...prev, globalError: errorMessage }));
       onError?.(error instanceof Error ? error : new Error(errorMessage));
     } finally {
@@ -389,22 +409,14 @@ export const useDrawerForm = <T extends Record<string, any>>({
       },
       onBlur: () => {
         setFieldTouched(key, true);
-        if (fieldConfig?.validateOnBlur !== false) {
-          // Trigger validation on blur if enabled
-          const error = validateField(key, formState.data[key], formState.data);
-          if (error !== formState.errors[key]) {
-            setFormState((prev) => ({
-              ...prev,
-              errors: { ...prev.errors, [key]: error || undefined },
-            }));
-          }
-        }
+        // Don't validate on blur
       },
       error: hasError,
       helperText: hasError ? formState.errors[key] : undefined,
       disabled: formState.loading,
     };
   }, [fields, formState.data, formState.errors, formState.touched, formState.loading, setFieldValue, setFieldTouched, validateField]);
+
 
   /**
    * Cleanup on unmount
@@ -427,6 +439,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
     setFieldTouched,
     resetForm,
     handleSubmit,
+    markAsClean,
     
     // Helpers
     getFieldProps,

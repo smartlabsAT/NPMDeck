@@ -26,6 +26,7 @@ import BaseDrawer from '../../base/BaseDrawer'
 import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface StreamDrawerProps {
   open: boolean
@@ -48,6 +49,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
   const [activeTab, setActiveTab] = React.useState(0)
   const [certificates, setCertificates] = React.useState<Certificate[]>([])
   const [loadingCertificates, setLoadingCertificates] = React.useState(false)
+  const { showSuccess, showError } = useToast()
   
   const isEditMode = !!stream
 
@@ -79,6 +81,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     isDirty,
     isValid,
     getFieldProps,
+    resetForm,
   } = useDrawerForm<StreamFormData>({
     initialData: {
       incomingPort: stream?.incoming_port || '',
@@ -91,71 +94,66 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     },
     fields: {
       incomingPort: {
-        initialValue: '',
-        required: true,
-        requiredMessage: 'Incoming port is required',
-        validate: (value: string | number) => {
-          const port = typeof value === 'string' ? parseInt(value, 10) : value
-          if (isNaN(port) || port < 1 || port > 65535) {
-            return 'Incoming port must be between 1 and 65535'
-          }
-          return null
-        }
+        initialValue: stream?.incoming_port || '',
       },
       forwardingHost: {
-        initialValue: '',
-        required: true,
-        requiredMessage: 'Forwarding host is required',
+        initialValue: stream?.forwarding_host || '',
       },
       forwardingPort: {
-        initialValue: '',
-        required: true,
-        requiredMessage: 'Forwarding port is required',
-        validate: (value: string | number) => {
-          const port = typeof value === 'string' ? parseInt(value, 10) : value
-          if (isNaN(port) || port < 1 || port > 65535) {
-            return 'Forwarding port must be between 1 and 65535'
-          }
-          return null
-        }
+        initialValue: stream?.forwarding_port || '',
       },
       certificateId: {
-        initialValue: 0,
-        required: false
+        initialValue: stream?.certificate_id || 0,
       },
       selectedCertificate: {
         initialValue: null as Certificate | null,
-        required: false
       },
       tcpForwarding: {
-        initialValue: true,
-        required: false
+        initialValue: stream?.tcp_forwarding ?? true,
       },
       udpForwarding: {
-        initialValue: false,
-        required: false
+        initialValue: stream?.udp_forwarding ?? false,
       },
     },
-    validate: (formData) => {
-      const validationErrors: Record<keyof StreamFormData, string> = {
-        incomingPort: '',
-        forwardingHost: '',
-        forwardingPort: '',
-        tcpForwarding: '',
-        udpForwarding: '',
-        certificateId: '',
-        selectedCertificate: ''
+    validate: (data) => {
+      const errors: Partial<Record<keyof StreamFormData, string>> = {}
+      
+      // Incoming port validation
+      if (!data.incomingPort) {
+        errors.incomingPort = 'Incoming port is required'
+      } else {
+        const port = typeof data.incomingPort === 'string' 
+          ? parseInt(data.incomingPort, 10) 
+          : data.incomingPort
+        if (isNaN(port) || port < 1 || port > 65535) {
+          errors.incomingPort = 'Port must be between 1 and 65535'
+        }
       }
       
-      let hasErrors = false
-      
-      if (!formData.tcpForwarding && !formData.udpForwarding) {
-        validationErrors.tcpForwarding = 'At least one forwarding type (TCP or UDP) must be enabled'
-        validationErrors.udpForwarding = 'At least one forwarding type (TCP or UDP) must be enabled'
-        hasErrors = true
+      // Forwarding host validation
+      if (!data.forwardingHost) {
+        errors.forwardingHost = 'Forwarding host is required'
       }
       
-      return hasErrors ? validationErrors : null
+      // Forwarding port validation
+      if (!data.forwardingPort) {
+        errors.forwardingPort = 'Forwarding port is required'
+      } else {
+        const port = typeof data.forwardingPort === 'string' 
+          ? parseInt(data.forwardingPort, 10) 
+          : data.forwardingPort
+        if (isNaN(port) || port < 1 || port > 65535) {
+          errors.forwardingPort = 'Port must be between 1 and 65535'
+        }
+      }
+      
+      // At least one protocol must be selected
+      if (!data.tcpForwarding && !data.udpForwarding) {
+        errors.tcpForwarding = 'At least one protocol must be selected'
+        errors.udpForwarding = 'At least one protocol must be selected'
+      }
+      
+      return Object.keys(errors).length > 0 ? errors : null
     },
     onSubmit: async (formData) => {
       const inPort = typeof formData.incomingPort === 'string' 
@@ -190,6 +188,14 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       onSave()
       onClose()
     },
+    onSuccess: (data) => {
+      const streamName = `${data.incomingPort}/${data.tcpForwarding ? 'TCP' : ''}${data.udpForwarding ? 'UDP' : ''}`
+      showSuccess('stream', isEditMode ? 'updated' : 'created', streamName)
+    },
+    onError: (error) => {
+      const streamName = data.incomingPort ? `${data.incomingPort}/${data.tcpForwarding ? 'TCP' : ''}${data.udpForwarding ? 'UDP' : ''}` : 'Stream'
+      showError('stream', isEditMode ? 'update' : 'create', error.message, streamName)
+    },
     autoSave: {
       enabled: true,
       delay: 3000,
@@ -205,8 +211,18 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
   React.useEffect(() => {
     if (open) {
       loadCertificates()
+      // Reset form when opening with different stream or new stream
+      resetForm({
+        incomingPort: stream?.incoming_port || '',
+        forwardingHost: stream?.forwarding_host || '',
+        forwardingPort: stream?.forwarding_port || '',
+        tcpForwarding: stream?.tcp_forwarding ?? true,
+        udpForwarding: stream?.udp_forwarding ?? false,
+        certificateId: stream?.certificate_id || 0,
+        selectedCertificate: null,
+      })
     }
-  }, [open])
+  }, [open, stream, resetForm])
 
   // Set selected certificate after certificates are loaded
   React.useEffect(() => {
@@ -257,6 +273,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       open={open}
       onClose={onClose}
       title={titleContent}
+      titleIcon={<StreamIcon sx={{ color: '#467fcf' }} />}
       subtitle={data?.forwardingHost ? `${data.incomingPort} → ${data.forwardingHost}:${data.forwardingPort}` : 'Stream Configuration'}
       tabs={tabs}
       activeTab={activeTab}
@@ -265,12 +282,12 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       error={globalError}
       isDirty={isDirty}
       onSave={handleSubmit}
-      saveDisabled={!isValid}
+      saveDisabled={false}
       saveText={isEditMode ? 'Save Changes' : 'Create Stream'}
       confirmClose={isDirty}
       width={600}
     >
-      <TabPanel value={activeTab} index={0}>
+      <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab
           data={data}
           setFieldValue={setFieldValue}
@@ -279,7 +296,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
         />
       </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <SSLTab
           data={data}
           setFieldValue={setFieldValue}
@@ -315,6 +332,7 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
           type="number"
           required
           fullWidth
+          error={!!errors.incomingPort}
           helperText={errors.incomingPort || "The port that will receive incoming connections"}
           InputProps={{
             inputProps: { min: 1, max: 65535 }
@@ -329,6 +347,7 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             placeholder="192.168.1.1 or example.com"
             required
             sx={{ flex: 1 }}
+            error={!!errors.forwardingHost}
             helperText={errors.forwardingHost || "The destination host"}
           />
           <TextField
@@ -340,14 +359,15 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             }}
             required
             sx={{ width: 150 }}
+            error={!!errors.forwardingPort}
             helperText={errors.forwardingPort || "The destination port"}
           />
         </Box>
       </FormSection>
 
       <FormSection title="Forwarding Type" required>
-        <FormHelperText sx={{ mb: 2 }}>
-          Select at least one protocol to forward
+        <FormHelperText sx={{ mb: 2, color: errors.tcpForwarding ? 'error.main' : 'text.secondary' }}>
+          {errors.tcpForwarding || 'Select at least one protocol to forward'}
         </FormHelperText>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <FormControlLabel
@@ -369,11 +389,6 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             label="UDP Forwarding"
           />
         </Box>
-        {errors.tcpForwarding && (
-          <FormHelperText error sx={{ mt: 1 }}>
-            {errors.tcpForwarding}
-          </FormHelperText>
-        )}
       </FormSection>
     </Box>
   )

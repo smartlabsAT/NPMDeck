@@ -52,6 +52,7 @@ import CertificateDetailsDialog from '../components/CertificateDetailsDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
+import { useToast } from '../contexts/ToastContext'
 
 type Order = 'asc' | 'desc'
 type OrderBy = 'nice_name' | 'domain_names' | 'provider' | 'expires_on'
@@ -135,6 +136,7 @@ const Certificates = () => {
   
   const { } = useAuthStore()
   const { } = usePermissions()
+  const { showSuccess, showError } = useToast()
 
   useEffect(() => {
     loadCertificates()
@@ -309,8 +311,12 @@ const Certificates = () => {
     
     try {
       await certificatesApi.delete(certToDelete.id)
+      showSuccess('certificate', 'deleted', certToDelete.nice_name || certToDelete.domain_names[0], certToDelete.id)
       await loadCertificates()
+      setDeleteDialogOpen(false)
+      setCertToDelete(null)
     } catch (err: unknown) {
+      showError('certificate', 'delete', err instanceof Error ? err.message : 'Unknown error', certToDelete.nice_name || certToDelete.domain_names[0], certToDelete.id)
       setError(getErrorMessage(err))
     }
   }
@@ -322,8 +328,10 @@ const Certificates = () => {
     
     try {
       await certificatesApi.renew(cert.id)
+      showSuccess('certificate', 'renewed', cert.nice_name || cert.domain_names[0], cert.id)
       await loadCertificates()
     } catch (err: unknown) {
+      showError('certificate', 'renew', err instanceof Error ? err.message : 'Unknown error', cert.nice_name || cert.domain_names[0], cert.id)
       setError(getErrorMessage(err))
     } finally {
       setRenewingCerts(prev => {
@@ -783,7 +791,10 @@ const Certificates = () => {
                           <Tooltip title="Renew">
                             <IconButton
                               size="small"
-                              onClick={() => handleRenew(cert)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleRenew(cert)
+                              }}
                               color="primary"
                               disabled={renewingCerts.has(cert.id)}
                             >
@@ -798,7 +809,10 @@ const Certificates = () => {
                         <Tooltip title="Download">
                           <IconButton
                             size="small"
-                            onClick={() => handleDownload(cert)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDownload(cert)
+                            }}
                           >
                             <DownloadIcon />
                           </IconButton>
@@ -808,7 +822,10 @@ const Certificates = () => {
                           permissionAction="edit"
                           size="small"
                           tooltipTitle="Edit"
-                          onClick={() => handleEdit(cert)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEdit(cert)
+                          }}
                           color="primary"
                         >
                           <EditIcon />
@@ -818,7 +835,10 @@ const Certificates = () => {
                           permissionAction="delete"
                           size="small"
                           tooltipTitle="Delete"
-                          onClick={() => handleDelete(cert)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(cert)
+                          }}
                           color="error"
                         >
                           <DeleteIcon />
