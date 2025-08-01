@@ -207,6 +207,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave }) 
           nickname: data.nickname,
           email: data.email,
           is_disabled: data.is_disabled,
+          roles: data.is_admin ? ['admin'] : [],
         }
         await usersApi.update(user.id, updateData)
       } else {
@@ -216,8 +217,31 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave }) 
           nickname: data.nickname,
           email: data.email,
           is_disabled: data.is_disabled,
+          roles: data.is_admin ? ['admin'] : [],
         }
-        await usersApi.create(createData)
+        const newUser = await usersApi.create(createData)
+        
+        // Set password for new user (required)
+        if (data.new_password) {
+          await usersApi.updatePassword(newUser.id, {
+            type: 'password',
+            secret: data.new_password,
+          })
+        }
+        
+        // Set permissions if not default (all/manage)
+        const hasNonDefaultPermissions = 
+          data.permissions.visibility !== 'all' ||
+          data.permissions.proxy_hosts !== 'manage' ||
+          data.permissions.redirection_hosts !== 'manage' ||
+          data.permissions.dead_hosts !== 'manage' ||
+          data.permissions.streams !== 'manage' ||
+          data.permissions.access_lists !== 'manage' ||
+          data.permissions.certificates !== 'manage'
+          
+        if (hasNonDefaultPermissions && !data.is_admin) {
+          await usersApi.updatePermissions(newUser.id, data.permissions)
+        }
       }
       onSave()
     },

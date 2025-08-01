@@ -27,7 +27,7 @@ export interface CreateUserPayload {
   nickname: string
   email: string
   is_disabled?: boolean
-  permissions?: User['permissions']
+  roles?: string[]
 }
 
 export interface UpdateUserPayload extends Partial<CreateUserPayload> {}
