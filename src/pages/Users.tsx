@@ -1,31 +1,24 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
   Button,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Typography,
-  TextField,
-  InputAdornment,
-  CircularProgress,
-  Alert,
   Avatar,
+  Chip,
 } from '@mui/material'
 import {
   Add as AddIcon,
-  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Login as LoginIcon,
   Person as PersonIcon,
   Group as GroupIcon,
+  AdminPanelSettings as AdminIcon,
+  PersonOutline as UserIcon,
+  Block as BlockIcon,
+  Check as CheckIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
 import { getErrorMessage } from '../types/common'
@@ -34,6 +27,7 @@ import UserDrawer from '../components/UserDrawer'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
+import { DataTable, TableColumn, Filter, BulkAction } from '../components/DataTable'
 
 const Users = () => {
   const { id } = useParams<{ id?: string }>()
@@ -41,11 +35,13 @@ const Users = () => {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [usersToDelete, setUsersToDelete] = useState<User[]>([])
+  const [bulkDisableDialogOpen, setBulkDisableDialogOpen] = useState(false)
+  const [usersToBulkProcess, setUsersToBulkProcess] = useState<User[]>([])
+  const [bulkProcessing, setBulkProcessing] = useState(false)
   
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
   const { showSuccess, showError } = useToast()
@@ -76,7 +72,7 @@ const Users = () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await usersApi.getAll(['permissions'], searchQuery)
+      const data = await usersApi.getAll(['permissions'])
       setUsers(data)
     } catch (err: unknown) {
       setError(getErrorMessage(err))
@@ -85,15 +81,30 @@ const Users = () => {
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    loadUsers()
+  // Format relative time for last login
+  const formatRelativeTime = (date: string | null | undefined) => {
+    if (!date) return 'Never'
+    
+    const now = new Date()
+    const then = new Date(date)
+    const seconds = Math.floor((now.getTime() - then.getTime()) / 1000)
+    
+    if (seconds < 60) return 'Just now'
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`
+    
+    return then.toLocaleDateString()
   }
 
   const handleRowClick = (user: User) => {
     setSelectedUser(user)
     setDrawerOpen(true)
     navigate(`/users/${user.id}`)
+  }
+
+  const handleEdit = (user: User) => {
+    handleRowClick(user)
   }
 
   const handleAdd = () => {
@@ -103,24 +114,63 @@ const Users = () => {
   }
 
   const handleDelete = (user: User) => {
-    setUserToDelete(user)
+    setUsersToDelete([user])
     setDeleteDialogOpen(true)
     setDrawerOpen(false)
   }
 
   const handleConfirmDelete = async () => {
-    if (!userToDelete) return
+    if (usersToDelete.length === 0) return
     
-    try {
-      await usersApi.delete(userToDelete.id)
-      showSuccess('user', 'deleted', userToDelete.name || userToDelete.email, userToDelete.id)
-      await loadUsers()
-      setDeleteDialogOpen(false)
-      setUserToDelete(null)
-    } catch (err: unknown) {
-      showError('user', 'delete', err instanceof Error ? err.message : 'Unknown error', userToDelete.name || userToDelete.email, userToDelete.id)
-      setError(getErrorMessage(err))
+    setBulkProcessing(true)
+    let successCount = 0
+    let failCount = 0
+    
+    for (const user of usersToDelete) {
+      try {
+        await usersApi.delete(user.id)
+        successCount++
+      } catch (err: unknown) {
+        failCount++
+        showError('user', 'delete', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
+      }
     }
+    
+    if (successCount > 0) {
+      showSuccess('user', 'deleted', `${successCount} user${successCount > 1 ? 's' : ''}`)
+      await loadUsers()
+    }
+    
+    setBulkProcessing(false)
+    setDeleteDialogOpen(false)
+    setUsersToDelete([])
+  }
+
+  const handleBulkDisable = async () => {
+    if (usersToBulkProcess.length === 0) return
+    
+    setBulkProcessing(true)
+    let successCount = 0
+    let failCount = 0
+    
+    for (const user of usersToBulkProcess) {
+      try {
+        await usersApi.update(user.id, { ...user, is_disabled: true })
+        successCount++
+      } catch (err: unknown) {
+        failCount++
+        showError('user', 'disable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
+      }
+    }
+    
+    if (successCount > 0) {
+      showSuccess('user', 'disabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
+      await loadUsers()
+    }
+    
+    setBulkProcessing(false)
+    setBulkDisableDialogOpen(false)
+    setUsersToBulkProcess([])
   }
 
 
@@ -147,23 +197,186 @@ const Users = () => {
     ).join(', ')
   }
 
-  const filteredUsers = users.filter(user => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    return (
-      user.name.toLowerCase().includes(query) ||
-      user.nickname.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query)
-    )
-  })
+  // Table column definitions
+  const columns: TableColumn<User>[] = useMemo(() => [
+    {
+      id: 'avatar',
+      label: '',
+      width: 60,
+      accessor: (user) => user.avatar,
+      render: (_, user) => (
+        <Box position="relative" display="inline-block">
+          <Avatar
+            src={user.avatar || '/images/default-avatar.jpg'}
+            alt={user.name}
+          >
+            <PersonIcon />
+          </Avatar>
+          <Box
+            position="absolute"
+            bottom={0}
+            right={0}
+            width={12}
+            height={12}
+            borderRadius="50%"
+            bgcolor={user.is_disabled ? 'error.main' : 'success.main'}
+            border="2px solid"
+            borderColor="background.paper"
+          />
+        </Box>
+      ),
+    },
+    {
+      id: 'name',
+      label: 'User',
+      accessor: (user) => user.name,
+      sortable: true,
+      render: (_, user) => (
+        <Box>
+          <Typography variant="body2" fontWeight="medium">
+            {user.name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {user.nickname || user.email}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      accessor: (user) => user.email,
+      sortable: true,
+    },
+    {
+      id: 'roles',
+      label: 'Role',
+      accessor: (user) => user.roles,
+      sortable: true,
+      render: (roles) => (
+        <Chip
+          size="small"
+          label={getRoleDisplay(roles)}
+          color={roles.includes('admin') ? 'primary' : 'default'}
+          icon={roles.includes('admin') ? <AdminIcon /> : <UserIcon />}
+        />
+      ),
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      accessor: (user) => user.is_disabled,
+      sortable: true,
+      render: (_, user) => (
+        <Chip
+          size="small"
+          label={user.is_disabled ? 'Disabled' : 'Active'}
+          color={user.is_disabled ? 'error' : 'success'}
+          icon={user.is_disabled ? <BlockIcon /> : <CheckIcon />}
+        />
+      ),
+    },
+    {
+      id: 'created_on',
+      label: 'Created',
+      accessor: (user) => user.created_on,
+      sortable: true,
+      render: (date) => new Date(date).toLocaleDateString(),
+    },
+    // TODO: Enable when last_login is available in API
+    // {
+    //   id: 'last_login',
+    //   label: 'Last Login',
+    //   accessor: (user) => user.last_login,
+    //   sortable: true,
+    //   render: (date) => formatRelativeTime(date),
+    // },
+    {
+      id: 'actions',
+      label: 'Actions',
+      align: 'right',
+      accessor: () => null,
+      render: (_, user) => (
+        <Box display="flex" gap={0.5} justifyContent="flex-end" onClick={(e) => e.stopPropagation()}>
+          <IconButton
+            size="small"
+            onClick={() => handleEdit(user)}
+            title="Edit User"
+          >
+            <EditIcon />
+          </IconButton>
+          {currentUser?.id !== user.id && !user.is_disabled && (
+            <IconButton
+              size="small"
+              onClick={() => handleLoginAs(user)}
+              title="Sign in as User"
+            >
+              <LoginIcon />
+            </IconButton>
+          )}
+          {currentUser?.id !== user.id && (
+            <IconButton
+              size="small"
+              onClick={() => handleDelete(user)}
+              color="error"
+              title="Delete User"
+            >
+              <DeleteIcon />
+            </IconButton>
+          )}
+        </Box>
+      ),
+    },
+  ], [currentUser])
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    )
-  }
+  // Filter definitions
+  const filters: Filter[] = useMemo(() => [
+    {
+      id: 'roles',
+      label: 'Role',
+      type: 'select',
+      options: [
+        { value: 'admin', label: 'Administrator', icon: <AdminIcon fontSize="small" /> },
+        { value: 'user', label: 'User', icon: <UserIcon fontSize="small" /> },
+      ],
+    },
+    {
+      id: 'is_disabled',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'false', label: 'Active', icon: <CheckIcon fontSize="small" color="success" /> },
+        { value: 'true', label: 'Disabled', icon: <BlockIcon fontSize="small" color="error" /> },
+      ],
+    },
+  ], [])
+
+  // Bulk action definitions
+  const bulkActions: BulkAction<User>[] = useMemo(() => [
+    {
+      id: 'disable',
+      label: 'Disable',
+      icon: <BlockIcon />,
+      action: async (users) => {
+        setUsersToBulkProcess(users.filter(u => !u.is_disabled && u.id !== currentUser?.id))
+        setBulkDisableDialogOpen(true)
+      },
+      disabled: (users) => users.every(u => u.is_disabled || u.id === currentUser?.id),
+      confirmMessage: 'Disable {count} users?',
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: <DeleteIcon />,
+      color: 'error',
+      action: async (users) => {
+        setUsersToDelete(users.filter(u => u.id !== currentUser?.id))
+        setDeleteDialogOpen(true)
+      },
+      disabled: (users) => users.every(u => u.id === currentUser?.id),
+      confirmMessage: 'Delete {count} users? This action cannot be undone.',
+    },
+  ], [currentUser])
 
   return (
     <Box>
@@ -185,140 +398,23 @@ const Users = () => {
         )}
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      <Paper sx={{ mb: 2 }}>
-        <Box p={2}>
-          <form onSubmit={handleSearch}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search by name, nickname, or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </form>
-        </Box>
-      </Paper>
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell width={60}></TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight="bold">User</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight="bold">Email</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight="bold">Roles</Typography>
-              </TableCell>
-              <TableCell align="right">
-                <Typography variant="subtitle2" fontWeight="bold">Actions</Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredUsers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                  {searchQuery ? 'No users found matching your search.' : 'No users configured yet.'}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredUsers.map((user) => (
-                <TableRow 
-                  key={user.id} 
-                  hover
-                  onClick={() => handleRowClick(user)}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <TableCell>
-                    <Box position="relative" display="inline-block">
-                      <Avatar
-                        src={user.avatar || '/images/default-avatar.jpg'}
-                        alt={user.name}
-                      >
-                        <PersonIcon />
-                      </Avatar>
-                      <Box
-                        position="absolute"
-                        bottom={0}
-                        right={0}
-                        width={12}
-                        height={12}
-                        borderRadius="50%"
-                        bgcolor={user.is_disabled ? 'error.main' : 'success.main'}
-                        border="2px solid"
-                        borderColor="background.paper"
-                      />
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="medium">
-                      {user.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Created on {new Date(user.created_on).toLocaleDateString()}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{user.email}</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {getRoleDisplay(user.roles)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <Box display="flex" gap={0.5} justifyContent="flex-end">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleRowClick(user)}
-                        title="Edit User"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      {currentUser?.id !== user.id && !user.is_disabled && (
-                        <IconButton
-                          size="small"
-                          onClick={() => handleLoginAs(user)}
-                          title="Sign in as User"
-                        >
-                          <LoginIcon />
-                        </IconButton>
-                      )}
-                      {currentUser?.id !== user.id && (
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(user)}
-                          color="error"
-                          title="Delete User"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      )}
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <DataTable
+        data={users}
+        columns={columns}
+        keyExtractor={(user) => user.id}
+        onRowClick={handleRowClick}
+        bulkActions={isAdmin ? bulkActions : []}
+        filters={filters}
+        searchPlaceholder="Search by name, nickname, or email..."
+        loading={loading}
+        error={error}
+        emptyMessage="No users configured yet."
+        selectable={isAdmin}
+        defaultSortField="name"
+        defaultSortDirection="asc"
+        defaultRowsPerPage={100}
+        rowsPerPageOptions={[10, 25, 50, 100]}
+      />
 
 
       <UserDrawer
@@ -337,10 +433,30 @@ const Users = () => {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete User?"
-        message={`Are you sure you want to delete ${userToDelete?.name}? This action cannot be undone.`}
+        title={usersToDelete.length === 1 ? "Delete User?" : `Delete ${usersToDelete.length} Users?`}
+        message={
+          usersToDelete.length === 1
+            ? `Are you sure you want to delete ${usersToDelete[0]?.name}? This action cannot be undone.`
+            : `Are you sure you want to delete ${usersToDelete.length} users? This action cannot be undone.`
+        }
         confirmText="Delete"
         confirmColor="error"
+        loading={bulkProcessing}
+      />
+
+      <ConfirmDialog
+        open={bulkDisableDialogOpen}
+        onClose={() => setBulkDisableDialogOpen(false)}
+        onConfirm={handleBulkDisable}
+        title={usersToBulkProcess.length === 1 ? "Disable User?" : `Disable ${usersToBulkProcess.length} Users?`}
+        message={
+          usersToBulkProcess.length === 1
+            ? `Are you sure you want to disable ${usersToBulkProcess[0]?.name}?`
+            : `Are you sure you want to disable ${usersToBulkProcess.length} users?`
+        }
+        confirmText="Disable"
+        confirmColor="warning"
+        loading={bulkProcessing}
       />
     </Box>
   )
