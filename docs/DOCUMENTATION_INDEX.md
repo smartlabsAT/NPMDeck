@@ -16,6 +16,7 @@ The NPMDeck documentation suite covers all aspects of the refactored drawer syst
 | [User Interface Guide](./USER_INTERFACE_GUIDE.md) | End Users | How to use the new interface |
 | [Testing Guidelines](./TESTING_GUIDELINES.md) | Developers, QA | Testing strategies and patterns |
 | [TypeScript Interfaces](./TYPESCRIPT_INTERFACES.md) | Developers | Complete type definitions |
+| **[API Documentation](./api/README.md)** | **Developers** | **Complete REST API documentation for backend and frontend** |
 
 ---
 
@@ -37,6 +38,7 @@ The NPMDeck documentation suite covers all aspects of the refactored drawer syst
 1. Study [Component API Documentation](./COMPONENT_API_DOCUMENTATION.md)
 2. Follow patterns in [Architecture Documentation](./ARCHITECTURE_DOCUMENTATION.md)
 3. Implement tests using [Testing Guidelines](./TESTING_GUIDELINES.md)
+4. Review [API Documentation](./api/README.md) for backend integration
 
 ### 👥 For End Users
 
@@ -133,6 +135,18 @@ The NPMDeck documentation suite covers all aspects of the refactored drawer syst
 - Component Prop Interfaces
 - Hook Interfaces
 - API Interfaces
+
+### API Documentation
+**Target Audience**: Backend & Frontend Developers  
+**Content**: Comprehensive REST API documentation covering both backend implementation details and frontend integration patterns. Includes complete endpoint reference, validation rules, and practical examples.
+
+**Key Sections**:
+- Backend API Reference (NPM REST API)
+- Frontend API Integration Guide
+- Authentication & Security
+- Validation Rules & Business Logic
+- Complete Endpoint Reference
+- Code Examples & Best Practices
 
 ---
 
