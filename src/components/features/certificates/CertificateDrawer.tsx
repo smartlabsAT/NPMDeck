@@ -32,6 +32,7 @@ import DomainInput from '../../DomainInput'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import FileDropzone from './components/FileDropzone'
 import DNSProviderSelector from './components/DNSProviderSelector'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface CertificateDrawerProps {
   open: boolean
@@ -65,6 +66,7 @@ export default function CertificateDrawer({
 }: CertificateDrawerProps) {
 
   const navigate = useNavigate()
+  const { showSuccess, showError } = useToast()
 
   // Determine initial tab - always start with Details tab
   const getInitialTab = () => {
@@ -187,6 +189,12 @@ export default function CertificateDrawer({
         initialValue: null as File | null,
         required: false
       },
+    },
+    onSuccess: (data) => {
+      showSuccess('certificate', isEditMode ? 'updated' : 'created', data.niceName || data.domainNames[0])
+    },
+    onError: (error) => {
+      showError('certificate', isEditMode ? 'update' : 'create', error.message, data.niceName || data.domainNames[0])
     },
     onSubmit: async (data) => {
       // Validate wildcard domains
