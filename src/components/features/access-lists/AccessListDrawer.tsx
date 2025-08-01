@@ -9,6 +9,8 @@ import {
   InputLabel,
   Box,
   Paper,
+  Typography,
+  Alert,
 } from '@mui/material'
 import {
   Info as InfoIcon,
@@ -88,28 +90,79 @@ const AuthItemComponent = React.memo(({ value, onChange, onDelete, index, access
   </Paper>
 ))
 
-const AccessRuleComponent = React.memo(({ value, onChange, onDelete, index }: any) => (
-  <Paper
-    variant="outlined"
-    sx={{
-      p: 2,
-      display: 'flex',
-      gap: 2,
-      alignItems: 'flex-start'
-    }}
-  >
-    <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
-      <TextField
-        label="IP Address or Range"
-        value={value.address}
-        onChange={(e) => {
-          onChange({ ...value, address: e.target.value })
-        }}
-        error={false}
-        helperText="Examples: 192.168.1.0/24, 10.0.0.5, all"
-        fullWidth
-        required
-      />
+// IP/CIDR validation function
+const validateIpCidr = (address: string): string | null => {
+    if (!address || address.trim() === '') {
+      return 'IP address is required'
+    }
+    
+    // Allow special keyword 'all'
+    if (address === 'all') {
+      return null
+    }
+    
+    // IPv4 with optional CIDR
+    const ipv4CidrRegex = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/
+    
+    // IPv6 with optional CIDR (simplified)
+    const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}(\/\d{1,3})?$/
+    
+    if (!ipv4CidrRegex.test(address) && !ipv6Regex.test(address)) {
+      return 'Please enter a valid IP address, CIDR range, or "all"'
+    }
+    
+    // Additional validation for IPv4
+    if (ipv4CidrRegex.test(address)) {
+      const parts = address.split('/')
+      const ip = parts[0]
+      const cidr = parts[1]
+      
+      // Validate IP octets
+      const octets = ip.split('.')
+      for (const octet of octets) {
+        const num = parseInt(octet, 10)
+        if (num < 0 || num > 255) {
+          return 'Invalid IP address: each octet must be between 0-255'
+        }
+      }
+      
+      // Validate CIDR if present
+      if (cidr) {
+        const cidrNum = parseInt(cidr, 10)
+        if (cidrNum < 0 || cidrNum > 32) {
+          return 'Invalid CIDR: must be between 0-32'
+        }
+      }
+    }
+    
+    return null
+}
+
+const AccessRuleComponent = React.memo(({ value, onChange, onDelete, index }: any) => {
+  const error = validateIpCidr(value.address)
+  
+  return (
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 2,
+        display: 'flex',
+        gap: 2,
+        alignItems: 'flex-start'
+      }}
+    >
+      <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
+        <TextField
+          label="IP Address or Range"
+          value={value.address}
+          onChange={(e) => {
+            onChange({ ...value, address: e.target.value })
+          }}
+          error={!!error}
+          helperText={error || "Examples: 192.168.1.0/24, 10.0.0.5, all"}
+          fullWidth
+          required
+        />
       <FormControl sx={{ minWidth: 120 }}>
         <InputLabel>Action</InputLabel>
         <Select
@@ -125,7 +178,8 @@ const AccessRuleComponent = React.memo(({ value, onChange, onDelete, index }: an
       </FormControl>
     </Box>
   </Paper>
-))
+  )
+})
 
 export default function AccessListDrawer({ open, onClose, accessList, onSave }: AccessListDrawerProps) {
   const [activeTab, setActiveTab] = React.useState(0)
@@ -163,7 +217,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       })) || [{ address: '', directive: 'allow' }],
     },
     validate: (data) => {
-      const errors: Partial<Record<keyof AccessListFormData, string>> = {}
+      const errors: Partial<Record<keyof AccessListFormData | 'general', string>> = {}
       
       // Name validation
       if (!data.name || data.name.trim() === '') {
@@ -175,8 +229,23 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       const hasValidAccessRules = data.accessRules.some(rule => rule.address)
       
       if (!hasValidAuthItems && !hasValidAccessRules) {
-        errors.authItems = 'At least one authorization item or access rule is required'
-        errors.accessRules = 'At least one authorization item or access rule is required'
+        // Set a general error that will be displayed at the top of the drawer
+        errors.general = 'Please add at least one authorization user OR one access rule. An access list must have either authentication users or IP-based access rules (or both).'
+      }
+      
+      // Validate IP/CIDR addresses in access rules
+      const ipValidationErrors: string[] = []
+      data.accessRules.forEach((rule, index) => {
+        if (rule.address) {
+          const error = validateIpCidr(rule.address)
+          if (error) {
+            ipValidationErrors.push(`Rule ${index + 1}: ${error}`)
+          }
+        }
+      })
+      
+      if (ipValidationErrors.length > 0) {
+        errors.accessRules = ipValidationErrors.join(', ')
       }
       
       return Object.keys(errors).length > 0 ? errors : null
@@ -264,6 +333,11 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     >
       {/* Details Tab */}
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
+        {errors.general && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errors.general}
+          </Alert>
+        )}
         <FormSection
           title="Basic Information"
           description="Configure the basic settings for this access list"
@@ -288,25 +362,43 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
           icon={<LockIcon />}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={data.satisfyAny}
-                  onChange={(e) => setFieldValue('satisfyAny', e.target.checked)}
-                />
-              }
-              label="Satisfy Any"
-            />
+            <Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={data.satisfyAny}
+                    onChange={(e) => setFieldValue('satisfyAny', e.target.checked)}
+                  />
+                }
+                label={
+                  <Box>
+                    <Typography variant="body2">Satisfy Any</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Allow access if ANY condition is met (IP rule OR authentication)
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Box>
             
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={data.passAuth}
-                  onChange={(e) => setFieldValue('passAuth', e.target.checked)}
-                />
-              }
-              label="Pass Auth"
-            />
+            <Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={data.passAuth}
+                    onChange={(e) => setFieldValue('passAuth', e.target.checked)}
+                  />
+                }
+                label={
+                  <Box>
+                    <Typography variant="body2">Pass Auth</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Pass authentication headers to the proxied server
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Box>
           </Box>
         </FormSection>
       </TabPanel>
