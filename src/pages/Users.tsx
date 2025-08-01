@@ -39,9 +39,6 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [usersToDelete, setUsersToDelete] = useState<User[]>([])
-  const [bulkDisableDialogOpen, setBulkDisableDialogOpen] = useState(false)
-  const [bulkEnableDialogOpen, setBulkEnableDialogOpen] = useState(false)
-  const [usersToBulkProcess, setUsersToBulkProcess] = useState<User[]>([])
   const [bulkProcessing, setBulkProcessing] = useState(false)
   
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
@@ -147,14 +144,14 @@ const Users = () => {
     setUsersToDelete([])
   }
 
-  const handleBulkDisable = async () => {
-    if (usersToBulkProcess.length === 0) return
+  const handleBulkDisable = async (users: User[]) => {
+    const eligibleUsers = users.filter(u => !u.is_disabled && u.id !== currentUser?.id)
+    if (eligibleUsers.length === 0) return
     
-    setBulkProcessing(true)
     let successCount = 0
     let failCount = 0
     
-    for (const user of usersToBulkProcess) {
+    for (const user of eligibleUsers) {
       try {
         await usersApi.update(user.id, { is_disabled: true })
         successCount++
@@ -168,20 +165,16 @@ const Users = () => {
       showSuccess('user', 'disabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
       await loadUsers()
     }
-    
-    setBulkProcessing(false)
-    setBulkDisableDialogOpen(false)
-    setUsersToBulkProcess([])
   }
 
-  const handleBulkEnable = async () => {
-    if (usersToBulkProcess.length === 0) return
+  const handleBulkEnable = async (users: User[]) => {
+    const eligibleUsers = users.filter(u => u.is_disabled && u.id !== currentUser?.id)
+    if (eligibleUsers.length === 0) return
     
-    setBulkProcessing(true)
     let successCount = 0
     let failCount = 0
     
-    for (const user of usersToBulkProcess) {
+    for (const user of eligibleUsers) {
       try {
         await usersApi.update(user.id, { is_disabled: false })
         successCount++
@@ -195,10 +188,6 @@ const Users = () => {
       showSuccess('user', 'enabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
       await loadUsers()
     }
-    
-    setBulkProcessing(false)
-    setBulkEnableDialogOpen(false)
-    setUsersToBulkProcess([])
   }
 
 
@@ -220,6 +209,9 @@ const Users = () => {
   }
 
   const getRoleDisplay = (roles: string[]) => {
+    if (!roles || roles.length === 0) {
+      return 'User'
+    }
     return roles.map(role => 
       role === 'admin' ? 'Administrator' : role.charAt(0).toUpperCase() + role.slice(1)
     ).join(', ')
@@ -387,8 +379,7 @@ const Users = () => {
       icon: <CheckIcon />,
       color: 'success',
       action: async (users) => {
-        setUsersToBulkProcess(users.filter(u => u.is_disabled && u.id !== currentUser?.id))
-        setBulkEnableDialogOpen(true)
+        await handleBulkEnable(users)
       },
       disabled: (users) => users.every(u => !u.is_disabled || u.id === currentUser?.id),
       confirmMessage: 'Enable {count} users?',
@@ -399,8 +390,7 @@ const Users = () => {
       icon: <BlockIcon />,
       color: 'warning',
       action: async (users) => {
-        setUsersToBulkProcess(users.filter(u => !u.is_disabled && u.id !== currentUser?.id))
-        setBulkDisableDialogOpen(true)
+        await handleBulkDisable(users)
       },
       disabled: (users) => users.every(u => u.is_disabled || u.id === currentUser?.id),
       confirmMessage: 'Disable {count} users?',
@@ -485,35 +475,6 @@ const Users = () => {
         loading={bulkProcessing}
       />
 
-      <ConfirmDialog
-        open={bulkDisableDialogOpen}
-        onClose={() => setBulkDisableDialogOpen(false)}
-        onConfirm={handleBulkDisable}
-        title={usersToBulkProcess.length === 1 ? "Disable User?" : `Disable ${usersToBulkProcess.length} Users?`}
-        message={
-          usersToBulkProcess.length === 1
-            ? `Are you sure you want to disable ${usersToBulkProcess[0]?.name}?`
-            : `Are you sure you want to disable ${usersToBulkProcess.length} users?`
-        }
-        confirmText="Disable"
-        confirmColor="warning"
-        loading={bulkProcessing}
-      />
-
-      <ConfirmDialog
-        open={bulkEnableDialogOpen}
-        onClose={() => setBulkEnableDialogOpen(false)}
-        onConfirm={handleBulkEnable}
-        title={usersToBulkProcess.length === 1 ? "Enable User?" : `Enable ${usersToBulkProcess.length} Users?`}
-        message={
-          usersToBulkProcess.length === 1
-            ? `Are you sure you want to enable ${usersToBulkProcess[0]?.name}?`
-            : `Are you sure you want to enable ${usersToBulkProcess.length} users?`
-        }
-        confirmText="Enable"
-        confirmColor="success"
-        loading={bulkProcessing}
-      />
     </Box>
   )
 }
