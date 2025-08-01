@@ -225,7 +225,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave }) 
       showSuccess('user', isEditMode ? 'updated' : 'created', data.name || data.email)
     },
     onError: (error) => {
-      showError('user', isEditMode ? 'update' : 'create', error.message, data.name || data.email)
+      showError('user', isEditMode ? 'update' : 'create', error.message, form.data.name || form.data.email)
     },
   })
 

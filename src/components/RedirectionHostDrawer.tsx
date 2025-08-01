@@ -185,7 +185,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
       showSuccess('redirection-host', host ? 'updated' : 'created', data.domain_names[0] || `#${host?.id || 'new'}`)
     },
     onError: (error) => {
-      showError('redirection-host', host ? 'update' : 'create', error.message, data.domain_names[0])
+      showError('redirection-host', host ? 'update' : 'create', error.message, form.data.domain_names[0])
     },
   })
 
