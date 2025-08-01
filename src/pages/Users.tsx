@@ -40,6 +40,7 @@ const Users = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [usersToDelete, setUsersToDelete] = useState<User[]>([])
   const [bulkDisableDialogOpen, setBulkDisableDialogOpen] = useState(false)
+  const [bulkEnableDialogOpen, setBulkEnableDialogOpen] = useState(false)
   const [usersToBulkProcess, setUsersToBulkProcess] = useState<User[]>([])
   const [bulkProcessing, setBulkProcessing] = useState(false)
   
@@ -155,7 +156,7 @@ const Users = () => {
     
     for (const user of usersToBulkProcess) {
       try {
-        await usersApi.update(user.id, { ...user, is_disabled: true })
+        await usersApi.update(user.id, { is_disabled: true })
         successCount++
       } catch (err: unknown) {
         failCount++
@@ -170,6 +171,33 @@ const Users = () => {
     
     setBulkProcessing(false)
     setBulkDisableDialogOpen(false)
+    setUsersToBulkProcess([])
+  }
+
+  const handleBulkEnable = async () => {
+    if (usersToBulkProcess.length === 0) return
+    
+    setBulkProcessing(true)
+    let successCount = 0
+    let failCount = 0
+    
+    for (const user of usersToBulkProcess) {
+      try {
+        await usersApi.update(user.id, { is_disabled: false })
+        successCount++
+      } catch (err: unknown) {
+        failCount++
+        showError('user', 'enable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
+      }
+    }
+    
+    if (successCount > 0) {
+      showSuccess('user', 'enabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
+      await loadUsers()
+    }
+    
+    setBulkProcessing(false)
+    setBulkEnableDialogOpen(false)
     setUsersToBulkProcess([])
   }
 
@@ -354,9 +382,22 @@ const Users = () => {
   // Bulk action definitions
   const bulkActions: BulkAction<User>[] = useMemo(() => [
     {
+      id: 'enable',
+      label: 'Enable',
+      icon: <CheckIcon />,
+      color: 'success',
+      action: async (users) => {
+        setUsersToBulkProcess(users.filter(u => u.is_disabled && u.id !== currentUser?.id))
+        setBulkEnableDialogOpen(true)
+      },
+      disabled: (users) => users.every(u => !u.is_disabled || u.id === currentUser?.id),
+      confirmMessage: 'Enable {count} users?',
+    },
+    {
       id: 'disable',
       label: 'Disable',
       icon: <BlockIcon />,
+      color: 'warning',
       action: async (users) => {
         setUsersToBulkProcess(users.filter(u => !u.is_disabled && u.id !== currentUser?.id))
         setBulkDisableDialogOpen(true)
@@ -456,6 +497,21 @@ const Users = () => {
         }
         confirmText="Disable"
         confirmColor="warning"
+        loading={bulkProcessing}
+      />
+
+      <ConfirmDialog
+        open={bulkEnableDialogOpen}
+        onClose={() => setBulkEnableDialogOpen(false)}
+        onConfirm={handleBulkEnable}
+        title={usersToBulkProcess.length === 1 ? "Enable User?" : `Enable ${usersToBulkProcess.length} Users?`}
+        message={
+          usersToBulkProcess.length === 1
+            ? `Are you sure you want to enable ${usersToBulkProcess[0]?.name}?`
+            : `Are you sure you want to enable ${usersToBulkProcess.length} users?`
+        }
+        confirmText="Enable"
+        confirmColor="success"
         loading={bulkProcessing}
       />
     </Box>

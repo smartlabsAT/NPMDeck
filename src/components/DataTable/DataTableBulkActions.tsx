@@ -65,57 +65,61 @@ export default function DataTableBulkActions<T>({
   return (
     <>
       <Paper
+        elevation={1}
         sx={{
           position: 'sticky',
           top: 64,
           zIndex: 10,
           mb: 2,
-          p: 2,
-          backgroundColor: 'primary.main',
-          color: 'primary.contrastText',
+          backgroundColor: 'background.paper',
+          borderRadius: 1,
         }}
       >
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Typography variant="subtitle1" fontWeight="medium">
-              {selectedCount} {selectedCount === 1 ? 'item' : 'items'} selected
-            </Typography>
-            <Box sx={{ height: 24, width: 1, backgroundColor: 'rgba(255,255,255,0.3)' }} />
-            {actions.map((action) => (
-              <Button
-                key={action.id}
-                variant="contained"
+        <Box sx={{ p: 2 }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" spacing={3} alignItems="center">
+              <Box display="flex" alignItems="center" gap={1.5} sx={{ minWidth: 150 }}>
+                <Typography variant="h6" fontWeight="bold" color="primary">
+                  {selectedCount}
+                </Typography>
+                <Typography variant="body1" fontWeight="medium" whiteSpace="nowrap">
+                  {selectedCount === 1 ? 'item selected' : 'items selected'}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ height: 28, width: 1, backgroundColor: 'divider' }} />
+              
+              <Stack direction="row" spacing={1.5}>
+                {actions.map((action) => {
+                  const isDisabled = processing || (action.disabled && action.disabled(selectedItems))
+                  const actionColor = action.color || 'primary'
+                  
+                  return (
+                    <Button
+                      key={action.id}
+                      variant="contained"
+                      size="small"
+                      startIcon={action.icon}
+                      onClick={() => handleAction(action)}
+                      disabled={isDisabled}
+                      color={actionColor}
+                    >
+                      {action.label}
+                    </Button>
+                  )
+                })}
+              </Stack>
+            </Stack>
+            
+            <Tooltip title="Clear selection">
+              <IconButton
                 size="small"
-                startIcon={action.icon}
-                onClick={() => handleAction(action)}
-                disabled={processing || (action.disabled && action.disabled(selectedItems))}
-                sx={{
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  color: 'inherit',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.3)',
-                  },
-                  ...(action.color === 'error' && {
-                    backgroundColor: 'error.dark',
-                    '&:hover': {
-                      backgroundColor: 'error.main',
-                    },
-                  }),
-                }}
+                onClick={onClearSelection}
               >
-                {action.label}
-              </Button>
-            ))}
-          </Stack>
-          <Tooltip title="Clear selection">
-            <IconButton
-              size="small"
-              onClick={onClearSelection}
-              sx={{ color: 'inherit' }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Tooltip>
+                <CloseIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
       </Paper>
 
