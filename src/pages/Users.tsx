@@ -366,7 +366,9 @@ const Users = () => {
       id: 'roles',
       label: 'Role',
       type: 'select',
+      defaultValue: 'all',
       options: [
+        { value: 'all', label: 'All' },
         { value: 'admin', label: 'Administrator', icon: <AdminIcon fontSize="small" /> },
         { value: 'user', label: 'User', icon: <UserIcon fontSize="small" /> },
       ],
@@ -375,7 +377,9 @@ const Users = () => {
       id: 'is_disabled',
       label: 'Status',
       type: 'select',
+      defaultValue: 'all',
       options: [
+        { value: 'all', label: 'All' },
         { value: 'false', label: 'Active', icon: <CheckIcon fontSize="small" color="success" /> },
         { value: 'true', label: 'Disabled', icon: <BlockIcon fontSize="small" color="error" /> },
       ],

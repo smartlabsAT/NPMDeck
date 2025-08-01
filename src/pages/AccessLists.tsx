@@ -1,38 +1,23 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
   Container,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
   Typography,
   IconButton,
-  TextField,
-  InputAdornment,
   Tooltip,
-  TablePagination,
   Chip,
   Alert,
-  CircularProgress,
 } from '@mui/material'
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  Search as SearchIcon,
-  
   Lock as LockIcon,
   Security as SecurityIcon,
   Person as PersonIcon,
   NetworkCheck as NetworkIcon,
-  
 } from '@mui/icons-material'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
@@ -46,26 +31,20 @@ import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
-
-type OrderDirection = 'asc' | 'desc'
-type OrderBy = 'name' | 'users' | 'rules' | 'created_on'
+import { DataTable } from '../components/DataTable'
+import { TableColumn, Filter, BulkAction } from '../components/DataTable/types'
 
 export default function AccessLists() {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
-  const { canManage: canManageAccessLists } = usePermissions()
+  const { canManage: canManageAccessLists, isAdmin } = usePermissions()
   const { showSuccess, showError } = useToast()
 
   // State
   const [accessLists, setAccessLists] = useState<AccessList[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [orderBy, setOrderBy] = useState<OrderBy>('name')
-  const [orderDirection, setOrderDirection] = useState<OrderDirection>('asc')
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
   
   // Dialogs
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -152,81 +131,9 @@ export default function AccessLists() {
     navigate('/security/access-lists')
   }
 
-
-  // Sorting and filtering
-  const handleSort = (property: OrderBy) => {
-    const isAsc = orderBy === property && orderDirection === 'asc'
-    setOrderDirection(isAsc ? 'desc' : 'asc')
-    setOrderBy(property)
-  }
-
   // Apply visibility filtering
   const visibleAccessLists = useFilteredData(accessLists)
   const filterInfo = useFilteredInfo(accessLists, visibleAccessLists)
-
-  const filteredAndSortedAccessLists = useMemo(() => {
-    let filtered = visibleAccessLists
-
-    // Apply search filter
-    if (searchTerm) {
-      filtered = visibleAccessLists.filter(accessList => 
-        accessList.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        accessList.items?.some(item => item.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        accessList.clients?.some(client => client.address.includes(searchTerm))
-      )
-    }
-
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
-      let aValue: unknown
-      let bValue: unknown
-
-      switch (orderBy) {
-        case 'name':
-          aValue = a.name.toLowerCase()
-          bValue = b.name.toLowerCase()
-          break
-        case 'users':
-          aValue = a.items?.length || 0
-          bValue = b.items?.length || 0
-          break
-        case 'rules':
-          aValue = a.clients?.length || 0
-          bValue = b.clients?.length || 0
-          break
-        case 'created_on':
-          aValue = new Date(a.created_on).getTime()
-          bValue = new Date(b.created_on).getTime()
-          break
-        default:
-          return 0
-      }
-
-      if (orderDirection === 'asc') {
-        return (aValue as any) < (bValue as any) ? -1 : (aValue as any) > (bValue as any) ? 1 : 0
-      } else {
-        return (aValue as any) > (bValue as any) ? -1 : (aValue as any) < (bValue as any) ? 1 : 0
-      }
-    })
-
-    return sorted
-  }, [visibleAccessLists, searchTerm, orderBy, orderDirection])
-
-  // Pagination
-  const paginatedAccessLists = useMemo(() => {
-    const start = page * rowsPerPage
-    const end = start + rowsPerPage
-    return filteredAndSortedAccessLists.slice(start, end)
-  }, [filteredAndSortedAccessLists, page, rowsPerPage])
-
-  const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
 
   const getUsersChip = (accessList: AccessList) => {
     const count = accessList.items?.length || 0
@@ -254,13 +161,171 @@ export default function AccessLists() {
     )
   }
 
-  if (loading && accessLists.length === 0) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    )
-  }
+  // Column definitions for DataTable
+  const columns: TableColumn<AccessList>[] = [
+    {
+      id: 'name',
+      label: 'Name',
+      icon: <LockIcon fontSize="small" />,
+      accessor: (item) => item.name,
+      sortable: true,
+      render: (value, item) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          <LockIcon fontSize="small" color="action" />
+          <Typography variant="body2">{value}</Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'users',
+      label: 'Authorization',
+      icon: <PersonIcon fontSize="small" />,
+      accessor: (item) => item.items?.length || 0,
+      sortable: true,
+      align: 'left',
+      render: (value, item) => getUsersChip(item) || (
+        <Typography variant="body2" color="text.secondary">
+          No users
+        </Typography>
+      )
+    },
+    {
+      id: 'rules',
+      label: 'Access Rules',
+      icon: <NetworkIcon fontSize="small" />,
+      accessor: (item) => item.clients?.length || 0,
+      sortable: true,
+      align: 'left',
+      render: (value, item) => getRulesChip(item) || (
+        <Typography variant="body2" color="text.secondary">
+          No rules
+        </Typography>
+      )
+    },
+    {
+      id: 'options',
+      label: 'Options',
+      accessor: (item) => ({ satisfy_any: item.satisfy_any, pass_auth: item.pass_auth }),
+      sortable: false,
+      align: 'left',
+      render: (value, item) => (
+        <Box display="flex" gap={0.5}>
+          {item.satisfy_any && (
+            <Chip label="Satisfy Any" size="small" color="primary" />
+          )}
+          {item.pass_auth && (
+            <Chip label="Pass Auth" size="small" color="secondary" />
+          )}
+        </Box>
+      )
+    },
+    {
+      id: 'created_on',
+      label: 'Created',
+      accessor: (item) => new Date(item.created_on).getTime(),
+      sortable: true,
+      align: 'left',
+      render: (value, item) => (
+        <Typography variant="body2" color="text.secondary">
+          {new Date(item.created_on).toLocaleDateString()}
+        </Typography>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      accessor: (item) => item.id,
+      sortable: false,
+      align: 'right',
+      render: (value, item) => (
+        <Box display="flex" justifyContent="flex-end" gap={1}>
+          <Tooltip title="View Details">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleViewAccessList(item)
+              }}
+            >
+              <ViewIcon />
+            </IconButton>
+          </Tooltip>
+          <PermissionIconButton
+            resource="access_lists"
+            permissionAction="edit"
+            size="small"
+            tooltipTitle="Edit"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleEditAccessList(item)
+            }}
+          >
+            <EditIcon />
+          </PermissionIconButton>
+          <PermissionIconButton
+            resource="access_lists"
+            permissionAction="delete"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              setAccessListToDelete(item)
+              setDeleteDialogOpen(true)
+            }}
+            color="error"
+          >
+            <DeleteIcon />
+          </PermissionIconButton>
+        </Box>
+      )
+    }
+  ]
+
+  // Filter definitions
+  const filters: Filter[] = [
+    {
+      id: 'hasUsers',
+      label: 'Authorization',
+      type: 'select',
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'with-users', label: 'With Users' },
+        { value: 'no-users', label: 'No Users' }
+      ]
+    },
+    {
+      id: 'hasRules',
+      label: 'Access Rules',
+      type: 'select',
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'with-rules', label: 'With Rules' },
+        { value: 'no-rules', label: 'No Rules' }
+      ]
+    }
+  ]
+
+  // Bulk actions
+  const bulkActions: BulkAction<AccessList>[] = [
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: <DeleteIcon />,
+      color: 'error',
+      confirmMessage: 'Are you sure you want to delete the selected access lists?',
+      action: async (items) => {
+        try {
+          await Promise.all(items.map(item => accessListsApi.delete(item.id)))
+          showSuccess('access-list', 'deleted', `${items.length} access lists`)
+          await loadAccessLists()
+        } catch (err) {
+          showError('access-list', 'delete', err instanceof Error ? err.message : 'Unknown error')
+        }
+      }
+    }
+  ]
+
 
   return (
     <Container maxWidth={false}>
@@ -283,12 +348,6 @@ export default function AccessLists() {
           </PermissionButton>
         </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
         {filterInfo.isFiltered && (
           <Alert severity="info" sx={{ mb: 2 }}>
             Showing {filterInfo.visibleCount} of {filterInfo.totalCount} access lists 
@@ -296,176 +355,26 @@ export default function AccessLists() {
           </Alert>
         )}
 
-        {/* Search */}
-        <Box mb={2}>
-          <TextField
-            fullWidth
-            placeholder="Search by name, username, or IP address..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-
-        {/* Table */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'name'}
-                    direction={orderBy === 'name' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('name')}
-                  >
-                    Name
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'users'}
-                    direction={orderBy === 'users' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('users')}
-                  >
-                    Authorization
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'rules'}
-                    direction={orderBy === 'rules' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('rules')}
-                  >
-                    Access Rules
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>Options</TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'created_on'}
-                    direction={orderBy === 'created_on' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('created_on')}
-                  >
-                    Created
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedAccessLists.map((accessList) => (
-                <TableRow
-                  key={accessList.id}
-                  hover
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => handleViewAccessList(accessList)}
-                >
-                  <TableCell>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <LockIcon fontSize="small" color="action" />
-                      <Typography variant="body2">
-                        {accessList.name}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    {getUsersChip(accessList) || (
-                      <Typography variant="body2" color="text.secondary">
-                        No users
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {getRulesChip(accessList) || (
-                      <Typography variant="body2" color="text.secondary">
-                        No rules
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" gap={0.5}>
-                      {accessList.satisfy_any && (
-                        <Chip label="Satisfy Any" size="small" color="primary" />
-                      )}
-                      {accessList.pass_auth && (
-                        <Chip label="Pass Auth" size="small" color="secondary" />
-                      )}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {new Date(accessList.created_on).toLocaleDateString()}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Box display="flex" justifyContent="flex-end" gap={1}>
-                      <Tooltip title="View Details">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleViewAccessList(accessList)
-                          }}
-                        >
-                          <ViewIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <PermissionIconButton
-                        resource="access_lists"
-                        permissionAction="edit"
-                        size="small"
-                        tooltipTitle="Edit"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEditAccessList(accessList)
-                        }}
-                      >
-                        <EditIcon />
-                      </PermissionIconButton>
-                      <PermissionIconButton
-                        resource="access_lists"
-                        permissionAction="delete"
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setAccessListToDelete(accessList)
-                          setDeleteDialogOpen(true)
-                        }}
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </PermissionIconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {paginatedAccessLists.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    <Typography variant="body2" color="text.secondary" py={3}>
-                      {searchTerm ? 'No access lists found matching your search' : 'No access lists configured yet'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            component="div"
-            count={filteredAndSortedAccessLists.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </TableContainer>
+        {/* DataTable */}
+        <DataTable
+          data={visibleAccessLists}
+          columns={columns}
+          keyExtractor={(item) => item.id.toString()}
+          onRowClick={handleViewAccessList}
+          bulkActions={isAdmin ? bulkActions : []}
+          filters={filters}
+          searchPlaceholder="Search by name, username, or IP address..."
+          loading={loading}
+          error={error}
+          emptyMessage="No access lists configured yet"
+          defaultSortField="name"
+          defaultSortDirection="asc"
+          searchable={true}
+          selectable={isAdmin}
+          showPagination={true}
+          defaultRowsPerPage={100}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
       </Box>
 
       {/* Drawer for create/edit */}

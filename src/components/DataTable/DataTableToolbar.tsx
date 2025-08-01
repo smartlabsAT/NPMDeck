@@ -118,7 +118,6 @@ export default function DataTableToolbar({
                     )
                   }
                 >
-                  <MenuItem value="all">All</MenuItem>
                   {filter.options?.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
                       <Box display="flex" alignItems="center" gap={1}>

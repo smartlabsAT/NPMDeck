@@ -26,11 +26,31 @@ export function useDataTable<T>(
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       result = result.filter((item) => {
-        return columns.some((column) => {
+        // First check standard column values
+        const matchesColumn = columns.some((column) => {
           const value = column.accessor(item)
           if (value == null) return false
           return String(value).toLowerCase().includes(query)
         })
+        
+        if (matchesColumn) return true
+        
+        // Special search for Access Lists - search in nested items
+        if ('items' in item && Array.isArray((item as any).items)) {
+          const matchesUser = (item as any).items.some((user: any) => 
+            user.username?.toLowerCase().includes(query)
+          )
+          if (matchesUser) return true
+        }
+        
+        if ('clients' in item && Array.isArray((item as any).clients)) {
+          const matchesClient = (item as any).clients.some((client: any) => 
+            client.address?.includes(searchQuery) // IP addresses are case-sensitive
+          )
+          if (matchesClient) return true
+        }
+        
+        return false
       })
     }
 
@@ -55,6 +75,31 @@ export function useDataTable<T>(
         if (filterId === 'is_disabled') {
           const isDisabled = (item as any).is_disabled
           return String(isDisabled) === filterValue
+        }
+        
+        // Access Lists specific filters
+        if (filterId === 'hasUsers') {
+          const users = (item as any).items as any[] | undefined
+          const userCount = users?.length || 0
+          if (filterValue === 'with-users') {
+            return userCount > 0
+          }
+          if (filterValue === 'no-users') {
+            return userCount === 0
+          }
+          return true
+        }
+        
+        if (filterId === 'hasRules') {
+          const clients = (item as any).clients as any[] | undefined
+          const ruleCount = clients?.length || 0
+          if (filterValue === 'with-rules') {
+            return ruleCount > 0
+          }
+          if (filterValue === 'no-rules') {
+            return ruleCount === 0
+          }
+          return true
         }
         
         // Find column with matching filter ID
