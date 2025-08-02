@@ -491,6 +491,7 @@ const Certificates = () => {
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Certificate?"
+        titleIcon={<CertificateIcon sx={{ color: '#467fcf' }} />}
         message={`Are you sure you want to delete the certificate "${certToDelete?.nice_name || certToDelete?.domain_names[0]}"? This action cannot be undone.`}
         confirmText="Delete"
         confirmColor="error"

@@ -542,6 +542,7 @@ export default function Streams() {
         }}
         onConfirm={handleDeleteStream}
         title="Delete Stream"
+        titleIcon={<StreamIcon sx={{ color: '#467fcf' }} />}
         message={`Are you sure you want to delete the stream on port ${streamToDelete?.incoming_port}?`}
         confirmText="Delete"
         confirmColor="error"

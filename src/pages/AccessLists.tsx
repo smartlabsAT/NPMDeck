@@ -413,6 +413,7 @@ export default function AccessLists() {
         }}
         onConfirm={handleDeleteAccessList}
         title="Delete Access List"
+        titleIcon={<SecurityIcon sx={{ color: '#2bcbba' }} />}
         message={`Are you sure you want to delete the access list "${accessListToDelete?.name}"?`}
         confirmText="Delete"
         confirmColor="error"
