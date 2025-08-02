@@ -11,7 +11,6 @@ import {
   VpnKey,
   Info as InfoIcon,
   WebAsset as HostsIcon,
-  Settings as AdvancedIcon,
 } from '@mui/icons-material'
 import { Certificate } from '../api/certificates'
 import { CertificateWithHosts } from '../types/common'
@@ -20,7 +19,6 @@ import { usePermissions } from '../hooks/usePermissions'
 import AdaptiveContainer from './AdaptiveContainer'
 import CertificateInfoPanel from './features/certificates/CertificateInfoPanel'
 import CertificateHostsPanel from './features/certificates/CertificateHostsPanel'
-import CertificateAdvancedPanel from './features/certificates/CertificateAdvancedPanel'
 import CertificateActions from './features/certificates/CertificateActions'
 
 interface CertificateDetailsDialogProps {
@@ -77,9 +75,6 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
         case 'hosts':
           setActiveTab(1)
           break
-        case 'advanced':
-          setActiveTab(2)
-          break
         default:
           setActiveTab(0)
           break
@@ -110,7 +105,7 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
     if (certificate) {
-      const tabs = ['overview', 'hosts', 'advanced']
+      const tabs = ['overview', 'hosts']
       navigate(`/security/certificates/${certificate.id}/view/${tabs[newValue]}`, { replace: true })
     }
   }
@@ -146,7 +141,6 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
         <Tabs value={activeTab} onChange={handleTabChange} aria-label="certificate details tabs">
           <Tab label="Overview" icon={<InfoIcon />} iconPosition="start" />
           <Tab label="Hosts" icon={<HostsIcon />} iconPosition="start" />
-          <Tab label="Advanced" icon={<AdvancedIcon />} iconPosition="start" />
         </Tabs>
       </Box>
 
@@ -171,10 +165,6 @@ const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
             certificate={certificate as CertificateWithHosts}
             onNavigateToHost={handleNavigateToHost}
           />
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={2}>
-          <CertificateAdvancedPanel certificate={certificate} />
         </TabPanel>
       </Box>
       
