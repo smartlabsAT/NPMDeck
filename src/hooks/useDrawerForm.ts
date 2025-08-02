@@ -33,7 +33,7 @@ export interface UseDrawerFormOptions<T> {
   /** Field configurations */
   fields?: Partial<Record<keyof T, FieldConfig>>;
   /** Global validation function */
-  validate?: (data: T) => Record<keyof T, string> | null;
+  validate?: (data: T) => Partial<Record<keyof T, string>> | null;
   /** Submit handler */
   onSubmit: (data: T) => Promise<void> | void;
   /** Success callback */

@@ -30,7 +30,7 @@ export interface CreateUserPayload {
   roles?: string[]
 }
 
-export interface UpdateUserPayload extends Partial<CreateUserPayload> {}
+export type UpdateUserPayload = Partial<CreateUserPayload>
 
 export interface UserPasswordPayload {
   type: 'password'

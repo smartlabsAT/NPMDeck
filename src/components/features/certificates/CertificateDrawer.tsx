@@ -104,7 +104,7 @@ export default function CertificateDrawer({
       niceName: {
         initialValue: '',
         required: false,
-        validate: null // Remove nice name validation
+        validate: undefined // Remove nice name validation
       },
       domainNames: {
         initialValue: [],
@@ -278,9 +278,6 @@ export default function CertificateDrawer({
         
         // Check if it's a 500 error with debug info
         if (error.response?.status === 500 && error.response?.data?.debug?.stack) {
-          // Switch to first tab
-          setActiveTab(0)
-          
           // Extract all lines from stack and format them
           const stack = error.response.data.debug.stack
           let errorMessage = 'Certificate creation failed:\n\n'
@@ -463,7 +460,7 @@ export default function CertificateDrawer({
                     onChange={(e) => setFieldValue('letsencryptAgree', e.target.checked)}
                   />
                 }
-                label="I agree to the Let's Encrypt Subscriber Agreement"
+                label="I agree to the Let&apos;s Encrypt Subscriber Agreement"
               />
             </FormSection>
 

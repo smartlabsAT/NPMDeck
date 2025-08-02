@@ -23,8 +23,8 @@ interface DataTableToolbarProps {
   filters: Filter[]
   activeFilters: Record<string, any>
   onFilter: (filterId: string, value: any) => void
-  onClearFilters: () => void
-  hasActiveFilters: boolean
+  _onClearFilters: () => void
+  _hasActiveFilters: boolean
   searchable: boolean
   searchPlaceholder: string
 }
@@ -35,8 +35,8 @@ export default function DataTableToolbar({
   filters,
   activeFilters,
   onFilter,
-  onClearFilters,
-  hasActiveFilters,
+  _onClearFilters,
+  _hasActiveFilters,
   searchable,
   searchPlaceholder,
 }: DataTableToolbarProps) {

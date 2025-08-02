@@ -19,7 +19,6 @@ import {
   Person as PersonIcon,
   Lock as LockIcon,
   Shield as ShieldIcon,
-  Delete as DeleteIcon,
   VisibilityOff as HiddenIcon,
   Visibility as ViewIcon,
   Edit as EditIcon,

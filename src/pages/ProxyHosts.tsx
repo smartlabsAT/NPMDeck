@@ -3,48 +3,37 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
+  Container,
   IconButton,
   Typography,
   Chip,
-  TextField,
-  InputAdornment,
   CircularProgress,
   Alert,
   Tooltip,
-  Switch,
-  FormControlLabel,
 } from '@mui/material'
 import {
   Add as AddIcon,
-  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
+  Error as ErrorIcon,
   PowerSettingsNew as PowerIcon,
   Language as LanguageIcon,
   Lock as LockIcon,
   LockOpen as LockOpenIcon,
-  ExpandMore as ExpandMoreIcon,
-  ChevronRight as ChevronRightIcon,
-  UnfoldMore as ExpandAllIcon,
-  UnfoldLess as CollapseAllIcon,
   TrendingFlat as RedirectIcon,
   SwapHoriz as ProxyIcon,
+  ToggleOn as StatusIcon,
+  MoreVert as ActionsIcon,
+  CallMade as ForwardIcon,
+  Security as AccessIcon,
+  OpenInNew as LinkIcon,
 } from '@mui/icons-material'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
-import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
-import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
+import { useFilteredData } from '../hooks/useFilteredData'
 import ProxyHostDrawer from '../components/features/proxy-hosts/ProxyHostDrawer'
 import ProxyHostDetailsDialog from '../components/ProxyHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -52,16 +41,9 @@ import PermissionButton from '../components/PermissionButton'
 import PageHeader from '../components/PageHeader'
 import PermissionIconButton from '../components/PermissionIconButton'
 import { useToast } from '../contexts/ToastContext'
+import { DataTable } from '../components/DataTable'
+import { TableColumn, Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 
-type Order = 'asc' | 'desc'
-type OrderBy = 'status' | 'domain_names' | 'forward_host' | 'ssl' | 'access'
-
-interface DomainGroup {
-  id: string
-  domain: string
-  hosts: ProxyHost[]
-  isExpanded: boolean
-}
 
 // Helper to extract base domain from a full domain
 const extractBaseDomain = (domain: string): string => {
@@ -78,41 +60,28 @@ const extractBaseDomain = (domain: string): string => {
   return domain
 }
 
-// Generate stable group ID from domain
-const generateGroupId = (domain: string): string => {
-  return `group-${domain.replace(/\./g, '-')}`
-}
-
-const ProxyHosts = () => {
+export default function ProxyHosts() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  
+  const { canManage: canManageProxyHosts } = usePermissions()
+  const { showSuccess, showError } = useToast()
+  
+  // State
   const [hosts, setHosts] = useState<ProxyHost[]>([])
-  const [_redirectionHosts, setRedirectionHosts] = useState<RedirectionHost[]>([])
   const [redirectionsByTarget, setRedirectionsByTarget] = useState<Map<string, RedirectionHost[]>>(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [togglingHosts, setTogglingHosts] = useState<Set<number>>(new Set())
+  
+  // Dialogs
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingHost, setEditingHost] = useState<ProxyHost | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [hostToDelete, setHostToDelete] = useState<ProxyHost | null>(null)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [viewingHost, setViewingHost] = useState<ProxyHost | null>(null)
-  const { showSuccess, showError } = useToast()
-  const [order, setOrder] = useState<Order>('asc')
-  const [orderBy, setOrderBy] = useState<OrderBy>('domain_names')
-  const [groupByDomain, setGroupByDomain] = useState<boolean>(() => {
-    const saved = localStorage.getItem('npm.proxyHosts.groupByDomain')
-    return saved === 'true'
-  })
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
-    const saved = localStorage.getItem('npm.proxyHosts.expandedGroups')
-    return saved ? JSON.parse(saved) : {}
-  })
-  
-  const { } = useAuthStore()
-  const { } = usePermissions()
 
   useEffect(() => {
     loadHosts()
@@ -120,8 +89,7 @@ const ProxyHosts = () => {
 
   // Handle URL parameter for editing or viewing
   useEffect(() => {
-    // Handle new host creation
-    if (location.pathname.includes('/new')) {
+    if (location.pathname.includes('/new') && canManageProxyHosts('proxy_hosts')) {
       setEditingHost(null)
       setDrawerOpen(true)
       setDetailsDialogOpen(false)
@@ -134,7 +102,7 @@ const ProxyHosts = () => {
       
       const host = hosts.find(h => h.id === parseInt(id))
       if (host) {
-        if (location.pathname.includes('/edit')) {
+        if (location.pathname.includes('/edit') && canManageProxyHosts('proxy_hosts')) {
           setEditingHost(host)
           setDrawerOpen(true)
           setDetailsDialogOpen(false)
@@ -158,17 +126,7 @@ const ProxyHosts = () => {
       setDetailsDialogOpen(false)
       setViewingHost(null)
     }
-  }, [id, hosts, location.pathname, navigate, loading])
-
-  // Save groupByDomain to localStorage
-  useEffect(() => {
-    localStorage.setItem('npm.proxyHosts.groupByDomain', groupByDomain.toString())
-  }, [groupByDomain])
-
-  // Save expandedGroups to localStorage
-  useEffect(() => {
-    localStorage.setItem('npm.proxyHosts.expandedGroups', JSON.stringify(expandedGroups))
-  }, [expandedGroups])
+  }, [id, hosts, location.pathname, navigate, loading, canManageProxyHosts])
 
   const loadHosts = async () => {
     try {
@@ -181,7 +139,6 @@ const ProxyHosts = () => {
       ])
       
       setHosts(proxyData)
-      setRedirectionHosts(redirectionData)
       
       // Create lookup map for redirections by target domain
       const targetMap = new Map<string, RedirectionHost[]>()
@@ -201,16 +158,31 @@ const ProxyHosts = () => {
   }
 
   const handleToggleEnabled = async (host: ProxyHost) => {
+    // Add host ID to toggling set
+    setTogglingHosts(prev => new Set(prev).add(host.id))
+    
     try {
+      const hostName = host.domain_names[0] || `#${host.id}`
+      
       if (host.enabled) {
         await proxyHostsApi.disable(host.id)
+        showSuccess('proxy-host', 'disabled', hostName, host.id)
       } else {
         await proxyHostsApi.enable(host.id)
+        showSuccess('proxy-host', 'enabled', hostName, host.id)
       }
-      // Reload to get updated status
       await loadHosts()
     } catch (err: unknown) {
+      const hostName = host.domain_names[0] || `#${host.id}`
+      showError('proxy-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
       setError(getErrorMessage(err))
+    } finally {
+      // Remove host ID from toggling set
+      setTogglingHosts(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(host.id)
+        return newSet
+      })
     }
   }
 
@@ -247,145 +219,18 @@ const ProxyHosts = () => {
     }
   }
 
-  const toggleGroupExpanded = (groupId: string) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }))
-  }
 
-  const toggleAllGroups = (expand: boolean) => {
-    const newExpanded: Record<string, boolean> = {}
-    domainGroups.forEach(group => {
-      newExpanded[group.id] = expand
-    })
-    setExpandedGroups(newExpanded)
-  }
-
-  const handleRequestSort = (property: OrderBy) => {
-    const isAsc = orderBy === property && order === 'asc'
-    setOrder(isAsc ? 'desc' : 'asc')
-    setOrderBy(property)
-  }
-
-  const getComparator = (order: Order, orderBy: OrderBy): (a: ProxyHost, b: ProxyHost) => number => {
-    return order === 'desc'
-      ? (a, b) => descendingComparator(a, b, orderBy)
-      : (a, b) => -descendingComparator(a, b, orderBy)
-  }
-
-  const descendingComparator = (a: ProxyHost, b: ProxyHost, orderBy: OrderBy) => {
-    let aValue: unknown
-    let bValue: unknown
-
-    switch (orderBy) {
-      case 'status':
-        aValue = !a.enabled ? 0 : (a.meta.nginx_online === false ? 1 : 2)
-        bValue = !b.enabled ? 0 : (b.meta.nginx_online === false ? 1 : 2)
-        break
-      case 'domain_names':
-        aValue = a.domain_names[0] || ''
-        bValue = b.domain_names[0] || ''
-        break
-      case 'forward_host':
-        aValue = `${a.forward_scheme}://${a.forward_host}:${a.forward_port}`
-        bValue = `${b.forward_scheme}://${b.forward_host}:${b.forward_port}`
-        break
-      case 'ssl':
-        aValue = !a.certificate_id ? 0 : (a.ssl_forced ? 2 : 1)
-        bValue = !b.certificate_id ? 0 : (b.ssl_forced ? 2 : 1)
-        break
-      case 'access':
-        aValue = a.access_list?.name || ''
-        bValue = b.access_list?.name || ''
-        break
-      default:
-        return 0
-    }
-
-    if ((bValue as any) < (aValue as any)) return -1
-    if ((bValue as any) > (aValue as any)) return 1
-    return 0
-  }
-
-  // Apply visibility filtering first
+  // Apply visibility filtering
   const visibleHosts = useFilteredData(hosts)
-  const filterInfo = useFilteredInfo(hosts, visibleHosts)
-  
-  // Then apply search filtering
-  const filteredHosts = visibleHosts.filter(host => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    return (
-      host.domain_names.some(domain => domain.toLowerCase().includes(query)) ||
-      host.forward_host.toLowerCase().includes(query) ||
-      host.forward_port.toString().includes(query)
-    )
-  })
-
-  const sortedHosts = [...filteredHosts].sort(getComparator(order, orderBy))
-
-  // Create domain groups
-  const domainGroups: DomainGroup[] = []
-  const groupMap = new Map<string, DomainGroup>()
-  
-  if (groupByDomain) {
-    sortedHosts.forEach(host => {
-      const mainDomain = host.domain_names[0] || ''
-      const baseDomain = extractBaseDomain(mainDomain)
-      const groupId = generateGroupId(baseDomain)
-      
-      if (!groupMap.has(groupId)) {
-        const group: DomainGroup = {
-          id: groupId,
-          domain: baseDomain,
-          hosts: [],
-          isExpanded: expandedGroups[groupId] !== false // Default to expanded
-        }
-        groupMap.set(groupId, group)
-        domainGroups.push(group)
-      }
-      
-      groupMap.get(groupId)!.hosts.push(host)
-    })
-    
-    // Sort groups based on current sort settings
-    if (orderBy === 'domain_names') {
-      domainGroups.sort((a, b) => {
-        const compare = a.domain.localeCompare(b.domain)
-        return order === 'asc' ? compare : -compare
-      })
-    } else {
-      // For other sort fields, sort by the first host's value in each group
-      domainGroups.sort((a, b) => {
-        const aHost = a.hosts[0]
-        const bHost = b.hosts[0]
-        if (!aHost || !bHost) return 0
-        
-        const comparator = descendingComparator(aHost, bHost, orderBy)
-        return order === 'desc' ? comparator : -comparator
-      })
-    }
-  }
 
   const getStatusIcon = (host: ProxyHost) => {
     if (!host.enabled) {
       return <Tooltip title="Disabled"><CancelIcon color="disabled" /></Tooltip>
     }
     if (host.meta.nginx_online === false) {
-      return <Tooltip title={host.meta.nginx_err || 'Offline'}><CancelIcon color="error" /></Tooltip>
+      return <Tooltip title={host.meta.nginx_err || 'Offline'}><ErrorIcon color="error" /></Tooltip>
     }
     return <Tooltip title="Online"><CheckCircleIcon color="success" /></Tooltip>
-  }
-
-  const getSSLIcon = (host: ProxyHost) => {
-    if (!host.certificate_id) {
-      return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
-    }
-    if (host.ssl_forced) {
-      return <Tooltip title="SSL Forced"><LockIcon color="primary" /></Tooltip>
-    }
-    return <Tooltip title="SSL Optional"><LockIcon color="action" /></Tooltip>
   }
 
   const getLinkedRedirections = (host: ProxyHost): RedirectionHost[] => {
@@ -400,548 +245,436 @@ const ProxyHosts = () => {
     )
   }
 
+  // Column definitions for DataTable
+  const columns: TableColumn<ProxyHost>[] = [
+    {
+      id: 'status',
+      label: 'Status',
+      icon: <StatusIcon fontSize="small" />,
+      accessor: (item) => !item.enabled ? 0 : (item.meta.nginx_online === false ? 1 : 2),
+      sortable: true,
+      align: 'center',
+      render: (value, item) => getStatusIcon(item)
+    },
+    {
+      id: 'domain_names',
+      label: 'Domain Names',
+      icon: <LanguageIcon fontSize="small" />,
+      accessor: (item) => item.domain_names[0] || '',
+      sortable: true,
+      render: (value, item) => {
+        const linkedRedirections = getLinkedRedirections(item)
+        return (
+          <Box>
+            {item.domain_names.map((domain, index) => (
+              <Box key={index} display="flex" alignItems="center" gap={0.5}>
+                <Typography variant="body2">
+                  {domain}
+                </Typography>
+                <IconButton
+                  size="small"
+                  sx={{ 
+                    p: 0.25,
+                    '&:hover': { 
+                      backgroundColor: 'action.hover'
+                    }
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.open(`https://${domain}`, '_blank')
+                  }}
+                >
+                  <LinkIcon sx={{ fontSize: '0.875rem' }} />
+                </IconButton>
+              </Box>
+            ))}
+            {linkedRedirections.length > 0 && (
+              <Tooltip 
+                title={
+                  <Box>
+                    {linkedRedirections.map((redirect, idx) => (
+                      <div key={idx}>
+                        {redirect.domain_names.join(', ')} → {redirect.forward_domain_name}
+                      </div>
+                    ))}
+                  </Box>
+                }
+              >
+                <Box 
+                  display="flex" 
+                  alignItems="center" 
+                  gap={0.5} 
+                  ml={3}
+                  sx={{ 
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.8 }
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (linkedRedirections.length === 1) {
+                      navigate(`/hosts/redirection/${linkedRedirections[0].id}/view`)
+                    } else {
+                      setViewingHost(item)
+                      setDetailsDialogOpen(true)
+                      navigate(`/hosts/proxy/${item.id}/view/connections`)
+                    }
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">↳</Typography>
+                  <RedirectIcon fontSize="small" sx={{ fontSize: '0.875rem' }} color="action" />
+                  <Typography variant="caption" color="primary">
+                    {linkedRedirections.length} Redirection{linkedRedirections.length > 1 ? 's' : ''}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            )}
+          </Box>
+        )
+      }
+    },
+    {
+      id: 'forward_host',
+      label: 'Forward Host',
+      icon: <ForwardIcon fontSize="small" />,
+      accessor: (item) => `${item.forward_scheme}://${item.forward_host}:${item.forward_port}`,
+      sortable: true,
+      render: (value, item) => (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <Typography variant="body2" color="text.secondary">
+            {item.forward_scheme}://{item.forward_host}:{item.forward_port}
+          </Typography>
+          <IconButton
+            size="small"
+            sx={{ 
+              p: 0.25,
+              '&:hover': { 
+                backgroundColor: 'action.hover'
+              }
+            }}
+            onClick={(e) => {
+              e.stopPropagation()
+              window.open(`${item.forward_scheme}://${item.forward_host}:${item.forward_port}`, '_blank')
+            }}
+          >
+            <LinkIcon sx={{ fontSize: '0.875rem' }} />
+          </IconButton>
+        </Box>
+      )
+    },
+    {
+      id: 'ssl',
+      label: 'SSL',
+      icon: <LockIcon fontSize="small" />,
+      accessor: (item) => !item.certificate_id ? 0 : (item.ssl_forced ? 2 : 1),
+      sortable: true,
+      align: 'center',
+      render: (value, item) => {
+        if (!item.certificate_id) {
+          return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
+        }
+        if (item.ssl_forced) {
+          return <Tooltip title="SSL Forced"><LockIcon color="primary" /></Tooltip>
+        }
+        return <Tooltip title="SSL Optional"><LockIcon color="action" /></Tooltip>
+      }
+    },
+    {
+      id: 'access',
+      label: 'Access',
+      icon: <AccessIcon fontSize="small" />,
+      accessor: (item) => item.access_list?.name || '',
+      sortable: true,
+      render: (value, item) => {
+        if (item.access_list) {
+          return (
+            <Chip 
+              label={item.access_list.name} 
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                setViewingHost(item)
+                setDetailsDialogOpen(true)
+                navigate(`/hosts/proxy/${item.id}/view/access`)
+              }}
+              sx={{ 
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'action.hover'
+                }
+              }}
+            />
+          )
+        }
+        return (
+          <Typography variant="body2" color="text.secondary">
+            Public
+          </Typography>
+        )
+      }
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      icon: <ActionsIcon fontSize="small" />,
+      accessor: (item) => item.id,
+      sortable: false,
+      align: 'right',
+      render: (value, item) => (
+        <Box display="flex" gap={0.5} justifyContent="flex-end">
+          {togglingHosts.has(item.id) ? (
+            <IconButton size="small" disabled>
+              <CircularProgress size={18} />
+            </IconButton>
+          ) : (
+            <PermissionIconButton
+              resource="proxy_hosts"
+              permissionAction="edit"
+              size="small"
+              tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleToggleEnabled(item)
+              }}
+              color={item.enabled ? 'default' : 'success'}
+            >
+              <PowerIcon />
+            </PermissionIconButton>
+          )}
+          <PermissionIconButton
+            resource="proxy_hosts"
+            permissionAction="edit"
+            size="small"
+            tooltipTitle="Edit"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleEdit(item)
+            }}
+          >
+            <EditIcon />
+          </PermissionIconButton>
+          <PermissionIconButton
+            resource="proxy_hosts"
+            permissionAction="delete"
+            size="small"
+            tooltipTitle="Delete"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDelete(item)
+            }}
+            color="error"
+          >
+            <DeleteIcon />
+          </PermissionIconButton>
+        </Box>
+      )
+    }
+  ]
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+  // Filter definitions
+  const filters: Filter[] = [
+    {
+      id: 'ssl',
+      label: 'SSL',
+      type: 'select',
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'forced', label: 'SSL Forced', icon: <LockIcon fontSize="small" /> },
+        { value: 'optional', label: 'SSL Optional', icon: <LockIcon fontSize="small" /> },
+        { value: 'disabled', label: 'No SSL', icon: <LockOpenIcon fontSize="small" /> }
+      ]
+    },
+    {
+      id: 'access',
+      label: 'Access',
+      type: 'select',
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'public', label: 'Public' },
+        { value: 'restricted', label: 'Restricted', icon: <LockIcon fontSize="small" /> }
+      ]
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      type: 'select',
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'enabled', label: 'Enabled', icon: <CheckCircleIcon fontSize="small" /> },
+        { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
+      ]
+    }
+  ]
+
+  // Custom filter function for DataTable
+  const filterFunction = (item: ProxyHost, activeFilters: Record<string, any>) => {
+    // SSL filter
+    if (activeFilters.ssl && activeFilters.ssl !== 'all') {
+      if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false
+      if (activeFilters.ssl === 'optional' && (!item.certificate_id || item.ssl_forced)) return false
+      if (activeFilters.ssl === 'disabled' && item.certificate_id) return false
+    }
+
+    // Access filter
+    if (activeFilters.access && activeFilters.access !== 'all') {
+      if (activeFilters.access === 'public' && item.access_list) return false
+      if (activeFilters.access === 'restricted' && !item.access_list) return false
+    }
+
+    // Status filter
+    if (activeFilters.status && activeFilters.status !== 'all') {
+      if (activeFilters.status === 'enabled' && !item.enabled) return false
+      if (activeFilters.status === 'disabled' && item.enabled) return false
+    }
+
+    return true
+  }
+
+  // Bulk actions
+  const bulkActions: BulkAction<ProxyHost>[] = [
+    {
+      id: 'enable',
+      label: 'Enable',
+      icon: <CheckCircleIcon />,
+      confirmMessage: 'Are you sure you want to enable the selected proxy hosts?',
+      action: async (items) => {
+        try {
+          await Promise.all(items.filter(item => !item.enabled).map(item => proxyHostsApi.enable(item.id)))
+          showSuccess('proxy-host', 'enabled', `${items.length} hosts`)
+          await loadHosts()
+        } catch (err) {
+          showError('proxy-host', 'enable', err instanceof Error ? err.message : 'Unknown error')
+        }
+      }
+    },
+    {
+      id: 'disable',
+      label: 'Disable',
+      icon: <CancelIcon />,
+      confirmMessage: 'Are you sure you want to disable the selected proxy hosts?',
+      action: async (items) => {
+        try {
+          await Promise.all(items.filter(item => item.enabled).map(item => proxyHostsApi.disable(item.id)))
+          showSuccess('proxy-host', 'disabled', `${items.length} hosts`)
+          await loadHosts()
+        } catch (err) {
+          showError('proxy-host', 'disable', err instanceof Error ? err.message : 'Unknown error')
+        }
+      }
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: <DeleteIcon />,
+      color: 'error',
+      confirmMessage: 'Are you sure you want to delete the selected proxy hosts?',
+      action: async (items) => {
+        try {
+          await Promise.all(items.map(item => proxyHostsApi.delete(item.id)))
+          showSuccess('proxy-host', 'deleted', `${items.length} hosts`)
+          await loadHosts()
+        } catch (err) {
+          showError('proxy-host', 'delete', err instanceof Error ? err.message : 'Unknown error')
+        }
+      }
+    }
+  ]
+
+  // Group configuration for domain grouping
+  const groupConfig: GroupConfig<ProxyHost> = {
+    groupBy: (item) => {
+      const mainDomain = item.domain_names[0] || ''
+      return extractBaseDomain(mainDomain)
+    },
+    groupLabel: (groupId, items) => `domain`,
+    defaultEnabled: false,
+    groupHeaderRender: (groupId, items, isExpanded) => (
+      <Box display="flex" alignItems="center" gap={1}>
+        <LanguageIcon fontSize="small" color="primary" />
+        <Typography variant="subtitle2" fontWeight="bold">
+          {groupId}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          ({items.length})
+        </Typography>
       </Box>
     )
   }
 
   return (
-    <Box>
-      <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <PageHeader
-          icon={<ProxyIcon sx={{ color: '#5eba00' }} />}
-          title="Proxy Hosts"
-          description="Manage reverse proxy configurations for your web services"
+    <Container maxWidth={false}>
+      <Box py={3}>
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <PageHeader
+            icon={<ProxyIcon sx={{ color: '#5eba00' }} />}
+            title="Proxy Hosts"
+            description="Manage reverse proxy configurations for your web services"
+          />
+          <PermissionButton
+            resource="proxy_hosts"
+            permissionAction="create"
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAdd}
+          >
+            Add Proxy Host
+          </PermissionButton>
+        </Box>
+
+        {/* DataTable */}
+        <DataTable
+          data={visibleHosts}
+          columns={columns}
+          keyExtractor={(item) => item.id.toString()}
+          onRowClick={handleView}
+          bulkActions={bulkActions}
+          filters={filters}
+          filterFunction={filterFunction}
+          searchPlaceholder="Search by domain name, forward host, or port..."
+          searchFields={['domain_names', 'forward_host', 'forward_port']}
+          loading={loading}
+          error={error}
+          emptyMessage="No proxy hosts configured"
+          defaultSortField="domain_names"
+          defaultSortDirection="asc"
+          searchable={true}
+          selectable={true}
+          showPagination={true}
+          defaultRowsPerPage={10}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          groupConfig={groupConfig}
+          showGroupToggle={true}
         />
-        <PermissionButton
-          resource="proxy_hosts"
-          permissionAction="create"
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleAdd}
-        >
-          Add Proxy Host
-        </PermissionButton>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+      {canManageProxyHosts('proxy_hosts') && (
+        <ProxyHostDrawer
+          open={drawerOpen}
+          onClose={() => {
+            setDrawerOpen(false)
+            navigate('/hosts/proxy')
+          }}
+          host={editingHost}
+          onSave={() => {
+            loadHosts()
+            navigate('/hosts/proxy')
+          }}
+        />
       )}
-
-      {filterInfo.isFiltered && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Zeige {filterInfo.visibleCount} von {filterInfo.totalCount} Proxy Hosts 
-          (nur eigene Einträge werden angezeigt)
-        </Alert>
-      )}
-
-      <Paper sx={{ mb: 2 }}>
-        <Box p={2}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search by domain name, forward host, or port..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-      </Paper>
-
-      <Box mb={2} display="flex" justifyContent="space-between" alignItems="center">
-        <Box display="flex" alignItems="center" gap={2}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={groupByDomain}
-                onChange={(e) => setGroupByDomain(e.target.checked)}
-              />
-            }
-            label="Group by Domain"
-          />
-          {groupByDomain && domainGroups.length > 0 && (
-            <>
-              <IconButton
-                size="small"
-                onClick={() => toggleAllGroups(true)}
-                title="Expand All"
-              >
-                <ExpandAllIcon />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => toggleAllGroups(false)}
-                title="Collapse All"
-              >
-                <CollapseAllIcon />
-              </IconButton>
-            </>
-          )}
-        </Box>
-      </Box>
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'status'}
-                  direction={orderBy === 'status' ? order : 'asc'}
-                  onClick={() => handleRequestSort('status')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">Status</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'domain_names'}
-                  direction={orderBy === 'domain_names' ? order : 'asc'}
-                  onClick={() => handleRequestSort('domain_names')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">Domain Names</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'forward_host'}
-                  direction={orderBy === 'forward_host' ? order : 'asc'}
-                  onClick={() => handleRequestSort('forward_host')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">Forward Host</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'ssl'}
-                  direction={orderBy === 'ssl' ? order : 'asc'}
-                  onClick={() => handleRequestSort('ssl')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">SSL</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === 'access'}
-                  direction={orderBy === 'access' ? order : 'asc'}
-                  onClick={() => handleRequestSort('access')}
-                >
-                  <Typography variant="subtitle2" fontWeight="bold">Access</Typography>
-                </TableSortLabel>
-              </TableCell>
-              <TableCell align="right">
-                <Typography variant="subtitle2" fontWeight="bold">Actions</Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedHosts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                  {searchQuery ? 'No proxy hosts found matching your search.' : 'No proxy hosts configured yet.'}
-                </TableCell>
-              </TableRow>
-            ) : groupByDomain ? (
-              // Grouped view
-              domainGroups.map((group) => (
-                <React.Fragment key={group.id}>
-                  {/* Group header row */}
-                  <TableRow 
-                    key={group.id}
-                    sx={{ 
-                      backgroundColor: 'action.hover',
-                      cursor: 'pointer',
-                      '&:hover': { backgroundColor: 'action.selected' }
-                    }}
-                    onClick={() => toggleGroupExpanded(group.id)}
-                  >
-                    <TableCell>
-                      <Box display="flex" alignItems="center">
-                        <IconButton size="small" sx={{ p: 0.5 }}>
-                          {group.isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
-                        </IconButton>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <LanguageIcon fontSize="small" color="primary" />
-                        <Typography variant="subtitle2" fontWeight="bold">
-                          {group.domain} ({group.hosts.length})
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                  </TableRow>
-                  
-                  {/* Host rows */}
-                  {group.isExpanded && group.hosts.map((host) => (
-                    <TableRow 
-                      key={host.id}
-                      hover
-                      sx={{ 
-                        '& > td:first-of-type': { pl: 6 },
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => handleView(host)}
-                    >
-                      <TableCell>{getStatusIcon(host)}</TableCell>
-                      <TableCell>
-                        <Box>
-                          <Box display="flex" alignItems="center" gap={1} pl={2}>
-                            <Box sx={{ 
-                              width: 2, 
-                              height: 20, 
-                              backgroundColor: 'divider',
-                              mr: 1 
-                            }} />
-                            <Box>
-                              {host.domain_names.map((domain, index) => (
-                                <div key={index}>
-                                  <Typography 
-                                    variant="body2"
-                                    sx={{ 
-                                      cursor: 'pointer',
-                                      '&:hover': { 
-                                        textDecoration: 'underline',
-                                        color: 'primary.main'
-                                      }
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      window.open(`https://${domain}`, '_blank')
-                                    }}
-                                  >
-                                    {domain}
-                                  </Typography>
-                                </div>
-                              ))}
-                            </Box>
-                          </Box>
-                          {(() => {
-                            const linkedRedirections = getLinkedRedirections(host)
-                            if (linkedRedirections.length > 0) {
-                              return (
-                                <Tooltip 
-                                  title={
-                                    <Box>
-                                      {linkedRedirections.map((redirect, idx) => (
-                                        <div key={idx}>
-                                          {redirect.domain_names.join(', ')} → {redirect.forward_domain_name}
-                                        </div>
-                                      ))}
-                                    </Box>
-                                  }
-                                >
-                                  <Box 
-                                    display="flex" 
-                                    alignItems="center" 
-                                    gap={0.5} 
-                                    ml={5}
-                                    sx={{ 
-                                      cursor: 'pointer',
-                                      '&:hover': { opacity: 0.8 }
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      if (linkedRedirections.length === 1) {
-                                        // Navigate to the redirection host overview
-                                        navigate(`/hosts/redirection/${linkedRedirections[0].id}/view/overview`)
-                                      } else {
-                                        // Open this proxy host's details with connections tab
-                                        setViewingHost(host)
-                                        setDetailsDialogOpen(true)
-                                        navigate(`/hosts/proxy/${host.id}/view/connections`)
-                                      }
-                                    }}
-                                  >
-                                    <Typography variant="caption" color="text.secondary">↳</Typography>
-                                    <RedirectIcon fontSize="small" sx={{ fontSize: '0.875rem' }} color="action" />
-                                    <Typography variant="caption" color="primary">
-                                      {linkedRedirections.length} Redirection{linkedRedirections.length > 1 ? 's' : ''}
-                                    </Typography>
-                                  </Box>
-                                </Tooltip>
-                              )
-                            }
-                            return null
-                          })()}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {host.forward_scheme}://{host.forward_host}:{host.forward_port}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{getSSLIcon(host)}</TableCell>
-                      <TableCell>
-                        {host.access_list ? (
-                          <Chip 
-                            label={host.access_list.name} 
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setViewingHost(host)
-                              setDetailsDialogOpen(true)
-                              navigate(`/hosts/proxy/${host.id}/view/access`)
-                            }}
-                            sx={{ 
-                              cursor: 'pointer',
-                              '&:hover': {
-                                backgroundColor: 'action.hover'
-                              }
-                            }}
-                          />
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            Public
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                          <PermissionIconButton
-                            resource="proxy_hosts"
-                            permissionAction="edit"
-                            size="small"
-                            tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleToggleEnabled(host)
-                            }}
-                            color={host.enabled ? 'default' : 'success'}
-                          >
-                            <PowerIcon />
-                          </PermissionIconButton>
-                          <PermissionIconButton
-                            resource="proxy_hosts"
-                            permissionAction="edit"
-                            size="small"
-                            tooltipTitle="Edit"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEdit(host)
-                            }}
-                            color="primary"
-                          >
-                            <EditIcon />
-                          </PermissionIconButton>
-                          <PermissionIconButton
-                            resource="proxy_hosts"
-                            permissionAction="delete"
-                            size="small"
-                            tooltipTitle="Delete"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(host)
-                            }}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </PermissionIconButton>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </React.Fragment>
-              ))
-            ) : (
-              // Flat view
-              sortedHosts.map((host) => (
-                <TableRow 
-                  key={host.id}
-                  hover
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => handleView(host)}
-                >
-                  <TableCell>{getStatusIcon(host)}</TableCell>
-                  <TableCell>
-                    <Box>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <LanguageIcon fontSize="small" color="action" />
-                        <Box>
-                          {host.domain_names.map((domain, index) => (
-                            <div key={index}>
-                              <Typography 
-                                variant="body2"
-                                sx={{ 
-                                  cursor: 'pointer',
-                                  '&:hover': { 
-                                    textDecoration: 'underline',
-                                    color: 'primary.main'
-                                  }
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  window.open(`https://${domain}`, '_blank')
-                                }}
-                              >
-                                {domain}
-                              </Typography>
-                            </div>
-                          ))}
-                        </Box>
-                      </Box>
-                      {(() => {
-                        const linkedRedirections = getLinkedRedirections(host)
-                        if (linkedRedirections.length > 0) {
-                          return (
-                            <Tooltip 
-                              title={
-                                <Box>
-                                  {linkedRedirections.map((redirect, idx) => (
-                                    <div key={idx}>
-                                      {redirect.domain_names.join(', ')} → {redirect.forward_domain_name}
-                                    </div>
-                                  ))}
-                                </Box>
-                              }
-                            >
-                              <Box 
-                                display="flex" 
-                                alignItems="center" 
-                                gap={0.5} 
-                                ml={3}
-                                sx={{ 
-                                  cursor: 'pointer',
-                                  '&:hover': { opacity: 0.8 }
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  if (linkedRedirections.length === 1) {
-                                    // Navigate to the redirection host overview
-                                    navigate(`/hosts/redirection/${linkedRedirections[0].id}/view/overview`)
-                                  } else {
-                                    // Open this proxy host's details with connections tab
-                                    setViewingHost(host)
-                                    setDetailsDialogOpen(true)
-                                    navigate(`/hosts/proxy/${host.id}/view/connections`)
-                                  }
-                                }}
-                              >
-                                <Typography variant="caption" color="text.secondary">↳</Typography>
-                                <RedirectIcon fontSize="small" sx={{ fontSize: '0.875rem' }} color="action" />
-                                <Typography variant="caption" color="primary">
-                                  {linkedRedirections.length} Redirection{linkedRedirections.length > 1 ? 's' : ''}
-                                </Typography>
-                              </Box>
-                            </Tooltip>
-                          )
-                        }
-                        return null
-                      })()}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {host.forward_scheme}://{host.forward_host}:{host.forward_port}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{getSSLIcon(host)}</TableCell>
-                  <TableCell>
-                    {host.access_list ? (
-                      <Chip 
-                        label={host.access_list.name} 
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setViewingHost(host)
-                          setDetailsDialogOpen(true)
-                          navigate(`/hosts/proxy/${host.id}/view/access`)
-                        }}
-                        sx={{ 
-                          cursor: 'pointer',
-                          '&:hover': {
-                            backgroundColor: 'action.hover'
-                          }
-                        }}
-                      />
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        Public
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                      <PermissionIconButton
-                        resource="proxy_hosts"
-                        permissionAction="edit"
-                        size="small"
-                        tooltipTitle={host.enabled ? 'Disable' : 'Enable'}
-                        onClick={() => handleToggleEnabled(host)}
-                        color={host.enabled ? 'default' : 'success'}
-                      >
-                        <PowerIcon />
-                      </PermissionIconButton>
-                      <PermissionIconButton
-                        resource="proxy_hosts"
-                        permissionAction="edit"
-                        size="small"
-                        tooltipTitle="Edit"
-                        onClick={() => handleEdit(host)}
-                        color="primary"
-                      >
-                        <EditIcon />
-                      </PermissionIconButton>
-                      <PermissionIconButton
-                        resource="proxy_hosts"
-                        permissionAction="delete"
-                        size="small"
-                        tooltipTitle="Delete"
-                        onClick={() => handleDelete(host)}
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </PermissionIconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <ProxyHostDrawer
-        open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false)
-          navigate('/hosts/proxy')
-        }}
-        host={editingHost}
-        onSave={() => {
-          loadHosts()
-          navigate('/hosts/proxy')
-        }}
-      />
 
       <ProxyHostDetailsDialog
         open={detailsDialogOpen}
         onClose={() => {
           setDetailsDialogOpen(false)
-          // Clear the URL parameter when closing
           if (id) {
             navigate('/hosts/proxy')
           }
         }}
         host={viewingHost}
-        onEdit={handleEdit}
+        onEdit={canManageProxyHosts('proxy_hosts') ? handleEdit : undefined}
       />
 
       <ConfirmDialog
@@ -949,12 +682,11 @@ const ProxyHosts = () => {
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Proxy Host?"
+        titleIcon={<ProxyIcon sx={{ color: '#5eba00' }} />}
         message={`Are you sure you want to delete the proxy host for ${hostToDelete?.domain_names.join(', ')}? This action cannot be undone.`}
         confirmText="Delete"
         confirmColor="error"
       />
-    </Box>
+    </Container>
   )
 }
-
-export default ProxyHosts

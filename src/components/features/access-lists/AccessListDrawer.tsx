@@ -57,7 +57,7 @@ interface AccessListFormData {
 }
 
 // Memoized components to prevent re-renders and focus loss
-const AuthItemComponent = React.memo(({ value, onChange, onDelete, index, accessList }: any) => (
+const AuthItemComponent = React.memo(({ value, onChange, onDelete, _index, accessList }: any) => (
   <Paper
     variant="outlined"
     sx={{
@@ -254,7 +254,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       })) || [{ address: '', directive: 'allow' }],
     },
     validate: (data) => {
-      const errors: Partial<Record<keyof AccessListFormData | 'general', string>> = {}
+      const errors: Partial<Record<keyof AccessListFormData, string>> & { general?: string } = {}
       
       // Name validation
       if (!data.name || data.name.trim() === '') {
@@ -379,9 +379,9 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     >
       {/* Details Tab */}
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
-        {errors.general && (
+        {(errors as any).general && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {errors.general}
+            {(errors as any).general}
           </Alert>
         )}
         <FormSection

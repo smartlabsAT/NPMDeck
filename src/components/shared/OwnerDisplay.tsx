@@ -56,9 +56,8 @@ const OwnerDisplay: React.FC<OwnerDisplayProps> = ({
 
   const content = (
     <Box display="flex" alignItems="center" gap={1}>
-      {showAvatar && owner.avatar ? (
+      {showAvatar ? (
         <Avatar 
-          src={owner.avatar} 
           sx={{ width: avatarSize, height: avatarSize }}
         >
           {displayName.charAt(0).toUpperCase()}

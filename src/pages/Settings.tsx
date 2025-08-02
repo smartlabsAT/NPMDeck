@@ -52,7 +52,9 @@ import {
   Add as AddIcon,
 } from '@mui/icons-material'
 import Editor from 'react-simple-code-editor'
+// @ts-ignore - prismjs type declarations don't cover all exports
 import { highlight, languages } from 'prismjs/components/prism-core'
+// @ts-ignore
 import 'prismjs/components/prism-markup'
 import { settingsApi, Setting } from '../api/settings'
 import PageHeader from '../components/PageHeader'
@@ -420,7 +422,7 @@ const Settings = () => {
   }
   
   const [activeTab, setActiveTab] = useState(getInitialTab())
-  const [_settings, setSettings] = useState<Setting[]>([])
+  const [settings, setSettings] = useState<Setting[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)

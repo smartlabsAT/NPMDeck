@@ -281,7 +281,7 @@ export function SlideTabPanel({
 /**
  * NoAnimationTabPanel - Tab panel without transitions
  */
-export interface NoAnimationTabPanelProps extends Omit<TabPanelProps, 'animation' | 'timeout'> {}
+export type NoAnimationTabPanelProps = Omit<TabPanelProps, 'animation' | 'timeout'>
 
 export function NoAnimationTabPanel(props: NoAnimationTabPanelProps) {
   return (

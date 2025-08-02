@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { 
-  Snackbar, 
   Alert, 
   AlertColor, 
   Slide, 
@@ -79,7 +78,7 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 /**
  * Slide transition for toast
  */
-function SlideTransition(props: SlideProps) {
+function _SlideTransition(props: SlideProps) {
   return <Slide {...props} direction="down" />;
 }
 

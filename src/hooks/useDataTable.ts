@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { UseDataTableOptions, UseDataTableReturn, TableColumn, DataGroup, GroupConfig } from '../components/DataTable/types'
 
-export function useDataTable<T>(
+export function useDataTable<T extends object>(
   data: T[],
   columns: TableColumn<T>[],
   keyExtractor: (item: T) => string | number,

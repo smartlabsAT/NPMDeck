@@ -236,12 +236,8 @@ const AuditLog = () => {
   const columns: TableColumn<AuditLogEntry>[] = useMemo(() => [
     {
       id: 'user',
-      label: (
-        <Box display="flex" alignItems="center" gap={0.5}>
-          <PersonIcon fontSize="small" />
-          <span>User</span>
-        </Box>
-      ),
+      label: 'User',
+      icon: <PersonIcon fontSize="small" />,
       accessor: (entry) => entry.user.name,
       sortable: true,
       render: (_, entry) => (
@@ -276,12 +272,8 @@ const AuditLog = () => {
     },
     {
       id: 'object_type',
-      label: (
-        <Box display="flex" alignItems="center" gap={0.5}>
-          <CategoryIcon fontSize="small" />
-          <span>Type</span>
-        </Box>
-      ),
+      label: 'Type',
+      icon: <CategoryIcon fontSize="small" />,
       accessor: (entry) => entry.object_type,
       sortable: true,
       render: (_, entry) => (
@@ -295,12 +287,8 @@ const AuditLog = () => {
     },
     {
       id: 'action',
-      label: (
-        <Box display="flex" alignItems="center" gap={0.5}>
-          <ActionIcon fontSize="small" />
-          <span>Action</span>
-        </Box>
-      ),
+      label: 'Action',
+      icon: <ActionIcon fontSize="small" />,
       accessor: (entry) => entry.action,
       sortable: true,
       render: (_, entry) => (
@@ -309,12 +297,8 @@ const AuditLog = () => {
     },
     {
       id: 'entity',
-      label: (
-        <Box display="flex" alignItems="center" gap={0.5}>
-          <EntityIcon fontSize="small" />
-          <span>Entity</span>
-        </Box>
-      ),
+      label: 'Entity',
+      icon: <EntityIcon fontSize="small" />,
       accessor: (entry) => {
         // For sorting, use the first domain name or name
         if (entry.meta.domain_names?.[0]) return entry.meta.domain_names[0]
@@ -331,12 +315,8 @@ const AuditLog = () => {
     },
     {
       id: 'created_on',
-      label: (
-        <Box display="flex" alignItems="center" gap={0.5}>
-          <DateIcon fontSize="small" />
-          <span>Date</span>
-        </Box>
-      ),
+      label: 'Date',
+      icon: <DateIcon fontSize="small" />,
       accessor: (entry) => entry.created_on,
       sortable: true,
       render: (date) => (
@@ -352,12 +332,8 @@ const AuditLog = () => {
     },
     {
       id: 'actions',
-      label: (
-        <Box display="flex" alignItems="center" justifyContent="flex-end" gap={0.5}>
-          <ActionsIcon fontSize="small" />
-          <span>Actions</span>
-        </Box>
-      ),
+      label: 'Actions',
+      icon: <ActionsIcon fontSize="small" />,
       align: 'right',
       accessor: () => null,
       render: (_, entry) => (

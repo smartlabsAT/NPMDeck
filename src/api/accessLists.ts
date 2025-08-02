@@ -46,7 +46,7 @@ export interface CreateAccessList {
   }>
 }
 
-export interface UpdateAccessList extends CreateAccessList {}
+export type UpdateAccessList = CreateAccessList
 
 class AccessListsApi {
   async getAll(expand?: string[]): Promise<AccessList[]> {

@@ -17,8 +17,6 @@ import {
   DialogActions,
   useTheme,
   useMediaQuery,
-  Slide,
-  Paper,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -242,7 +240,7 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
   /**
    * Render tab with badge and error state
    */
-  const renderTab = (tab: Tab, index: number) => (
+  const renderTab = (tab: Tab, _index: number) => (
     <Tab
       key={tab.id}
       label={

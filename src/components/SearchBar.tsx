@@ -77,17 +77,8 @@ const SearchBar: React.FC = () => {
   
   logger.debug('SearchBar component rendering')
   
-  // Try to use GlobalSearch context, return null if not available
-  let searchContext
-  try {
-    searchContext = useGlobalSearch()
-    logger.debug('SearchBar: GlobalSearch context found')
-  } catch (error) {
-    logger.warn('SearchBar: GlobalSearchProvider not found', error)
-    // SearchBar is being rendered outside of GlobalSearchProvider
-    return null
-  }
-  
+  // Use GlobalSearch context - this must be called unconditionally
+  const searchContext = useGlobalSearch()
   const { searchState, preloadData, searchResults, quickActions } = searchContext
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')

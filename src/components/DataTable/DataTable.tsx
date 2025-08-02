@@ -17,7 +17,6 @@ import {
   IconButton,
   FormControlLabel,
   Switch,
-  Collapse,
 } from '@mui/material'
 import {
   ExpandMore as ExpandMoreIcon,
@@ -31,7 +30,7 @@ import { useDataTable } from '../../hooks/useDataTable'
 import DataTableToolbar from './DataTableToolbar'
 import DataTableBulkActions from './DataTableBulkActions'
 
-export function DataTable<T>({
+export function DataTable<T extends object>({
   data,
   columns,
   keyExtractor,
@@ -120,8 +119,8 @@ export function DataTable<T>({
         filters={filters}
         activeFilters={activeFilters}
         onFilter={handleFilter}
-        onClearFilters={handleClearFilters}
-        hasActiveFilters={hasActiveFilters}
+        _onClearFilters={handleClearFilters}
+        _hasActiveFilters={hasActiveFilters}
         searchable={searchable}
         searchPlaceholder={searchPlaceholder}
       />

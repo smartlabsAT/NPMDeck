@@ -570,7 +570,7 @@ export function ErrorFormSection(props: ErrorFormSectionProps) {
 /**
  * WarningFormSection - Pre-configured warning section
  */
-export interface WarningFormSectionProps extends Omit<FormSectionProps, 'severity'> {}
+export type WarningFormSectionProps = Omit<FormSectionProps, 'severity'>
 
 export function WarningFormSection(props: WarningFormSectionProps) {
   return (
@@ -584,7 +584,7 @@ export function WarningFormSection(props: WarningFormSectionProps) {
 /**
  * RequiredFormSection - Pre-configured required section
  */
-export interface RequiredFormSectionProps extends Omit<FormSectionProps, 'required'> {}
+export type RequiredFormSectionProps = Omit<FormSectionProps, 'required'>
 
 export function RequiredFormSection(props: RequiredFormSectionProps) {
   return (
