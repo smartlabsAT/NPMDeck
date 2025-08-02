@@ -10,21 +10,20 @@ import {
   Alert,
 } from '@mui/material'
 import {
-  
   Lock as LockIcon,
   LockOpen as LockOpenIcon,
   ContentCopy as CopyIcon,
-  Person as PersonIcon,
   Edit as EditIcon,
   Stream as StreamIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
   Error as ErrorIcon,
-  
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material'
 import { Stream } from '../api/streams'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
+import OwnerDisplay from './shared/OwnerDisplay'
 
 interface StreamDetailsDialogProps {
   open: boolean
@@ -180,6 +179,17 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
                   >
                     <CopyIcon fontSize="small" />
                   </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      const protocol = stream.certificate_id ? 'https' : 'http'
+                      const url = `${protocol}://${stream.forwarding_host}:${stream.forwarding_port}`
+                      window.open(url, '_blank', 'noopener,noreferrer')
+                    }}
+                    title="Open in new tab"
+                  >
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
                   {copiedText === 'Destination' && (
                     <Typography variant="caption" color="success.main">
                       Copied!
@@ -227,23 +237,44 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
             <Typography variant="subtitle2" gutterBottom color="primary">
               SSL Certificate
             </Typography>
-            <Box display="flex" alignItems="center" gap={1}>
-              {stream.certificate_id ? (
-                <>
+            {stream.certificate_id && stream.certificate ? (
+              <Box>
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
                   <LockIcon color="success" fontSize="small" />
-                  <Typography variant="body2">
-                    SSL certificate configured
+                  <Typography variant="body2" fontWeight="medium">
+                    {stream.certificate.nice_name || stream.certificate.domain_names?.[0] || 'SSL Certificate'}
                   </Typography>
-                </>
-              ) : (
-                <>
-                  <LockOpenIcon color="action" fontSize="small" />
-                  <Typography variant="body2" color="text.secondary">
-                    No SSL certificate
-                  </Typography>
-                </>
-              )}
-            </Box>
+                </Box>
+                {stream.certificate.domain_names && stream.certificate.domain_names.length > 0 && (
+                  <Box ml={3}>
+                    <Typography variant="caption" color="text.secondary">
+                      Domains: {stream.certificate.domain_names.join(', ')}
+                    </Typography>
+                  </Box>
+                )}
+                {stream.certificate.expires_on && (
+                  <Box ml={3}>
+                    <Typography variant="caption" color="text.secondary">
+                      Expires: {new Date(stream.certificate.expires_on).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            ) : stream.certificate_id ? (
+              <Box display="flex" alignItems="center" gap={1}>
+                <LockIcon color="success" fontSize="small" />
+                <Typography variant="body2">
+                  SSL certificate configured (ID: {stream.certificate_id})
+                </Typography>
+              </Box>
+            ) : (
+              <Box display="flex" alignItems="center" gap={1}>
+                <LockOpenIcon color="action" fontSize="small" />
+                <Typography variant="body2" color="text.secondary">
+                  No SSL certificate
+                </Typography>
+              </Box>
+            )}
           </Box>
 
           <Divider sx={{ my: 2 }} />
@@ -254,7 +285,7 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
               Information
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={4}>
                 <Typography variant="caption" color="text.secondary">
                   Created
                 </Typography>
@@ -262,7 +293,7 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
                   {formatDate(stream.created_on)}
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={4}>
                 <Typography variant="caption" color="text.secondary">
                   Modified
                 </Typography>
@@ -270,19 +301,15 @@ const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
                   {formatDate(stream.modified_on)}
                 </Typography>
               </Grid>
-              {stream.owner && (
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary">
-                    Owner
-                  </Typography>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <PersonIcon fontSize="small" />
-                    <Typography variant="body2">
-                      {stream.owner.name || stream.owner.email}
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
+              <Grid item xs={12} sm={4}>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Owner
+                </Typography>
+                <OwnerDisplay 
+                  owner={stream.owner} 
+                  userId={stream.owner_user_id}
+                />
+              </Grid>
             </Grid>
           </Box>
       </AdaptiveContainer>

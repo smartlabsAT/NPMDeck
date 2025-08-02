@@ -1,55 +1,45 @@
-import { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
   Container,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
-  Typography,
   IconButton,
-  TextField,
-  InputAdornment,
-  Tooltip,
-  TablePagination,
+  Typography,
   Chip,
-  Alert,
   CircularProgress,
+  Alert,
+  Tooltip,
 } from '@mui/material'
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  Search as SearchIcon,
-  
   Stream as StreamIcon,
   Power as PowerIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
   Error as ErrorIcon,
-  
+  Sync as ProtocolIcon,
+  PlayArrow as IncomingIcon,
+  TrendingFlat as ForwardIcon,
+  VpnKey as SslIcon,
+  MoreVert as ActionsIcon,
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material'
 import { usePermissions } from '../hooks/usePermissions'
-import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
+import { useFilteredData } from '../hooks/useFilteredData'
 import { Stream, streamsApi } from '../api/streams'
 import { getErrorMessage } from '../types/common'
 import StreamDrawer from '../components/features/streams/StreamDrawer'
 import StreamDetailsDialog from '../components/StreamDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
-import ExportDialog from '../components/ExportDialog'
 import PermissionButton from '../components/PermissionButton'
 import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
-
-type OrderDirection = 'asc' | 'desc'
-type OrderBy = 'incoming_port' | 'forwarding_host' | 'status' | 'protocols' | 'created_on'
+import { DataTable } from '../components/DataTable'
+import { TableColumn, Filter, BulkAction } from '../components/DataTable/types'
 
 export default function Streams() {
   const navigate = useNavigate()
@@ -63,11 +53,6 @@ export default function Streams() {
   const [streams, setStreams] = useState<Stream[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [orderBy, setOrderBy] = useState<OrderBy>('incoming_port')
-  const [orderDirection, setOrderDirection] = useState<OrderDirection>('asc')
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
   const [togglingStreams, setTogglingStreams] = useState<Set<number>>(new Set())
   
   // Dialogs
@@ -76,7 +61,6 @@ export default function Streams() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [streamToDelete, setStreamToDelete] = useState<Stream | null>(null)
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Load streams
   useEffect(() => {
@@ -186,75 +170,8 @@ export default function Streams() {
     navigate('/hosts/streams')
   }
 
-
-  // Sorting and filtering
-  const handleSort = (property: OrderBy) => {
-    const isAsc = orderBy === property && orderDirection === 'asc'
-    setOrderDirection(isAsc ? 'desc' : 'asc')
-    setOrderBy(property)
-  }
-
   // Apply visibility filtering
   const visibleStreams = useFilteredData(streams)
-  const filterInfo = useFilteredInfo(streams, visibleStreams)
-
-  const filteredAndSortedStreams = useMemo(() => {
-    let filtered = visibleStreams
-
-    // Apply search filter
-    if (searchTerm) {
-      filtered = visibleStreams.filter(stream => 
-        stream.incoming_port.toString().includes(searchTerm) ||
-        stream.forwarding_host.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stream.forwarding_port.toString().includes(searchTerm)
-      )
-    }
-
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
-      let aValue: unknown
-      let bValue: unknown
-
-      switch (orderBy) {
-        case 'incoming_port':
-          aValue = a.incoming_port
-          bValue = b.incoming_port
-          break
-        case 'forwarding_host':
-          aValue = `${a.forwarding_host}:${a.forwarding_port}`
-          bValue = `${b.forwarding_host}:${b.forwarding_port}`
-          break
-        case 'status':
-          aValue = !a.enabled ? 0 : (a.meta.nginx_online === false ? 1 : 2)
-          bValue = !b.enabled ? 0 : (b.meta.nginx_online === false ? 1 : 2)
-          break
-        case 'protocols':
-          aValue = (a.tcp_forwarding ? 2 : 0) + (a.udp_forwarding ? 1 : 0)
-          bValue = (b.tcp_forwarding ? 2 : 0) + (b.udp_forwarding ? 1 : 0)
-          break
-        case 'created_on':
-          aValue = new Date(a.created_on).getTime()
-          bValue = new Date(b.created_on).getTime()
-          break
-        default:
-          return 0
-      }
-
-      if (orderDirection === 'asc') {
-        return (aValue as any) < (bValue as any) ? -1 : (aValue as any) > (bValue as any) ? 1 : 0
-      } else {
-        return (aValue as any) > (bValue as any) ? -1 : (aValue as any) < (bValue as any) ? 1 : 0
-      }
-    })
-
-    return sorted
-  }, [visibleStreams, searchTerm, orderBy, orderDirection])
-
-  // Pagination
-  const paginatedStreams = useMemo(() => {
-    const start = page * rowsPerPage
-    return filteredAndSortedStreams.slice(start, start + rowsPerPage)
-  }, [filteredAndSortedStreams, page, rowsPerPage])
 
   const getStatusIcon = (stream: Stream) => {
     if (!stream.enabled) {
@@ -277,15 +194,269 @@ export default function Streams() {
     return chips
   }
 
-  if (loading) {
-    return (
-      <Container>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
+  // Column definitions for DataTable
+  const columns: TableColumn<Stream>[] = [
+    {
+      id: 'status',
+      label: 'Status',
+      accessor: (item) => !item.enabled ? 0 : (item.meta.nginx_online === false ? 1 : 2),
+      sortable: true,
+      align: 'center',
+      render: (value, item) => getStatusIcon(item)
+    },
+    {
+      id: 'incoming_port',
+      label: 'Incoming Port',
+      icon: <IncomingIcon fontSize="small" />,
+      accessor: (item) => item.incoming_port,
+      sortable: true,
+      render: (value, item) => (
+        <Typography variant="body2" fontWeight="bold">
+          {item.incoming_port}
+        </Typography>
+      )
+    },
+    {
+      id: 'destination',
+      label: 'Destination',
+      icon: <ForwardIcon fontSize="small" />,
+      accessor: (item) => `${item.forwarding_host}:${item.forwarding_port}`,
+      sortable: true,
+      render: (value, item) => (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <Typography variant="body2">
+            {item.forwarding_host}:{item.forwarding_port}
+          </Typography>
+          <Tooltip title="Open in new tab">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                // Determine the protocol - use http by default
+                const protocol = item.certificate_id ? 'https' : 'http'
+                const url = `${protocol}://${item.forwarding_host}:${item.forwarding_port}`
+                window.open(url, '_blank', 'noopener,noreferrer')
+              }}
+              sx={{ padding: 0.5 }}
+            >
+              <OpenInNewIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
-      </Container>
-    )
+      )
+    },
+    {
+      id: 'protocols',
+      label: 'Protocols',
+      icon: <ProtocolIcon fontSize="small" />,
+      accessor: (item) => (item.tcp_forwarding ? 2 : 0) + (item.udp_forwarding ? 1 : 0),
+      sortable: true,
+      render: (value, item) => (
+        <Box display="flex" gap={0.5}>
+          {getProtocolChips(item)}
+        </Box>
+      )
+    },
+    {
+      id: 'ssl',
+      label: 'SSL',
+      icon: <SslIcon fontSize="small" />,
+      accessor: (item) => item.certificate_id || 0,
+      sortable: true,
+      align: 'center',
+      render: (value, item) => (
+        item.certificate_id ? (
+          <Tooltip title="SSL enabled">
+            <CheckIcon color="success" fontSize="small" />
+          </Tooltip>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            -
+          </Typography>
+        )
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      icon: <ActionsIcon fontSize="small" />,
+      accessor: (item) => item.id,
+      sortable: false,
+      align: 'right',
+      render: (value, item) => (
+        <Box display="flex" gap={0.5} justifyContent="flex-end">
+          <Tooltip title="View Details">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleViewStream(item)
+              }}
+            >
+              <ViewIcon />
+            </IconButton>
+          </Tooltip>
+          {togglingStreams.has(item.id) ? (
+            <IconButton size="small" disabled>
+              <CircularProgress size={18} />
+            </IconButton>
+          ) : (
+            <PermissionIconButton
+              resource="streams"
+              permissionAction="edit"
+              size="small"
+              tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleToggleEnabled(item)
+              }}
+              color={item.enabled ? 'default' : 'success'}
+            >
+              <PowerIcon />
+            </PermissionIconButton>
+          )}
+          <PermissionIconButton
+            resource="streams"
+            permissionAction="edit"
+            size="small"
+            tooltipTitle="Edit"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleEditStream(item)
+            }}
+          >
+            <EditIcon />
+          </PermissionIconButton>
+          <PermissionIconButton
+            resource="streams"
+            permissionAction="delete"
+            size="small"
+            tooltipTitle="Delete"
+            onClick={(e) => {
+              e.stopPropagation()
+              setStreamToDelete(item)
+              setDeleteDialogOpen(true)
+            }}
+            color="error"
+          >
+            <DeleteIcon />
+          </PermissionIconButton>
+        </Box>
+      )
+    }
+  ]
+
+  // Filter definitions
+  const filters: Filter[] = [
+    {
+      id: 'protocols',
+      label: 'Protocols',
+      type: 'select',
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'tcp', label: 'TCP Only' },
+        { value: 'udp', label: 'UDP Only' },
+        { value: 'both', label: 'TCP & UDP' }
+      ]
+    },
+    {
+      id: 'ssl',
+      label: 'SSL',
+      type: 'select', 
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'enabled', label: 'SSL Enabled', icon: <CheckIcon fontSize="small" /> },
+        { value: 'disabled', label: 'No SSL' }
+      ]
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      type: 'select',
+      defaultValue: 'all',
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'enabled', label: 'Enabled', icon: <CheckIcon fontSize="small" /> },
+        { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
+      ]
+    }
+  ]
+
+  // Custom filter function for DataTable
+  const filterFunction = (item: Stream, activeFilters: Record<string, any>) => {
+    // Protocol filter
+    if (activeFilters.protocols && activeFilters.protocols !== 'all') {
+      if (activeFilters.protocols === 'tcp' && !item.tcp_forwarding) return false
+      if (activeFilters.protocols === 'udp' && !item.udp_forwarding) return false
+      if (activeFilters.protocols === 'both' && (!item.tcp_forwarding || !item.udp_forwarding)) return false
+    }
+
+    // SSL filter
+    if (activeFilters.ssl && activeFilters.ssl !== 'all') {
+      if (activeFilters.ssl === 'enabled' && !item.certificate_id) return false
+      if (activeFilters.ssl === 'disabled' && item.certificate_id) return false
+    }
+
+    // Status filter
+    if (activeFilters.status && activeFilters.status !== 'all') {
+      if (activeFilters.status === 'enabled' && !item.enabled) return false
+      if (activeFilters.status === 'disabled' && item.enabled) return false
+    }
+
+    return true
   }
+
+  // Bulk actions
+  const bulkActions: BulkAction<Stream>[] = [
+    {
+      id: 'enable',
+      label: 'Enable',
+      icon: <CheckIcon />,
+      confirmMessage: 'Are you sure you want to enable the selected streams?',
+      action: async (items) => {
+        try {
+          await Promise.all(items.filter(item => !item.enabled).map(item => streamsApi.enable(item.id)))
+          showSuccess('stream', 'enabled', `${items.length} streams`)
+          await loadStreams()
+        } catch (err) {
+          showError('stream', 'enable', err instanceof Error ? err.message : 'Unknown error')
+        }
+      }
+    },
+    {
+      id: 'disable',
+      label: 'Disable',
+      icon: <CancelIcon />,
+      confirmMessage: 'Are you sure you want to disable the selected streams?',
+      action: async (items) => {
+        try {
+          await Promise.all(items.filter(item => item.enabled).map(item => streamsApi.disable(item.id)))
+          showSuccess('stream', 'disabled', `${items.length} streams`)
+          await loadStreams()
+        } catch (err) {
+          showError('stream', 'disable', err instanceof Error ? err.message : 'Unknown error')
+        }
+      }
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: <DeleteIcon />,
+      color: 'error',
+      confirmMessage: 'Are you sure you want to delete the selected streams?',
+      action: async (items) => {
+        try {
+          await Promise.all(items.map(item => streamsApi.delete(item.id)))
+          showSuccess('stream', 'deleted', `${items.length} streams`)
+          await loadStreams()
+        } catch (err) {
+          showError('stream', 'delete', err instanceof Error ? err.message : 'Unknown error')
+        }
+      }
+    }
+  ]
 
   return (
     <Container maxWidth={false}>
@@ -308,220 +479,28 @@ export default function Streams() {
           </PermissionButton>
         </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        {filterInfo.isFiltered && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Showing {filterInfo.visibleCount} of {filterInfo.totalCount} streams 
-            (only your own entries are displayed)
-          </Alert>
-        )}
-
-        {/* Search */}
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <TextField
-            fullWidth
-            placeholder="Search by port or host..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Paper>
-
-        {/* Table */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'status'}
-                    direction={orderBy === 'status' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('status')}
-                  >
-                    Status
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'incoming_port'}
-                    direction={orderBy === 'incoming_port' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('incoming_port')}
-                  >
-                    Incoming Port
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'forwarding_host'}
-                    direction={orderBy === 'forwarding_host' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('forwarding_host')}
-                  >
-                    Destination
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'protocols'}
-                    direction={orderBy === 'protocols' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('protocols')}
-                  >
-                    Protocols
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>SSL</TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'created_on'}
-                    direction={orderBy === 'created_on' ? orderDirection : 'asc'}
-                    onClick={() => handleSort('created_on')}
-                  >
-                    Created
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedStreams.map((stream) => (
-                <TableRow 
-                  key={stream.id}
-                  hover
-                  onClick={() => handleViewStream(stream)}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    {getStatusIcon(stream)}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
-                      {stream.incoming_port}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {stream.forwarding_host}:{stream.forwarding_port}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" gap={0.5}>
-                      {getProtocolChips(stream)}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    {stream.certificate_id ? (
-                      <Tooltip title="SSL enabled">
-                        <CheckIcon color="success" fontSize="small" />
-                      </Tooltip>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        -
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {new Date(stream.created_on).toLocaleDateString()}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <Box display="flex" gap={0.5} justifyContent="flex-end">
-                      <Tooltip title="View Details">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleViewStream(stream)
-                          }}
-                        >
-                          <ViewIcon />
-                        </IconButton>
-                      </Tooltip>
-                      {togglingStreams.has(stream.id) ? (
-                        <IconButton
-                          size="small"
-                          disabled
-                        >
-                          <CircularProgress size={18} />
-                        </IconButton>
-                      ) : (
-                        <PermissionIconButton
-                          resource="streams"
-                          permissionAction="edit"
-                          size="small"
-                          tooltipTitle={stream.enabled ? 'Disable' : 'Enable'}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleToggleEnabled(stream)
-                          }}
-                          color={stream.enabled ? 'default' : 'success'}
-                        >
-                          <PowerIcon />
-                        </PermissionIconButton>
-                      )}
-                      <PermissionIconButton
-                        resource="streams"
-                        permissionAction="edit"
-                        size="small"
-                        tooltipTitle="Edit"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEditStream(stream)
-                        }}
-                      >
-                        <EditIcon />
-                      </PermissionIconButton>
-                      <PermissionIconButton
-                        resource="streams"
-                        permissionAction="delete"
-                        size="small"
-                        tooltipTitle="Delete"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setStreamToDelete(stream)
-                          setDeleteDialogOpen(true)
-                        }}
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </PermissionIconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {paginatedStreams.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                    <Typography color="text.secondary">
-                      {searchTerm ? 'No streams found matching your search' : 'No streams configured'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <TablePagination
-            component="div"
-            count={filteredAndSortedStreams.length}
-            page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10))
-              setPage(0)
-            }}
-          />
-        </TableContainer>
+        {/* DataTable */}
+        <DataTable
+          data={visibleStreams}
+          columns={columns}
+          keyExtractor={(item) => item.id.toString()}
+          onRowClick={handleViewStream}
+          bulkActions={bulkActions}
+          filters={filters}
+          filterFunction={filterFunction}
+          searchPlaceholder="Search by port or host..."
+          searchFields={['incoming_port', 'forwarding_host', 'forwarding_port']}
+          loading={loading}
+          error={error}
+          emptyMessage="No streams configured"
+          defaultSortField="incoming_port"
+          defaultSortDirection="asc"
+          searchable={true}
+          selectable={true}
+          showPagination={true}
+          defaultRowsPerPage={10}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
       </Box>
 
       {/* Drawer for create/edit */}
@@ -557,15 +536,6 @@ export default function Streams() {
         message={`Are you sure you want to delete the stream on port ${streamToDelete?.incoming_port}?`}
         confirmText="Delete"
         confirmColor="error"
-      />
-
-      {/* Export dialog */}
-      <ExportDialog
-        open={exportDialogOpen}
-        onClose={() => setExportDialogOpen(false)}
-        items={streams}
-        type="stream"
-        itemName="Streams"
       />
     </Container>
   )
