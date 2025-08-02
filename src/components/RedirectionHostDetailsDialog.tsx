@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import React from 'react'
 import {
-  IconButton,
   Box,
   Typography,
   Chip,
@@ -12,11 +10,7 @@ import {
   ListItemText,
   ListItemIcon,
   Alert,
-  Tabs,
-  Tab,
-  CircularProgress,
   Button,
-  Badge,
 } from '@mui/material'
 import {
   Edit as EditIcon,
@@ -30,34 +24,10 @@ import {
   Security as SecurityIcon,
   Shield as ShieldIcon,
   Info as InfoIcon,
-  Link as LinkIcon,
-  SwapHoriz as ProxyIcon,
 } from '@mui/icons-material'
 import { RedirectionHost } from '../api/redirectionHosts'
-import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
-
-interface TabPanelProps {
-  children?: React.ReactNode
-  index: number
-  value: number
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`redirection-host-tabpanel-${index}`}
-      aria-labelledby={`redirection-host-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
-    </div>
-  )
-}
 
 interface RedirectionHostDetailsDialogProps {
   open: boolean
@@ -72,65 +42,7 @@ export default function RedirectionHostDetailsDialog({
   host,
   onEdit
 }: RedirectionHostDetailsDialogProps) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [activeTab, setActiveTab] = useState(0)
-  const [linkedProxyHost, setLinkedProxyHost] = useState<ProxyHost | null>(null)
-  const [loadingConnection, setLoadingConnection] = useState(false)
   // const [exportDialogOpen, setExportDialogOpen] = useState(false)
-
-  // Parse tab from URL
-  useEffect(() => {
-    if (open && host) {
-      const pathParts = location.pathname.split('/')
-      const tabIndex = pathParts[pathParts.length - 1]
-      switch (tabIndex) {
-        case 'connections':
-          setActiveTab(1)
-          break
-        default:
-          setActiveTab(0)
-          break
-      }
-    }
-  }, [location.pathname, open, host])
-
-  // Load connection when dialog opens
-  useEffect(() => {
-    if (open && host) {
-      loadConnection()
-    }
-  }, [open, host])
-
-  const loadConnection = async () => {
-    if (!host) return
-    
-    setLoadingConnection(true)
-    try {
-      const proxyHosts = await proxyHostsApi.getAll()
-      
-      // Find proxy host that matches the forward domain
-      const linkedHost = proxyHosts.find(proxy => 
-        proxy.domain_names.some(domain => 
-          domain.toLowerCase() === host.forward_domain_name.toLowerCase()
-        )
-      )
-      
-      setLinkedProxyHost(linkedHost || null)
-    } catch (error) {
-      console.error('Failed to load connection:', error)
-    } finally {
-      setLoadingConnection(false)
-    }
-  }
-
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue)
-    if (host) {
-      const tabs = ['overview', 'connections']
-      navigate(`/hosts/redirection/${host.id}/view/${tabs[newValue]}`, { replace: true })
-    }
-  }
 
   if (!host) return null
 
@@ -219,24 +131,8 @@ export default function RedirectionHostDetailsDialog({
         </>
       }
     >
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={activeTab} onChange={handleTabChange} aria-label="redirection host details tabs">
-          <Tab label="Overview" icon={<InfoIcon />} iconPosition="start" />
-          <Tab 
-            label={
-              <Badge badgeContent={linkedProxyHost ? 1 : 0} color="primary">
-                <Typography>Connections</Typography>
-              </Badge>
-            } 
-            icon={<LinkIcon />} 
-            iconPosition="start" 
-          />
-        </Tabs>
-      </Box>
-
-      <Box sx={{ overflow: 'auto' }}>
-        <TabPanel value={activeTab} index={0}>
-          {/* Overview Tab */}
+      <Box sx={{ overflow: 'auto', p: 2 }}>
+        {/* Overview Content */}
           <Box sx={{ mb: 3 }}>
             <Box display="flex" alignItems="center" gap={2} mb={2}>
               <Chip
@@ -453,87 +349,6 @@ export default function RedirectionHostDetailsDialog({
             </Paper>
           </Grid>
         </Grid>
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={1}>
-          {/* Connections Tab */}
-          <Box>
-            <Box display="flex" alignItems="center" gap={1} mb={3}>
-              <ProxyIcon color="primary" />
-              <Typography variant="h6">Linked Proxy Host</Typography>
-            </Box>
-            
-            {loadingConnection ? (
-              <Box display="flex" justifyContent="center" py={4}>
-                <CircularProgress />
-              </Box>
-            ) : linkedProxyHost ? (
-              <Paper variant="outlined">
-                <List>
-                  <ListItem
-                    button
-                    onClick={() => {
-                      onClose()
-                      navigate(`/hosts/proxy/${linkedProxyHost.id}/view`)
-                    }}
-                  >
-                    <ListItemIcon>
-                      <ProxyIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="body1">
-                            {linkedProxyHost.domain_names.join(', ')}
-                          </Typography>
-                          {linkedProxyHost.enabled ? (
-                            <Chip label="Active" size="small" color="success" />
-                          ) : (
-                            <Chip label="Disabled" size="small" color="default" />
-                          )}
-                        </Box>
-                      }
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            → {linkedProxyHost.forward_scheme}://{linkedProxyHost.forward_host}:{linkedProxyHost.forward_port}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {linkedProxyHost.certificate_id ? 'SSL Enabled' : 'No SSL'}
-                            {linkedProxyHost.caching_enabled && ' • Caching enabled'}
-                            {linkedProxyHost.block_exploits && ' • Blocks exploits'}
-                            {linkedProxyHost.allow_websocket_upgrade && ' • Websockets enabled'}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                    <IconButton
-                      edge="end"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onClose()
-                        navigate(`/hosts/proxy/${linkedProxyHost.id}/edit`)
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </ListItem>
-                </List>
-              </Paper>
-            ) : (
-              <Alert severity="info">
-                This redirection does not point to any configured proxy host.
-                {host.forward_domain_name && (
-                  <Box mt={1}>
-                    <Typography variant="body2">
-                      Target domain: <strong>{host.forward_domain_name}</strong>
-                    </Typography>
-                  </Box>
-                )}
-              </Alert>
-            )}
-          </Box>
-        </TabPanel>
       </Box>
       
       {/* Export Dialog */}
