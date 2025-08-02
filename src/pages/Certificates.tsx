@@ -16,7 +16,6 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Lock as LockIcon,
-  CloudDownload as DownloadIcon,
   Refresh as RefreshIcon,
   Visibility as ViewIcon,
   Warning as WarningIcon,
@@ -209,21 +208,6 @@ const Certificates = () => {
     }
   }
 
-  const handleDownload = async (cert: Certificate) => {
-    try {
-      const blob = await certificatesApi.download(cert.id)
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${cert.nice_name || cert.domain_names[0]}.zip`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    }
-  }
 
   const handleView = (cert: Certificate) => {
     navigate(`/security/certificates/${cert.id}/view`)
@@ -366,17 +350,6 @@ const Certificates = () => {
               </IconButton>
             </Tooltip>
           )}
-          <Tooltip title="Download">
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDownload(item)
-              }}
-            >
-              <DownloadIcon />
-            </IconButton>
-          </Tooltip>
           <PermissionIconButton
             resource="certificates"
             permissionAction="delete"
