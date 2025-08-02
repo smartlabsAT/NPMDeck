@@ -250,15 +250,18 @@ export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMess
     );
   }
 
+  // Set up auto-hide timer
+  React.useEffect(() => {
+    if (toast.duration) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, toast.duration);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.duration, onClose]);
+
   return (
-    <Snackbar
-      open={true}
-      autoHideDuration={toast.duration}
-      onClose={onClose}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      TransitionComponent={SlideTransition}
-      sx={{ mt: 8 }} // Add margin to avoid overlapping with header
-    >
+    <Slide direction="down" in={true} mountOnEnter unmountOnExit>
       <Alert
         onClose={onClose}
         severity={toast.severity}
@@ -271,7 +274,8 @@ export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMess
             : theme.palette[toast.severity].main,
           '& .MuiAlert-icon': {
             display: 'none' // We'll use custom icon layout
-          }
+          },
+          boxShadow: 3,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
@@ -338,7 +342,7 @@ export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMess
           </Box>
         </Box>
       </Alert>
-    </Snackbar>
+    </Slide>
   );
 }
 
@@ -347,19 +351,6 @@ export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMess
  */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [currentToast, setCurrentToast] = useState<ToastMessage | null>(null);
-
-  // Process next toast in queue
-  const processNextToast = useCallback(() => {
-    setToasts((prev) => {
-      if (prev.length > 0) {
-        const [next, ...rest] = prev;
-        setCurrentToast(next);
-        return rest;
-      }
-      return prev;
-    });
-  }, []);
 
   // Show generic toast
   const showToast = useCallback((config: Omit<ToastMessage, 'id'>) => {
@@ -369,12 +360,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       duration: config.duration || 6000,
     };
 
-    if (!currentToast) {
-      setCurrentToast(toast);
-    } else {
-      setToasts((prev) => [...prev, toast]);
-    }
-  }, [currentToast]);
+    setToasts((prev) => [...prev, toast]);
+  }, []);
 
   // Show success toast
   const showSuccess = useCallback((
@@ -458,11 +445,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     });
   }, [showToast]);
 
-  const handleClose = useCallback(() => {
-    setCurrentToast(null);
-    // Process next toast after a short delay
-    setTimeout(processNextToast, 100);
-  }, [processNextToast]);
+  const handleClose = useCallback((id: string) => {
+    setToasts((prev) => prev.filter(toast => toast.id !== id));
+  }, []);
 
   return (
     <ToastContext.Provider
@@ -475,12 +460,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      {currentToast && (
-        <CustomToast 
-          toast={currentToast} 
-          onClose={handleClose} 
-        />
-      )}
+      {toasts.map((toast, index) => (
+        <Box
+          key={toast.id}
+          sx={{
+            position: 'fixed',
+            top: index * 80 + 64, // Stack toasts with 80px spacing, starting below header
+            right: 24,
+            zIndex: 1400 + index,
+          }}
+        >
+          <CustomToast 
+            toast={toast} 
+            onClose={() => handleClose(toast.id)} 
+          />
+        </Box>
+      ))}
     </ToastContext.Provider>
   );
 }
