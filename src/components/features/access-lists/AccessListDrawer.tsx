@@ -11,11 +11,17 @@ import {
   Paper,
   Typography,
   Alert,
+  useTheme,
+  IconButton,
 } from '@mui/material'
 import {
   Info as InfoIcon,
   Lock as LockIcon,
   Security as SecurityIcon,
+  OpenInNew as OpenInNewIcon,
+  Delete as DeleteIcon,
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon,
 } from '@mui/icons-material'
 import { AccessList, CreateAccessList, UpdateAccessList, accessListsApi } from '../../../api/accessLists'
 import BaseDrawer from '../../base/BaseDrawer'
@@ -138,7 +144,7 @@ const validateIpCidr = (address: string): string | null => {
     return null
 }
 
-const AccessRuleComponent = React.memo(({ value, onChange, onDelete, index }: any) => {
+const AccessRuleComponent = React.memo(({ value, onChange, onDelete, onMoveUp, onMoveDown, index }: any) => {
   const error = validateIpCidr(value.address)
   
   return (
@@ -177,6 +183,36 @@ const AccessRuleComponent = React.memo(({ value, onChange, onDelete, index }: an
         </Select>
       </FormControl>
     </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+      {onMoveUp && (
+        <IconButton 
+          size="small" 
+          onClick={onMoveUp}
+          title="Move up"
+          disabled={!onMoveUp}
+        >
+          <ArrowUpwardIcon fontSize="small" />
+        </IconButton>
+      )}
+      {onMoveDown && (
+        <IconButton 
+          size="small" 
+          onClick={onMoveDown}
+          title="Move down"
+          disabled={!onMoveDown}
+        >
+          <ArrowDownwardIcon fontSize="small" />
+        </IconButton>
+      )}
+      <IconButton 
+        size="small" 
+        onClick={onDelete}
+        color="error"
+        title="Delete rule"
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
+    </Box>
   </Paper>
   )
 })
@@ -184,6 +220,7 @@ const AccessRuleComponent = React.memo(({ value, onChange, onDelete, index }: an
 export default function AccessListDrawer({ open, onClose, accessList, onSave }: AccessListDrawerProps) {
   const [activeTab, setActiveTab] = React.useState(0)
   const { showSuccess, showError } = useToast()
+  const theme = useTheme()
   const isEditMode = !!accessList
   
   // Create memoized component with accessList in closure
@@ -439,6 +476,28 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
           title="Access Rules"
           description="Define IP addresses and ranges that should be allowed or denied"
           icon={<SecurityIcon />}
+          headerContent={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography variant="caption" color="text.secondary">
+                IP Address Whitelist/Blacklist via Nginx HTTP Access
+              </Typography>
+              <a 
+                href="https://nginx.org/en/docs/http/ngx_http_access_module.html" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: theme.palette.primary.main, 
+                  fontSize: '0.75rem',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                <OpenInNewIcon sx={{ fontSize: '0.875rem' }} />
+              </a>
+            </Box>
+          }
         >
           <ArrayFieldManager<AccessRule>
             value={data.accessRules}
@@ -450,6 +509,8 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             emptyPlaceholder="No access rules defined. Add rules to control IP-based access."
             ItemComponent={AccessRuleComponent}
             error={!!errors.accessRules}
+            allowReorder={true}
+            showIndices={true}
           />
         </FormSection>
       </TabPanel>
