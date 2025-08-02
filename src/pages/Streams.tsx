@@ -388,9 +388,18 @@ export default function Streams() {
   const filterFunction = (item: Stream, activeFilters: Record<string, any>) => {
     // Protocol filter
     if (activeFilters.protocols && activeFilters.protocols !== 'all') {
-      if (activeFilters.protocols === 'tcp' && !item.tcp_forwarding) return false
-      if (activeFilters.protocols === 'udp' && !item.udp_forwarding) return false
-      if (activeFilters.protocols === 'both' && (!item.tcp_forwarding || !item.udp_forwarding)) return false
+      if (activeFilters.protocols === 'tcp') {
+        // TCP only means TCP is enabled AND UDP is disabled
+        if (!item.tcp_forwarding || item.udp_forwarding) return false
+      }
+      if (activeFilters.protocols === 'udp') {
+        // UDP only means UDP is enabled AND TCP is disabled
+        if (!item.udp_forwarding || item.tcp_forwarding) return false
+      }
+      if (activeFilters.protocols === 'both') {
+        // Both means TCP AND UDP are enabled
+        if (!item.tcp_forwarding || !item.udp_forwarding) return false
+      }
     }
 
     // SSL filter

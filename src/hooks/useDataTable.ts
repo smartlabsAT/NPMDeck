@@ -5,7 +5,7 @@ export function useDataTable<T>(
   data: T[],
   columns: TableColumn<T>[],
   keyExtractor: (item: T) => string | number,
-  options?: UseDataTableOptions,
+  options?: UseDataTableOptions<T>,
   groupConfig?: GroupConfig<T>
 ): UseDataTableReturn<T> {
   // State
@@ -58,10 +58,15 @@ export function useDataTable<T>(
     }
 
     // Apply filters
-    Object.entries(filters).forEach(([filterId, filterValue]) => {
-      if (filterValue === '' || filterValue === 'all' || filterValue == null) return
-      
-      result = result.filter((item) => {
+    if (options?.filterFunction) {
+      // Use custom filter function if provided
+      result = result.filter((item) => options.filterFunction!(item, filters))
+    } else {
+      // Use default filter logic
+      Object.entries(filters).forEach(([filterId, filterValue]) => {
+        if (filterValue === '' || filterValue === 'all' || filterValue == null) return
+        
+        result = result.filter((item) => {
         // Special handling for certain filters
         if (filterId === 'roles') {
           const roles = (item as any).roles as string[]
@@ -129,11 +134,12 @@ export function useDataTable<T>(
         }
         
         return value === filterValue
+        })
       })
-    })
+    }
 
     return result
-  }, [data, searchQuery, filters, columns])
+  }, [data, searchQuery, filters, columns, options?.filterFunction])
 
   // Sort data
   const sortedData = useMemo(() => {

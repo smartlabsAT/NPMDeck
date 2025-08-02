@@ -47,7 +47,7 @@ export type EntityType =
 /**
  * Action types
  */
-export type ActionType = 'create' | 'update' | 'delete' | 'created' | 'updated' | 'deleted';
+export type ActionType = 'create' | 'update' | 'delete' | 'created' | 'updated' | 'deleted' | 'enable' | 'enabled' | 'disable' | 'disabled';
 
 /**
  * Toast message configuration
@@ -114,6 +114,10 @@ function getActionIcon(action?: ActionType) {
     'updated': EditIcon,
     'delete': DeleteIcon,
     'deleted': DeleteIcon,
+    'enable': CheckIcon,
+    'enabled': CheckIcon,
+    'disable': ErrorIcon,
+    'disabled': ErrorIcon,
   };
   return icons[action] || null;
 }

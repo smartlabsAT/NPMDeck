@@ -56,7 +56,9 @@ export interface DataTableProps<T> {
   onRowClick?: (item: T) => void
   bulkActions?: BulkAction<T>[]
   filters?: Filter[]
+  filterFunction?: (item: T, activeFilters: Record<string, any>) => boolean
   searchPlaceholder?: string
+  searchFields?: string[]
   loading?: boolean
   error?: string | null
   emptyMessage?: string
@@ -85,11 +87,13 @@ export interface DataTableState {
   expandedGroups: Set<string>
 }
 
-export interface UseDataTableOptions {
+export interface UseDataTableOptions<T = any> {
   defaultSortField?: string
   defaultSortDirection?: 'asc' | 'desc'
   defaultRowsPerPage?: number
   defaultFilters?: Record<string, any>
+  filterFunction?: (item: T, activeFilters: Record<string, any>) => boolean
+  searchFields?: string[]
 }
 
 export interface DataGroup<T> {

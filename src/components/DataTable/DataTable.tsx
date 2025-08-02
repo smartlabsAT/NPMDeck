@@ -38,7 +38,9 @@ export function DataTable<T>({
   onRowClick,
   bulkActions = [],
   filters = [],
+  filterFunction,
   searchPlaceholder = 'Search...',
+  searchFields,
   loading = false,
   error = null,
   emptyMessage = 'No data available',
@@ -85,6 +87,8 @@ export function DataTable<T>({
     defaultSortField,
     defaultSortDirection,
     defaultRowsPerPage,
+    filterFunction,
+    searchFields,
   }, groupConfig)
 
   const showBulkActions = selectable && selectedCount > 0 && bulkActions.length > 0
