@@ -12,14 +12,25 @@ import {
   Description,
   Tune as PreferencesIcon,
 } from '@mui/icons-material'
+import type { OverridableComponent } from '@mui/material/OverridableComponent'
+import type { SvgIconTypeMap } from '@mui/material/SvgIcon'
 
 /**
- * Navigation menu configuration with colors and icons
- * Used throughout the application for consistent theming
- * Flat structure with parent references for easy access
+ * Typisierung für ein Navigationselement
  */
-export const NAVIGATION_CONFIG = {
-  // Main navigation items
+export type NavigationItem = {
+  text: string
+  path: string | null
+  color: string
+  icon: OverridableComponent<SvgIconTypeMap<object, 'svg'>>
+  parent: string | null
+  isParent?: boolean
+}
+
+/**
+ * Navigation-Konfiguration
+ */
+export const NAVIGATION_CONFIG: Record<string, NavigationItem> = {
   dashboard: {
     text: 'Dashboard',
     path: '/',
@@ -27,8 +38,6 @@ export const NAVIGATION_CONFIG = {
     icon: Dashboard,
     parent: null,
   },
-  
-  // Hosts parent menu
   hosts: {
     text: 'Hosts',
     path: null,
@@ -37,8 +46,6 @@ export const NAVIGATION_CONFIG = {
     parent: null,
     isParent: true,
   },
-  
-  // Hosts children
   proxyHosts: {
     text: 'Proxy Hosts',
     path: '/hosts/proxy',
@@ -46,7 +53,6 @@ export const NAVIGATION_CONFIG = {
     icon: SwapHoriz,
     parent: 'hosts',
   },
-  
   redirectionHosts: {
     text: 'Redirection Hosts',
     path: '/hosts/redirection',
@@ -54,7 +60,6 @@ export const NAVIGATION_CONFIG = {
     icon: TrendingFlat,
     parent: 'hosts',
   },
-  
   deadHosts: {
     text: '404 Hosts',
     path: '/hosts/404',
@@ -62,7 +67,6 @@ export const NAVIGATION_CONFIG = {
     icon: Block,
     parent: 'hosts',
   },
-  
   streams: {
     text: 'Streams',
     path: '/hosts/streams',
@@ -70,8 +74,6 @@ export const NAVIGATION_CONFIG = {
     icon: Stream,
     parent: 'hosts',
   },
-  
-  // Security parent menu
   security: {
     text: 'Security',
     path: null,
@@ -80,8 +82,6 @@ export const NAVIGATION_CONFIG = {
     parent: null,
     isParent: true,
   },
-  
-  // Security children
   accessLists: {
     text: 'Access Lists',
     path: '/security/access-lists',
@@ -89,7 +89,6 @@ export const NAVIGATION_CONFIG = {
     icon: Security,
     parent: 'security',
   },
-  
   certificates: {
     text: 'SSL Certificates',
     path: '/security/certificates',
@@ -97,8 +96,6 @@ export const NAVIGATION_CONFIG = {
     icon: VpnKey,
     parent: 'security',
   },
-  
-  // Administration parent menu
   administration: {
     text: 'Administration',
     path: null,
@@ -107,8 +104,6 @@ export const NAVIGATION_CONFIG = {
     parent: null,
     isParent: true,
   },
-  
-  // Administration children
   users: {
     text: 'Users',
     path: '/admin/users',
@@ -116,7 +111,6 @@ export const NAVIGATION_CONFIG = {
     icon: Group,
     parent: 'administration',
   },
-  
   auditLog: {
     text: 'Audit Log',
     path: '/admin/audit-log',
@@ -124,7 +118,6 @@ export const NAVIGATION_CONFIG = {
     icon: Description,
     parent: 'administration',
   },
-  
   settings: {
     text: 'Settings',
     path: '/admin/settings',
@@ -134,22 +127,18 @@ export const NAVIGATION_CONFIG = {
   },
 } as const
 
-/**
- * Color palette used in navigation
- */
+export type NavigationConfig = typeof NAVIGATION_CONFIG
+
 export const NAVIGATION_COLORS = {
-  primary: '#2bcbba',      // Teal - Dashboard, Access Lists
-  success: '#5eba00',      // Green - Hosts, Proxy Hosts
-  warning: '#f1c40f',      // Yellow - Redirection Hosts
-  danger: '#cd201f',       // Red - 404 Hosts
-  info: '#467fcf',         // Blue - Streams, Security, Certificates
-  secondary: '#868e96',    // Gray - Users, Audit Log
-  muted: '#6c757d',        // Dark Gray - Settings
+  primary: '#2bcbba',
+  success: '#5eba00',
+  warning: '#f1c40f',
+  danger: '#cd201f',
+  info: '#467fcf',
+  secondary: '#868e96',
+  muted: '#6c757d',
 } as const
 
-/**
- * Helper function to get navigation item by path
- */
 export function getNavigationItemByPath(path: string) {
   for (const item of Object.values(NAVIGATION_CONFIG)) {
     if (item.path === path) {
@@ -159,41 +148,18 @@ export function getNavigationItemByPath(path: string) {
   return null
 }
 
-/**
- * Helper function to get children of a parent menu
- */
 export function getNavigationChildren(parentKey: keyof typeof NAVIGATION_CONFIG) {
   return Object.entries(NAVIGATION_CONFIG)
     .filter(([_, item]) => item.parent === parentKey)
     .map(([key, item]) => ({ key, ...item }))
 }
 
-/**
- * Helper function to get all parent menus
- */
 export function getNavigationParents() {
   return Object.entries(NAVIGATION_CONFIG)
     .filter(([_, item]) => item.isParent)
     .map(([key, item]) => ({ key, ...item }))
 }
 
-/**
- * Helper function to get color for a specific menu item
- */
 export function getMenuItemColor(key: keyof typeof NAVIGATION_CONFIG): string {
   return NAVIGATION_CONFIG[key]?.color || NAVIGATION_COLORS.secondary
 }
-
-/**
- * Type definitions for navigation items
- */
-export type NavigationItem = {
-  text: string
-  path: string | null
-  color: string
-  icon: typeof Dashboard // Icon component type
-  parent: string | null
-  isParent?: boolean
-}
-
-export type NavigationConfig = typeof NAVIGATION_CONFIG
