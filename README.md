@@ -8,16 +8,23 @@
   [![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 </div>
 
-> [!WARNING]
-> 🚧 **Development Status**: NPMDeck is currently under active development. A stable release is coming soon! 
-> 
-> ⭐ **Star & Watch** this repository to get notified about the release!
-
 ---
 
 ## 🎯 What is NPMDeck?
 
 NPMDeck is a **modern, responsive web interface** for [Nginx Proxy Manager](https://nginxproxymanager.com/). Built with React, Material-UI, and Express.js, it provides an improved user experience with powerful features and a beautiful design.
+
+### 🔒 Privacy & Security First
+
+> [!IMPORTANT]
+> **NPMDeck does NOT access your database directly!**
+> 
+> NPMDeck works exclusively through the official Nginx Proxy Manager API. This means:
+> - ✅ **No database access** - We never touch your database
+> - ✅ **API-only communication** - All operations go through NPM's REST API
+> - ✅ **No data storage** - NPMDeck doesn't store any of your data
+> - ✅ **Secure by design** - Same security as the official NPM interface
+> - ✅ **Compatible** - Works with any NPM installation that has API access
 
 ## ✨ Features
 
