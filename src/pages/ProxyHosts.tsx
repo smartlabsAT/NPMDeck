@@ -1,5 +1,5 @@
 import { getErrorMessage } from '../types/common'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -42,6 +42,7 @@ import PermissionIconButton from '../components/PermissionIconButton'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { TableColumn, Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 
 // Helper to extract base domain from a full domain
@@ -608,8 +609,8 @@ export default function ProxyHosts() {
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <PageHeader
-            icon={<ProxyIcon sx={{ color: '#5eba00' }} />}
-            title="Proxy Hosts"
+            icon={React.createElement(NAVIGATION_CONFIG.proxyHosts.icon, { sx: { color: NAVIGATION_CONFIG.proxyHosts.color } })}
+            title={NAVIGATION_CONFIG.proxyHosts.text}
             description="Manage reverse proxy configurations for your web services"
           />
           <PermissionButton

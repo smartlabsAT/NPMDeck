@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -40,6 +40,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { TableColumn, Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 // Helper to extract base domain for grouping
 const extractBaseDomain = (name: string): string => {
@@ -430,8 +431,8 @@ const Certificates = () => {
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <PageHeader
-            icon={<CertificateIcon sx={{ color: '#467fcf' }} />}
-            title="SSL Certificates"
+            icon={React.createElement(NAVIGATION_CONFIG.certificates.icon, { sx: { color: NAVIGATION_CONFIG.certificates.color } })}
+            title={NAVIGATION_CONFIG.certificates.text}
             description="Manage SSL certificates for secure HTTPS connections"
           />
           <>

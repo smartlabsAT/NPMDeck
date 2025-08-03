@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -33,6 +33,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable, TableColumn, Filter, BulkAction } from '../components/DataTable'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 const Users = () => {
   const { id } = useParams<{ id?: string }>()
@@ -428,8 +429,8 @@ const Users = () => {
     <Box>
       <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
         <PageHeader
-          icon={<GroupIcon sx={{ color: '#868e96' }} />}
-          title="Users"
+          icon={React.createElement(NAVIGATION_CONFIG.users.icon, { sx: { color: NAVIGATION_CONFIG.users.color } })}
+          title={NAVIGATION_CONFIG.users.text}
           description="Manage user accounts and permissions"
         />
         {isAdmin && (

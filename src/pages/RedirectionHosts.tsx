@@ -42,6 +42,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { TableColumn, Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 // Helper to extract base domain from a full domain
 const extractBaseDomain = (domain: string): string => {
@@ -575,8 +576,8 @@ export default function RedirectionHosts() {
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <PageHeader
-            icon={<RedirectIcon sx={{ color: '#f1c40f' }} />}
-            title="Redirection Hosts"
+            icon={React.createElement(NAVIGATION_CONFIG.redirectionHosts.icon, { sx: { color: NAVIGATION_CONFIG.redirectionHosts.color } })}
+            title={NAVIGATION_CONFIG.redirectionHosts.text}
             description="Configure permanent redirects from one domain to another"
           />
           <PermissionButton

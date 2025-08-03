@@ -58,6 +58,7 @@ import 'prismjs/components/prism-markup'
 import { settingsApi, Setting } from '../api/settings'
 import PageHeader from '../components/PageHeader'
 import TabPanel from '../components/shared/TabPanel'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 import FormSection from '../components/shared/FormSection'
 import { useUISettingsStore } from '../stores/uiSettingsStore'
 import { usePermissions } from '../hooks/usePermissions'
@@ -578,8 +579,8 @@ const Settings = () => {
     <Box>
       <Box mb={3}>
         <PageHeader
-          icon={<PreferencesIcon sx={{ color: '#6c757d' }} />}
-          title="Settings"
+          icon={React.createElement(NAVIGATION_CONFIG.settings.icon, { sx: { color: NAVIGATION_CONFIG.settings.color } })}
+          title={NAVIGATION_CONFIG.settings.text}
           description="Configure system-wide settings for Nginx Proxy Manager"
         />
       </Box>

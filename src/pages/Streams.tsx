@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -39,6 +39,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { TableColumn, Filter, BulkAction } from '../components/DataTable/types'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 export default function Streams() {
   const navigate = useNavigate()
@@ -472,8 +473,8 @@ export default function Streams() {
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <PageHeader
-            icon={<StreamIcon sx={{ color: '#467fcf' }} />}
-            title="Streams"
+            icon={React.createElement(NAVIGATION_CONFIG.streams.icon, { sx: { color: NAVIGATION_CONFIG.streams.color } })}
+            title={NAVIGATION_CONFIG.streams.text}
             description="Manage TCP/UDP port forwarding"
           />
           <PermissionButton

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -40,6 +40,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { TableColumn, Filter, BulkAction } from '../components/DataTable/types'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 export default function DeadHosts() {
   const { id } = useParams<{ id?: string }>()
@@ -429,8 +430,8 @@ export default function DeadHosts() {
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <PageHeader
-            icon={<BlockIcon sx={{ color: '#cd201f' }} />}
-            title="404 Hosts"
+            icon={React.createElement(NAVIGATION_CONFIG.deadHosts.icon, { sx: { color: NAVIGATION_CONFIG.deadHosts.color } })}
+            title={NAVIGATION_CONFIG.deadHosts.text}
             description="Configure custom 404 error pages for unmatched domains"
           />
           <PermissionButton

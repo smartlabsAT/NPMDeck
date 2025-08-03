@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -36,6 +36,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { TableColumn, Filter, BulkAction } from '../components/DataTable/types'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 export default function AccessLists() {
   const navigate = useNavigate()
@@ -339,8 +340,8 @@ export default function AccessLists() {
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <PageHeader
-            icon={<SecurityIcon sx={{ color: '#2bcbba' }} />}
-            title="Access Lists"
+            icon={React.createElement(NAVIGATION_CONFIG.accessLists.icon, { sx: { color: NAVIGATION_CONFIG.accessLists.color } })}
+            title={NAVIGATION_CONFIG.accessLists.text}
             description="Control access to your services with authentication and IP restrictions"
           />
           <PermissionButton

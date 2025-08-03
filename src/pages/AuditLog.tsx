@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -46,6 +46,7 @@ import PageHeader from '../components/PageHeader'
 import { DataTable, TableColumn, Filter } from '../components/DataTable'
 import { useToast } from '../contexts/ToastContext'
 import ActionChip from '../components/shared/ActionChip'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 const AuditLog = () => {
   const navigate = useNavigate()
@@ -396,8 +397,8 @@ const AuditLog = () => {
     <Box>
       <Box mb={3}>
         <PageHeader
-          icon={<AuditIcon sx={{ color: '#495c68' }} />}
-          title="Audit Log"
+          icon={React.createElement(NAVIGATION_CONFIG.auditLog.icon, { sx: { color: NAVIGATION_CONFIG.auditLog.color } })}
+          title={NAVIGATION_CONFIG.auditLog.text}
           description="View all system activities and changes"
         />
       </Box>
