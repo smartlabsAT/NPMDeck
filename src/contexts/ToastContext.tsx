@@ -164,6 +164,16 @@ export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMess
   
   const SeverityIcon = getSeverityIcon();
 
+  // Set up auto-hide timer
+  React.useEffect(() => {
+    if (!toast.duration) return
+    
+    const timer = setTimeout(() => {
+      onClose();
+    }, toast.duration);
+    return () => clearTimeout(timer);
+  }, [toast.duration, onClose]);
+
   // For demo mode, just return the Alert without Snackbar wrapper
   if (demo) {
     return (
@@ -248,16 +258,6 @@ export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMess
       </Alert>
     );
   }
-
-  // Set up auto-hide timer
-  React.useEffect(() => {
-    if (toast.duration) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, toast.duration);
-      return () => clearTimeout(timer);
-    }
-  }, [toast.duration, onClose]);
 
   return (
     <Slide direction="down" in={true} mountOnEnter unmountOnExit>

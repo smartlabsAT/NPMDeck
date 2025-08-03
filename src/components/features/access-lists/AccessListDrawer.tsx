@@ -57,7 +57,7 @@ interface AccessListFormData {
 }
 
 // Memoized components to prevent re-renders and focus loss
-const AuthItemComponent = React.memo(({ value, onChange, onDelete, _index, accessList }: any) => (
+const AuthItemComponent = React.memo(({ value, onChange, _onDelete, _index, accessList }: any) => (
   <Paper
     variant="outlined"
     sx={{
@@ -95,6 +95,8 @@ const AuthItemComponent = React.memo(({ value, onChange, onDelete, _index, acces
     </Box>
   </Paper>
 ))
+
+AuthItemComponent.displayName = 'AuthItemComponent'
 
 // IP/CIDR validation function
 const validateIpCidr = (address: string): string | null => {
@@ -144,7 +146,7 @@ const validateIpCidr = (address: string): string | null => {
     return null
 }
 
-const AccessRuleComponent = React.memo(({ value, onChange, onDelete, onMoveUp, onMoveDown, index }: any) => {
+const AccessRuleComponent = React.memo(({ value, onChange, onDelete, onMoveUp, onMoveDown, _index }: any) => {
   const error = validateIpCidr(value.address)
   
   return (
@@ -216,6 +218,8 @@ const AccessRuleComponent = React.memo(({ value, onChange, onDelete, onMoveUp, o
   </Paper>
   )
 })
+
+AccessRuleComponent.displayName = 'AccessRuleComponent'
 
 export default function AccessListDrawer({ open, onClose, accessList, onSave }: AccessListDrawerProps) {
   const [activeTab, setActiveTab] = React.useState(0)
@@ -327,13 +331,13 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     { id: 'access', label: 'Access', icon: <SecurityIcon />, hasError: Boolean(errors.accessRules) },
   ]
 
-  const handleAuthItemChange = (index: number, field: 'username' | 'password', value: string) => {
+  const _handleAuthItemChange = (index: number, field: 'username' | 'password', value: string) => {
     const updated = [...data.authItems]
     updated[index][field] = value
     setFieldValue('authItems', updated)
   }
 
-  const handleAccessRuleChange = (index: number, field: 'address' | 'directive', value: string) => {
+  const _handleAccessRuleChange = (index: number, field: 'address' | 'directive', value: string) => {
     const updated = [...data.accessRules]
     updated[index][field] = value as any
     setFieldValue('accessRules', updated)

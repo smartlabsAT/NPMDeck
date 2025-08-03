@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import { ReactNode } from 'react'
 import {
   Box,
   IconButton,
@@ -51,7 +51,7 @@ export interface ArrayItemProps<T> {
  */
 function DefaultStringItemComponent({
   value,
-  index,
+  index: _index,
   onChange,
   onDelete,
   onMoveUp,

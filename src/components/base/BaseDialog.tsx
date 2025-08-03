@@ -250,7 +250,7 @@ export default function BaseDialog({
   /**
    * Handle dialog close with persistence check
    */
-  const handleClose = useCallback((event: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
+  const handleClose = useCallback((event: object, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (persistent || loading) return
     
     if (reason === 'backdropClick' && disableBackdropClick) return

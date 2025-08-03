@@ -7,7 +7,7 @@ interface CertificateAdvancedPanelProps {
 }
 
 const CertificateAdvancedPanel: React.FC<CertificateAdvancedPanelProps> = ({
-  certificate,
+  certificate: _certificate,
 }) => {
   return (
     <Alert severity="info">

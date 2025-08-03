@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -7,7 +7,6 @@ import {
   Typography,
   Chip,
   CircularProgress,
-  Alert,
   Tooltip,
 } from '@mui/material'
 import {

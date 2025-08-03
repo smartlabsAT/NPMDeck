@@ -172,7 +172,7 @@ export default function AccessLists() {
       icon: <LockIcon fontSize="small" />,
       accessor: (item) => item.name,
       sortable: true,
-      render: (value, item) => (
+      render: (value, _item) => (
         <Box display="flex" alignItems="center" gap={1}>
           <LockIcon fontSize="small" color="action" />
           <Typography variant="body2">{value}</Typography>

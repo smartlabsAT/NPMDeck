@@ -175,7 +175,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (!state.refreshInterval) {
         state.startTokenRefresh()
       }
-    } catch (error) {
+    } catch {
       // If loading user fails, clear auth state
       authApi.logout()
       set({

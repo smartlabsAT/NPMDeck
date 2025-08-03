@@ -7,7 +7,6 @@ import {
   Typography,
   Chip,
   CircularProgress,
-  Alert,
   Tooltip,
 } from '@mui/material'
 import {
@@ -555,16 +554,16 @@ export default function RedirectionHosts() {
       const mainDomain = item.domain_names[0] || ''
       return extractBaseDomain(mainDomain)
     },
-    groupLabel: (groupId, items) => `domain`,
+    groupLabel: (_groupId, _items) => `domain`,
     defaultEnabled: false,
-    groupHeaderRender: (groupId, items, isExpanded) => (
+    groupHeaderRender: (_groupId, _items, _isExpanded) => (
       <Box display="flex" alignItems="center" gap={1}>
         <LanguageIcon fontSize="small" color="primary" />
         <Typography variant="subtitle2" fontWeight="bold">
-          {groupId}
+          {_groupId}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          ({items.length})
+          ({_items.length})
         </Typography>
       </Box>
     )

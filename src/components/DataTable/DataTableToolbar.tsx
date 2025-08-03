@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Box,
   TextField,
@@ -51,7 +50,7 @@ export default function DataTableToolbar({
     ).length
   }
 
-  const activeFilterCount = getActiveFilterCount()
+  const _activeFilterCount = getActiveFilterCount()
 
   if (!searchable && filters.length === 0) {
     return null

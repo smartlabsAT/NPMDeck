@@ -99,9 +99,9 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
     errors,
     handleSubmit,
     resetForm,
-    markAsClean,
+    markAsClean: _markAsClean,
     isDirty,
-    isValid,
+    isValid: _isValid,
   } = useDrawerForm<ProxyHostFormData>({
     initialData: {
       domainNames: host?.domain_names || [],
@@ -305,7 +305,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
           setFieldValue={setFieldValue}
           errors={errors}
           accessLists={accessLists}
-          loadingData={loadingData}
+          _loadingData={loadingData}
         />
       </TabPanel>
 
@@ -315,7 +315,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
           setFieldValue={setFieldValue}
           errors={errors}
           certificates={certificates}
-          loadingData={loadingData}
+          _loadingData={loadingData}
           getCertificateStatus={getCertificateStatus}
         />
       </TabPanel>
@@ -337,10 +337,10 @@ interface DetailsTabProps {
   setFieldValue: (field: keyof ProxyHostFormData, value: any) => void
   errors: Record<string, string>
   accessLists: AccessList[]
-  loadingData: boolean
+  _loadingData: boolean
 }
 
-const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadingData }: DetailsTabProps) => {
+const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, _loadingData: __loadingData }: DetailsTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="Host Details" required>
@@ -453,17 +453,19 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, loadi
   )
 })
 
+DetailsTab.displayName = 'DetailsTab'
+
 // SSL Tab Component
 interface SSLTabProps {
   data: ProxyHostFormData
   setFieldValue: (field: keyof ProxyHostFormData, value: any) => void
   errors: Record<string, string>
   certificates: Certificate[]
-  loadingData: boolean
+  _loadingData: boolean
   getCertificateStatus: (cert: Certificate) => { color: 'error' | 'warning' | 'success', text: string, icon: any }
 }
 
-const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingData, getCertificateStatus }: SSLTabProps) => {
+const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, _loadingData: __loadingData, getCertificateStatus }: SSLTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="SSL Configuration">
@@ -487,7 +489,7 @@ const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingD
                 setFieldValue('certificateId', newValue?.id || 0)
               }}
               options={certificates}
-              loading={loadingData}
+              loading={__loadingData}
               getOptionLabel={(option) => option.nice_name || option.domain_names.join(', ')}
               renderOption={(props, option) => {
                 const status = getCertificateStatus(option)
@@ -542,7 +544,7 @@ const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingD
                   }}
                 />
               )}
-              noOptionsText={loadingData ? "Loading certificates..." : "No certificates found"}
+              noOptionsText={__loadingData ? "Loading certificates..." : "No certificates found"}
             />
             
             {data.selectedCertificate && (
@@ -619,6 +621,8 @@ const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingD
   )
 })
 
+SSLTab.displayName = 'SSLTab'
+
 // Advanced Tab Component
 interface AdvancedTabProps {
   data: ProxyHostFormData
@@ -626,12 +630,12 @@ interface AdvancedTabProps {
   errors: Record<string, string>
 }
 
-const AdvancedTab = React.memo(({ data, setFieldValue, errors }: AdvancedTabProps) => {
+const AdvancedTab = React.memo(({ data, setFieldValue, errors: _errors }: AdvancedTabProps) => {
   return (
     <FormSection title="Custom Configuration">
       <Alert severity="warning" sx={{ mb: 2 }}>
         Please note, that any add_header or set_header directives added here will not be 
-        used by nginx. You will have to add a custom location '/' and add the header 
+        used by nginx. You will have to add a custom location &apos;/&apos; and add the header 
         directives there.
       </Alert>
       
@@ -653,3 +657,5 @@ const AdvancedTab = React.memo(({ data, setFieldValue, errors }: AdvancedTabProp
     </FormSection>
   )
 })
+
+AdvancedTab.displayName = 'AdvancedTab'

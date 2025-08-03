@@ -13,7 +13,7 @@ import {
   ContentCopy as CopyIcon,
   Fingerprint as FingerprintIcon,
   Schedule as ScheduleIcon,
-  Person as PersonIcon,
+  // Person as PersonIcon,
   Security as SecurityIcon,
   Cloud as CloudIcon,
   Dns as DnsIcon,
@@ -30,8 +30,8 @@ interface CertificateInfoPanelProps {
 
 const CertificateInfoPanel: React.FC<CertificateInfoPanelProps> = ({
   certificate,
-  expandedSections,
-  onToggleSection,
+  expandedSections: _expandedSections,
+  onToggleSection: _onToggleSection,
   onCopyToClipboard,
 }) => {
   const getDaysUntilExpiry = (expiresOn: string | null) => {
@@ -129,7 +129,7 @@ const CertificateInfoPanel: React.FC<CertificateInfoPanelProps> = ({
           {certificate.meta?.certificate_id && (
             <Grid item xs={12} md={6}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
-                Let's Encrypt Certificate ID
+                Let&apos;s Encrypt Certificate ID
               </Typography>
               <Box display="flex" alignItems="center" gap={1}>
                 <Typography variant="body2" fontFamily="monospace">
@@ -195,7 +195,7 @@ const CertificateInfoPanel: React.FC<CertificateInfoPanelProps> = ({
           <Grid item xs={12}>
             <Box display="flex" alignItems="center" gap={1} mb={2}>
               <CloudIcon color="primary" />
-              <Typography variant="h6">Let's Encrypt Configuration</Typography>
+              <Typography variant="h6">Let&apos;s Encrypt Configuration</Typography>
             </Box>
             
             <Grid container spacing={2}>

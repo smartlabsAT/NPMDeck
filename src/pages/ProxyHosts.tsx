@@ -1,5 +1,5 @@
 import { getErrorMessage } from '../types/common'
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -8,7 +8,6 @@ import {
   Typography,
   Chip,
   CircularProgress,
-  Alert,
   Tooltip,
 } from '@mui/material'
 import {
@@ -588,9 +587,9 @@ export default function ProxyHosts() {
       const mainDomain = item.domain_names[0] || ''
       return extractBaseDomain(mainDomain)
     },
-    groupLabel: (groupId, items) => `domain`,
+    groupLabel: (_groupId, _items) => `domain`,
     defaultEnabled: false,
-    groupHeaderRender: (groupId, items, isExpanded) => (
+    groupHeaderRender: (groupId, items, _isExpanded) => (
       <Box display="flex" alignItems="center" gap={1}>
         <LanguageIcon fontSize="small" color="primary" />
         <Typography variant="subtitle2" fontWeight="bold">

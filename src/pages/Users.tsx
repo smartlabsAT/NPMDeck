@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -85,7 +85,7 @@ const Users = () => {
   }
 
   // Format relative time for last login
-  const formatRelativeTime = (date: string | null | undefined) => {
+  const _formatRelativeTime = (date: string | null | undefined) => {
     if (!date) return 'Never'
     
     const now = new Date()
@@ -127,14 +127,14 @@ const Users = () => {
     
     setBulkProcessing(true)
     let successCount = 0
-    let failCount = 0
+    let _failCount = 0
     
     for (const user of usersToDelete) {
       try {
         await usersApi.delete(user.id)
         successCount++
       } catch (err: unknown) {
-        failCount++
+        _failCount++
         showError('user', 'delete', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
@@ -154,14 +154,14 @@ const Users = () => {
     if (eligibleUsers.length === 0) return
     
     let successCount = 0
-    let failCount = 0
+    let _failCount = 0
     
     for (const user of eligibleUsers) {
       try {
         await usersApi.update(user.id, { is_disabled: true })
         successCount++
       } catch (err: unknown) {
-        failCount++
+        _failCount++
         showError('user', 'disable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
@@ -177,14 +177,14 @@ const Users = () => {
     if (eligibleUsers.length === 0) return
     
     let successCount = 0
-    let failCount = 0
+    let _failCount = 0
     
     for (const user of eligibleUsers) {
       try {
         await usersApi.update(user.id, { is_disabled: false })
         successCount++
       } catch (err: unknown) {
-        failCount++
+        _failCount++
         showError('user', 'enable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -6,7 +6,6 @@ import {
   Typography,
   Chip,
   CircularProgress,
-  Alert,
   Tooltip,
   Menu,
   MenuItem,
@@ -22,7 +21,7 @@ import {
   VpnKey as CertificateIcon,
   Folder as ProviderIcon,
   Event as ExpiresIcon,
-  Dns as DomainIcon,
+  // Dns as DomainIcon,
   Apps as HostsIcon,
   MoreVert as ActionsIcon,
 } from '@mui/icons-material'
@@ -96,8 +95,8 @@ const Certificates = () => {
   const [viewingCert, setViewingCert] = useState<Certificate | null>(null)
   const [initialProvider, setInitialProvider] = useState<'letsencrypt' | 'other'>('letsencrypt')
   
-  const { } = useAuthStore()
-  const { } = usePermissions()
+  const { } = useAuthStore() // eslint-disable-line no-empty-pattern
+  const { } = usePermissions() // eslint-disable-line no-empty-pattern
   const { showSuccess, showError } = useToast()
 
   useEffect(() => {
@@ -374,17 +373,17 @@ const Certificates = () => {
       const certName = cert.nice_name || cert.domain_names[0] || 'Unknown'
       return extractBaseDomain(certName)
     },
-    groupLabel: (groupId) => 'Domain',
+    groupLabel: (_groupId) => 'Domain',
     defaultEnabled: localStorage.getItem('npm.certificates.groupByDomain') === 'true',
     defaultExpanded: true,
-    groupHeaderRender: (groupId, items, isExpanded) => (
+    groupHeaderRender: (groupId, _items, _isExpanded) => (
       <Box display="flex" alignItems="center" gap={1}>
         <LockIcon fontSize="small" color="primary" />
         <Typography variant="subtitle2" fontWeight="bold">
           {groupId}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          ({items.length})
+          ({_items.length})
         </Typography>
       </Box>
     )
@@ -453,7 +452,7 @@ const Certificates = () => {
             >
               <MenuItem onClick={handleAddLetsEncrypt}>
                 <LockIcon sx={{ mr: 1 }} />
-                Let's Encrypt
+                Let&apos;s Encrypt
               </MenuItem>
               <MenuItem onClick={handleAddCustom}>
                 Custom

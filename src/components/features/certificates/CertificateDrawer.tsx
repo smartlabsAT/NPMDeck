@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import {
   TextField,
   FormControlLabel,
-  FormControl,
+  // FormControl,
   Switch,
   Box,
-  RadioGroup,
-  Radio,
+  // RadioGroup,
+  // Radio,
   Alert,
   Button,
   Stack,
@@ -386,7 +386,7 @@ export default function CertificateDrawer({
   }
 
   // Handle provider change and update route
-  const handleProviderChange = React.useCallback((newProvider: 'letsencrypt' | 'other') => {
+  const _handleProviderChange = React.useCallback((newProvider: 'letsencrypt' | 'other') => {
     setFieldValue('provider', newProvider)
     
     // Update the route when provider changes

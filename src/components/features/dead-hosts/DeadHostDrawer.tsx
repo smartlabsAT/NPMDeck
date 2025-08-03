@@ -344,7 +344,7 @@ interface AdvancedTabProps {
   getFieldProps: (field: keyof DeadHostFormData) => any
 }
 
-function AdvancedTab({ data, setFieldValue, getFieldProps }: AdvancedTabProps) {
+function AdvancedTab({ data, setFieldValue, getFieldProps: _getFieldProps }: AdvancedTabProps) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Alert severity="info">

@@ -21,7 +21,7 @@ import {
   TableHead,
   TableRow,
   Chip,
-  Divider,
+  // Divider,
   IconButton,
   Tooltip,
   Stack,
@@ -37,7 +37,7 @@ import {
   Refresh as RefreshIcon,
   ContentCopy as CopyIcon,
   Save as SaveIcon,
-  OpenInNew as PreviewIcon,
+  // OpenInNew as PreviewIcon,
   ChevronLeft as LeftIcon,
   ChevronRight as RightIcon,
   SwapHoriz as ProxyIcon,
@@ -52,9 +52,8 @@ import {
   Add as AddIcon,
 } from '@mui/icons-material'
 import Editor from 'react-simple-code-editor'
-// @ts-ignore - prismjs type declarations don't cover all exports
+// @ts-expect-error - prismjs type declarations don't cover all exports
 import { highlight, languages } from 'prismjs/components/prism-core'
-// @ts-ignore
 import 'prismjs/components/prism-markup'
 import { settingsApi, Setting } from '../api/settings'
 import PageHeader from '../components/PageHeader'
@@ -422,10 +421,10 @@ const Settings = () => {
   }
   
   const [activeTab, setActiveTab] = useState(getInitialTab())
-  const [settings, setSettings] = useState<Setting[]>([])
+  const [_settings, setSettings] = useState<Setting[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [_error, setError] = useState<string | null>(null)
   const [defaultSiteType, setDefaultSiteType] = useState<string>('congratulations')
   const [defaultSiteHtml, setDefaultSiteHtml] = useState<string>(DEFAULT_HTML.html)
   
@@ -597,7 +596,7 @@ const Settings = () => {
           }}
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          {tabs.map((tab, index) => (
+          {tabs.map((tab, _index) => (
             <Tab
               key={tab.id}
               label={

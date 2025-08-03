@@ -79,7 +79,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     errors,
     handleSubmit,
     isDirty,
-    isValid,
+    isValid: _isValid,
     getFieldProps,
     resetForm,
   } = useDrawerForm<StreamFormData>({

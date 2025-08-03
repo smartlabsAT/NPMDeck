@@ -56,13 +56,13 @@ export default function ArrayFieldManager<T = string>({
   allowReorder = false,
   sx,
   error,
-  suggestions = [],
+  suggestions: _suggestions = [],
   allowDuplicates = true,
   EmptyComponent,
   AddButtonComponent,
   animationDuration = 200,
 }: ArrayFieldManagerProps<T>) {
-  const theme = useTheme()
+  const _theme = useTheme()
 
   // Use the custom hook for array logic
   const {
@@ -105,7 +105,7 @@ export default function ArrayFieldManager<T = string>({
    * Check constraints
    */
   const canAddMore = !maxItems || value.length < maxItems
-  const hasMinimumItems = value.length >= minItems
+  const _hasMinimumItems = value.length >= minItems
 
   /**
    * Memoized item list

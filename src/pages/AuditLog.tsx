@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -110,7 +110,7 @@ const AuditLog = () => {
     }
   }
 
-  const getObjectTypeColor = (objectType: string): string => {
+  const _getObjectTypeColor = (objectType: string): string => {
     switch (objectType) {
       case 'proxy-host':
         return '#5eba00'

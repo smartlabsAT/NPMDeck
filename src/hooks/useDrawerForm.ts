@@ -395,7 +395,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
    * Get field props for easy binding to input components
    */
   const getFieldProps = useCallback((key: keyof T) => {
-    const fieldConfig = fields[key];
+    const _fieldConfig = fields[key];
     const hasError = Boolean(formState.errors[key] && formState.touched[key]);
     
     return {

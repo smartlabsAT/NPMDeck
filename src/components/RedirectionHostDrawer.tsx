@@ -505,7 +505,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
           {form.data.use_lets_encrypt && form.data.certificate_id === 'new' && (
             <Box sx={{ mt: 3 }}>
               <Alert severity="info" sx={{ mb: 2 }}>
-                A new Let's Encrypt certificate will be requested when you save
+                A new Let&apos;s Encrypt certificate will be requested when you save
               </Alert>
 
               <TextField

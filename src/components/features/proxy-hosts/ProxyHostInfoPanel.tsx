@@ -45,7 +45,7 @@ interface ProxyHostInfoPanelProps {
 const ProxyHostInfoPanel: React.FC<ProxyHostInfoPanelProps> = ({
   host,
   expandedSections,
-  copiedText,
+  copiedText: _copiedText,
   onToggleSection,
   onCopyToClipboard,
   onNavigateToAccess,

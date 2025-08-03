@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter(routes, {
   future: {
     v7_relativeSplatPath: true,
-    // @ts-ignore - v7_startTransition will be available in React Router v7
+    // @ts-expect-error - v7_startTransition will be available in React Router v7
     v7_startTransition: true,
   },
 })
