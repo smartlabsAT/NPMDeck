@@ -14,7 +14,6 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  Stream as StreamIcon,
   Power as PowerIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
@@ -542,7 +541,7 @@ export default function Streams() {
         }}
         onConfirm={handleDeleteStream}
         title="Delete Stream"
-        titleIcon={<StreamIcon sx={{ color: '#467fcf' }} />}
+        titleIcon={React.createElement(NAVIGATION_CONFIG.streams.icon, { sx: { color: NAVIGATION_CONFIG.streams.color } })}
         message={`Are you sure you want to delete the stream on port ${streamToDelete?.incoming_port}?`}
         confirmText="Delete"
         confirmColor="error"

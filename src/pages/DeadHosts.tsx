@@ -501,7 +501,7 @@ export default function DeadHosts() {
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete 404 Host?"
-        titleIcon={<BlockIcon sx={{ color: '#cd201f' }} />}
+        titleIcon={React.createElement(NAVIGATION_CONFIG.deadHosts.icon, { sx: { color: NAVIGATION_CONFIG.deadHosts.color } })}
         message={`Are you sure you want to delete the 404 host for ${hostToDelete?.domain_names.join(', ')}? This action cannot be undone.`}
         confirmText="Delete"
         confirmColor="error"

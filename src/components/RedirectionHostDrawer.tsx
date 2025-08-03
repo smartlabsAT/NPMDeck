@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -33,6 +33,7 @@ import DomainInput from './DomainInput'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
 import { useToast } from '../contexts/ToastContext'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 interface RedirectionHostDrawerProps {
   open: boolean
@@ -275,7 +276,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         open={open}
         onClose={onClose}
         title={host ? 'Edit Redirection Host' : 'Add Redirection Host'}
-        titleIcon={<RedirectIcon sx={{ color: '#f1c40f' }} />}
+        titleIcon={React.createElement(NAVIGATION_CONFIG.redirectionHosts.icon, { sx: { color: NAVIGATION_CONFIG.redirectionHosts.color } })}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}

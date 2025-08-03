@@ -649,7 +649,7 @@ export default function RedirectionHosts() {
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Redirection Host?"
-        titleIcon={<RedirectIcon sx={{ color: '#f1c40f' }} />}
+        titleIcon={React.createElement(NAVIGATION_CONFIG.redirectionHosts.icon, { sx: { color: NAVIGATION_CONFIG.redirectionHosts.color } })}
         message={`Are you sure you want to delete the redirection host for ${hostToDelete?.domain_names.join(', ')}? This action cannot be undone.`}
         confirmText="Delete"
         confirmColor="error"

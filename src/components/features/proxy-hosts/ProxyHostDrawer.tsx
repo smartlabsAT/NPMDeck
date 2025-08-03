@@ -29,6 +29,7 @@ import {
   SwapHoriz as ProxyIcon,
 } from '@mui/icons-material'
 import { ProxyHost, CreateProxyHost, UpdateProxyHost, proxyHostsApi } from '../../../api/proxyHosts'
+import { NAVIGATION_CONFIG } from '../../../constants/navigation'
 import { AccessList, accessListsApi } from '../../../api/accessLists'
 import { Certificate, certificatesApi } from '../../../api/certificates'
 import BaseDrawer from '../../base/BaseDrawer'
@@ -285,7 +286,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       open={open}
       onClose={onClose}
       title={isEditMode ? 'Edit Proxy Host' : 'New Proxy Host'}
-      titleIcon={<ProxyIcon sx={{ color: '#5eba00' }} />}
+      titleIcon={React.createElement(NAVIGATION_CONFIG.proxyHosts.icon, { sx: { color: NAVIGATION_CONFIG.proxyHosts.color } })}
       subtitle={data.domainNames?.[0] || 'Proxy host configuration'}
       tabs={tabs}
       activeTab={activeTab}

@@ -12,7 +12,6 @@ import {
   FormHelperText,
 } from '@mui/material'
 import {
-  Block as BlockIcon,
   Settings as SettingsIcon,
   Code as CodeIcon,
   Security as SecurityIcon,
@@ -25,6 +24,7 @@ import FormSection from '../../shared/FormSection'
 import DomainInput from '../../DomainInput'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
+import { NAVIGATION_CONFIG } from '../../../constants/navigation'
 
 interface DeadHostDrawerProps {
   open: boolean
@@ -193,7 +193,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       open={open}
       onClose={onClose}
       title={title}
-      titleIcon={<BlockIcon sx={{ color: '#cd201f' }} />}
+      titleIcon={React.createElement(NAVIGATION_CONFIG.deadHosts.icon, { sx: { color: NAVIGATION_CONFIG.deadHosts.color } })}
       subtitle={data.domainNames.length > 0 ? data.domainNames.join(', ') : '404 Host Configuration'}
       tabs={tabs}
       activeTab={activeTab}

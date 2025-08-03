@@ -15,7 +15,6 @@ import {
 } from '@mui/material'
 import {
   Info as InfoIcon,
-  VpnKey as VpnKeyIcon,
   CheckCircle as CheckIcon,
   Description as FileIcon,
   Key as KeyIcon,
@@ -30,6 +29,7 @@ import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import FileDropzone from './components/FileDropzone'
 import DNSProviderSelector from './components/DNSProviderSelector'
 import { useToast } from '../../../contexts/ToastContext'
+import { NAVIGATION_CONFIG } from '../../../constants/navigation'
 
 interface CertificateDrawerProps {
   open: boolean
@@ -404,7 +404,7 @@ export default function CertificateDrawer({
       open={open}
       onClose={onClose}
       title={isEditMode ? 'Edit Certificate' : 'Add SSL Certificate'}
-      titleIcon={<VpnKeyIcon sx={{ color: '#467fcf' }} />}
+      titleIcon={React.createElement(NAVIGATION_CONFIG.certificates.icon, { sx: { color: NAVIGATION_CONFIG.certificates.color } })}
       subtitle={isEditMode ? (data?.niceName || data?.domainNames?.[0] || 'SSL Certificate') : (data?.domainNames?.[0] || 'SSL Certificate')}
       loading={loading}
       error={customError || globalError || undefined}
@@ -588,4 +588,3 @@ export default function CertificateDrawer({
     </BaseDrawer>
   )
 }
-

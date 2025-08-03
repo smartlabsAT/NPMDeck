@@ -18,7 +18,6 @@ import {
   Add as AddIcon,
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
-  Stream as StreamIcon,
 } from '@mui/icons-material'
 import { Stream, CreateStream, UpdateStream, streamsApi } from '../../../api/streams'
 import { Certificate, certificatesApi } from '../../../api/certificates'
@@ -27,6 +26,7 @@ import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
+import { NAVIGATION_CONFIG } from '../../../constants/navigation'
 
 interface StreamDrawerProps {
   open: boolean
@@ -273,7 +273,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       open={open}
       onClose={onClose}
       title={titleContent}
-      titleIcon={<StreamIcon sx={{ color: '#467fcf' }} />}
+      titleIcon={React.createElement(NAVIGATION_CONFIG.streams.icon, { sx: { color: NAVIGATION_CONFIG.streams.color } })}
       subtitle={data?.forwardingHost ? `${data.incomingPort} → ${data.forwardingHost}:${data.forwardingPort}` : 'Stream Configuration'}
       tabs={tabs}
       activeTab={activeTab}

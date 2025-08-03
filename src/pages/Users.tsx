@@ -481,7 +481,7 @@ const Users = () => {
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
         title={usersToDelete.length === 1 ? "Delete User?" : `Delete ${usersToDelete.length} Users?`}
-        titleIcon={<GroupIcon sx={{ color: '#868e96' }} />}
+        titleIcon={React.createElement(NAVIGATION_CONFIG.users.icon, { sx: { color: NAVIGATION_CONFIG.users.color } })}
         message={
           usersToDelete.length === 1
             ? `Are you sure you want to delete ${usersToDelete[0]?.name}? This action cannot be undone.`

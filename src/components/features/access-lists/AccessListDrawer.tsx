@@ -30,6 +30,7 @@ import FormSection from '../../shared/FormSection'
 import ArrayFieldManager from '../../shared/ArrayFieldManager'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
+import { NAVIGATION_CONFIG } from '../../../constants/navigation'
 
 interface AccessListDrawerProps {
   open: boolean
@@ -368,7 +369,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
       open={open}
       onClose={onClose}
       title={accessList ? 'Edit Access List' : 'Create Access List'}
-      titleIcon={<SecurityIcon sx={{ color: '#2bcbba' }} />}
+      titleIcon={React.createElement(NAVIGATION_CONFIG.accessLists.icon, { sx: { color: NAVIGATION_CONFIG.accessLists.color } })}
       subtitle="Manage access control and authorization"
       tabs={tabs}
       activeTab={activeTab}

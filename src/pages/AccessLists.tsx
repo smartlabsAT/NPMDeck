@@ -15,7 +15,6 @@ import {
   Delete as DeleteIcon,
   Visibility as ViewIcon,
   Lock as LockIcon,
-  Security as SecurityIcon,
   Person as PersonIcon,
   NetworkCheck as NetworkIcon,
   Settings as OptionsIcon,
@@ -414,7 +413,7 @@ export default function AccessLists() {
         }}
         onConfirm={handleDeleteAccessList}
         title="Delete Access List"
-        titleIcon={<SecurityIcon sx={{ color: '#2bcbba' }} />}
+        titleIcon={React.createElement(NAVIGATION_CONFIG.accessLists.icon, { sx: { color: NAVIGATION_CONFIG.accessLists.color } })}
         message={`Are you sure you want to delete the access list "${accessListToDelete?.name}"?`}
         confirmText="Delete"
         confirmColor="error"
