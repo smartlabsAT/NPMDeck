@@ -22,22 +22,11 @@ import {
 } from '@mui/material'
 import {
   Menu as MenuIcon,
-  Dashboard,
-  Language,
-  SwapHoriz,
-  Block,
-  Stream,
-  Security,
-  VpnKey,
-  Group,
-  Description,
-  Settings,
   Logout,
   ExpandLess,
   ExpandMore,
   AccountCircle,
-  TrendingFlat, // ImportExport as ImportExportIcon,
-  ChevronRight, Tune as PreferencesIcon,
+  ChevronRight,
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
@@ -45,6 +34,7 @@ import Footer from './Footer'
 import ThemeToggle from './ThemeToggle'
 import SearchBar from './SearchBar'
 import Logo from './Logo'
+import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 const drawerWidth = 240
 
@@ -94,56 +84,87 @@ const Layout = () => {
     })
   }
 
-  // Build menu items based on permissions
+  // Build menu items based on permissions using navigation constants
   const hostsChildren: MenuItem[] = [
-    canView('proxy_hosts') && { text: 'Proxy Hosts', icon: <SwapHoriz sx={{ color: '#5eba00' }} />, path: '/hosts/proxy' },
-    canView('redirection_hosts') && { text: 'Redirection Hosts', icon: <TrendingFlat sx={{ color: '#f1c40f' }} />, path: '/hosts/redirection' },
-    canView('dead_hosts') && { text: '404 Hosts', icon: <Block sx={{ color: '#cd201f' }} />, path: '/hosts/404' },
-    canView('streams') && { text: 'Streams', icon: <Stream sx={{ color: '#467fcf' }} />, path: '/hosts/streams' }
+    canView('proxy_hosts') && { 
+      text: NAVIGATION_CONFIG.proxyHosts.text, 
+      icon: React.createElement(NAVIGATION_CONFIG.proxyHosts.icon, { sx: { color: NAVIGATION_CONFIG.proxyHosts.color } }), 
+      path: NAVIGATION_CONFIG.proxyHosts.path 
+    },
+    canView('redirection_hosts') && { 
+      text: NAVIGATION_CONFIG.redirectionHosts.text, 
+      icon: React.createElement(NAVIGATION_CONFIG.redirectionHosts.icon, { sx: { color: NAVIGATION_CONFIG.redirectionHosts.color } }), 
+      path: NAVIGATION_CONFIG.redirectionHosts.path 
+    },
+    canView('dead_hosts') && { 
+      text: NAVIGATION_CONFIG.deadHosts.text, 
+      icon: React.createElement(NAVIGATION_CONFIG.deadHosts.icon, { sx: { color: NAVIGATION_CONFIG.deadHosts.color } }), 
+      path: NAVIGATION_CONFIG.deadHosts.path 
+    },
+    canView('streams') && { 
+      text: NAVIGATION_CONFIG.streams.text, 
+      icon: React.createElement(NAVIGATION_CONFIG.streams.icon, { sx: { color: NAVIGATION_CONFIG.streams.color } }), 
+      path: NAVIGATION_CONFIG.streams.path 
+    }
   ].filter(Boolean) as MenuItem[]
 
   const securityChildren: MenuItem[] = [
-    canView('access_lists') && { text: 'Access Lists', icon: <Security sx={{ color: '#2bcbba' }} />, path: '/security/access-lists' },
-    canView('certificates') && { text: 'SSL Certificates', icon: <VpnKey sx={{ color: '#467fcf' }} />, path: '/security/certificates' }
+    canView('access_lists') && { 
+      text: NAVIGATION_CONFIG.accessLists.text, 
+      icon: React.createElement(NAVIGATION_CONFIG.accessLists.icon, { sx: { color: NAVIGATION_CONFIG.accessLists.color } }), 
+      path: NAVIGATION_CONFIG.accessLists.path 
+    },
+    canView('certificates') && { 
+      text: NAVIGATION_CONFIG.certificates.text, 
+      icon: React.createElement(NAVIGATION_CONFIG.certificates.icon, { sx: { color: NAVIGATION_CONFIG.certificates.color } }), 
+      path: NAVIGATION_CONFIG.certificates.path 
+    }
   ].filter(Boolean) as MenuItem[]
 
   const menuItems = [
     {
-      text: 'Dashboard',
-      icon: <Dashboard sx={{ color: '#2bcbba' }} />,
-      path: '/'
+      text: NAVIGATION_CONFIG.dashboard.text,
+      icon: React.createElement(NAVIGATION_CONFIG.dashboard.icon, { sx: { color: NAVIGATION_CONFIG.dashboard.color } }),
+      path: NAVIGATION_CONFIG.dashboard.path
     },
     hostsChildren.length > 0 && {
-      text: 'Hosts',
-      icon: <Language sx={{ color: '#5eba00' }} />,
+      text: NAVIGATION_CONFIG.hosts.text,
+      icon: React.createElement(NAVIGATION_CONFIG.hosts.icon, { sx: { color: NAVIGATION_CONFIG.hosts.color } }),
       open: hostsOpen,
       onClick: () => setHostsOpen(!hostsOpen),
       children: hostsChildren
     },
     securityChildren.length > 0 && {
-      text: 'Security',
-      icon: <Security sx={{ color: '#467fcf' }} />,
+      text: NAVIGATION_CONFIG.security.text,
+      icon: React.createElement(NAVIGATION_CONFIG.security.icon, { sx: { color: NAVIGATION_CONFIG.security.color } }),
       open: securityOpen,
       onClick: () => setSecurityOpen(!securityOpen),
       children: securityChildren
     },
-    /* isAdmin && {
-      text: 'Import / Export',
-      icon: <ImportExportIcon />,
-      path: '/tools/import-export'
-    } */
   ].filter(Boolean) as MenuItem[]
 
   const adminItems = [
     {
-      text: 'Administration',
-      icon: <Settings />,
+      text: NAVIGATION_CONFIG.administration.text,
+      icon: React.createElement(NAVIGATION_CONFIG.administration.icon, { sx: { color: NAVIGATION_CONFIG.administration.color } }),
       open: adminOpen,
       onClick: () => setAdminOpen(!adminOpen),
       children: [
-        { text: 'Users', icon: <Group />, path: '/admin/users' },
-        { text: 'Audit Log', icon: <Description />, path: '/admin/audit-log' },
-        { text: 'Settings', icon: <PreferencesIcon sx={{ color: '#6c757d' }} />, path: '/admin/settings' }
+        { 
+          text: NAVIGATION_CONFIG.users.text, 
+          icon: React.createElement(NAVIGATION_CONFIG.users.icon, { sx: { color: NAVIGATION_CONFIG.users.color } }), 
+          path: NAVIGATION_CONFIG.users.path 
+        },
+        { 
+          text: NAVIGATION_CONFIG.auditLog.text, 
+          icon: React.createElement(NAVIGATION_CONFIG.auditLog.icon, { sx: { color: NAVIGATION_CONFIG.auditLog.color } }), 
+          path: NAVIGATION_CONFIG.auditLog.path 
+        },
+        { 
+          text: NAVIGATION_CONFIG.settings.text, 
+          icon: React.createElement(NAVIGATION_CONFIG.settings.icon, { sx: { color: NAVIGATION_CONFIG.settings.color } }), 
+          path: NAVIGATION_CONFIG.settings.path 
+        }
       ]
     }
   ]
