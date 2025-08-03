@@ -1,0 +1,52 @@
+{
+  "name": "NPMDeck - Nginx Proxy Manager",
+  "short_name": "NPMDeck",
+  "description": "A modern, responsive web interface for Nginx Proxy Manager with dark mode, enhanced dashboard, and improved user experience",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#2bcbba",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Proxy Hosts",
+      "short_name": "Proxies",
+      "description": "Manage proxy hosts",
+      "url": "/hosts/proxy",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "SSL Certificates",
+      "short_name": "SSL",
+      "description": "Manage SSL certificates",
+      "url": "/security/certificates",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

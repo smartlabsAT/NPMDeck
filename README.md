@@ -100,50 +100,104 @@ The application will be available at http://localhost:3000
 
 ### Option 2: Docker Deployment (Recommended) 🐳
 
-#### Using Docker Compose
-
-```bash
-# Start production container
-docker-compose up -d prod
-
-# View logs
-docker-compose logs -f prod
-
-# Stop container
-docker-compose down
-```
-
-#### Using Docker directly
+#### Build the Docker Image
 
 ```bash
 # Build the image
 docker build -t npmdeck:latest .
+```
 
-# Run the container
+#### Complete Docker Compose Setup with NPM
+
+Create a `docker-compose.yml` file:
+
+```yaml
+version: '3.8'
+
+services:
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: npm
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    environment:
+      - DB_MYSQL_HOST=db
+      - DB_MYSQL_PORT=3306
+      - DB_MYSQL_USER=npm
+      - DB_MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - DB_MYSQL_NAME=npm
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    networks:
+      - proxy
+    depends_on:
+      - db
+
+  db:
+    image: 'mariadb:10.11'
+    container_name: npm-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=npm
+      - MYSQL_USER=npm
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - ./mysql:/var/lib/mysql
+    networks:
+      - proxy
+
+  npmdeck:
+    image: npmdeck:latest
+    container_name: npmdeck
+    restart: unless-stopped
+    ports:
+      - '82:3000'  # Access NPMDeck on port 82
+    environment:
+      # For macOS Docker Desktop use:
+      - NPM_API_URL=http://host.docker.internal:81
+      # For Linux or container-to-container:
+      # - NPM_API_URL=http://nginx-proxy-manager:81
+    depends_on:
+      - nginx-proxy-manager
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    driver: bridge
+```
+
+> [!IMPORTANT]
+> **macOS Users**: Use `host.docker.internal` for NPM_API_URL when NPM runs on the host or in another Docker network.
+> 
+> **Linux Users**: Use the container name (e.g., `nginx-proxy-manager`) for container-to-container communication.
+
+Start everything:
+```bash
+docker-compose up -d
+```
+
+Access:
+- **NPM Admin**: http://localhost:81
+- **NPMDeck**: http://localhost:82
+- **Proxy**: http://localhost:80
+
+### Option 3: Standalone Docker Run
+
+```bash
+# For macOS (NPM on host or different network)
 docker run -d \
   --name npmdeck \
   -p 3000:3000 \
-  -e NPM_API_URL=http://your-npm-backend:81 \
-  -e NODE_ENV=production \
+  -e NPM_API_URL=http://host.docker.internal:81 \
   npmdeck:latest
 
-# View logs
-docker logs -f npmdeck
-
-# Stop container
-docker stop npmdeck
-docker rm npmdeck
-```
-
-### Option 3: Docker with Custom Network 🌐
-
-If NPM backend runs in Docker, use a shared network:
-
-```bash
-# Create network (if not exists)
-docker network create npm-network
-
-# Run NPMDeck
+# For Linux or same Docker network
 docker run -d \
   --name npmdeck \
   --network npm-network \
