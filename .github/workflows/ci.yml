@@ -37,7 +37,7 @@ jobs:
         id: eslint
         run: |
           pnpm run lint 2>&1 | tee lint-output.txt || true
-          ERRORS=$(grep -c "error" lint-output.txt || echo "0")
+          ERRORS=$(grep -E "^\s+[0-9]+:[0-9]+\s+error" lint-output.txt | wc -l || echo "0")
           WARNINGS=$(grep -c "warning" lint-output.txt || echo "0")
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
           echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
@@ -47,6 +47,7 @@ jobs:
             exit 1
           else
             echo "✅ No ESLint errors found"
+            echo "⚠️ $WARNINGS warnings (not blocking)"
           fi
 
       - name: Comment PR with lint results

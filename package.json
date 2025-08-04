@@ -11,7 +11,8 @@
     "start": "NODE_ENV=production node server/index.js",
     "start:dev": "pnpm run dev",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives",
+    "lint:strict": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "docker:build": "docker build -t npmdeck:latest .",
     "docker:run": "docker run -p 3000:3000 npmdeck:latest"

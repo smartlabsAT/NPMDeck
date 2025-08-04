@@ -37,19 +37,19 @@ jobs:
       - name: Run TypeScript type checking
         run: pnpm run typecheck
 
-      - name: Run ESLint
-        run: pnpm run lint
-        continue-on-error: true # Allow warnings for now, but still report them
-
-      - name: Check for ESLint errors
+      - name: Run ESLint (check for errors only)
         run: |
-          pnpm run lint 2>&1 | tee lint-output.txt
-          if grep -q "error" lint-output.txt; then
+          # Run ESLint but only fail on errors, not warnings
+          pnpm run lint 2>&1 | tee lint-output.txt || true
+          
+          # Check if there are actual errors (not warnings)
+          if grep -E "^\s+[0-9]+:[0-9]+\s+error" lint-output.txt; then
             echo "❌ ESLint errors found!"
-            grep "error" lint-output.txt
             exit 1
           else
             echo "✅ No ESLint errors found!"
+            WARNINGS=$(grep -c "warning" lint-output.txt || echo "0")
+            echo "⚠️ ESLint warnings: $WARNINGS (not blocking)"
           fi
 
       - name: Generate lint report

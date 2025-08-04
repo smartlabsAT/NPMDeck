@@ -47,7 +47,7 @@ jobs:
           echo "### 🔍 ESLint Check" >> $GITHUB_STEP_SUMMARY
           pnpm run lint 2>&1 | tee lint-output.txt || true
           
-          ERRORS=$(grep -c "error" lint-output.txt || echo "0")
+          ERRORS=$(grep -E "^\s+[0-9]+:[0-9]+\s+error" lint-output.txt | wc -l || echo "0")
           WARNINGS=$(grep -c "warning" lint-output.txt || echo "0")
           
           if [ "$ERRORS" -eq "0" ]; then
@@ -58,7 +58,7 @@ jobs:
             echo "status=failure" >> $GITHUB_OUTPUT
           fi
           
-          echo "⚠️ ESLint Warnings: **$WARNINGS**" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ ESLint Warnings: **$WARNINGS** (not blocking)**" >> $GITHUB_STEP_SUMMARY
           
           if [ "$ERRORS" -gt "0" ]; then
             exit 1
