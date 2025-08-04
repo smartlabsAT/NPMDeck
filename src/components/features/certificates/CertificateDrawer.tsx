@@ -352,7 +352,6 @@ export default function CertificateDrawer({
   // Update provider when initialProvider changes (e.g., switching between Let's Encrypt and Custom)
   React.useEffect(() => {
     if (!certificate && open) {
-      console.log('useEffect: Updating provider from', data?.provider, 'to', initialProvider)
       setFieldValue('provider', initialProvider)
     }
   }, [initialProvider, certificate, open, setFieldValue])
