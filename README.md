@@ -29,18 +29,17 @@ NPMDeck is a **modern, responsive web interface** for [Nginx Proxy Manager](http
 ## ✨ Features
 
 - 🌓 **Dark Mode** - Built-in dark theme with system preference detection
-- 🔍 **Global Search** - Lightning-fast search across all resources
+- 🔍 **Global Search** - Search across all resources
 - 🎨 **Customizable UI** - Choose between drawer and dialog views
-- 📊 **Enhanced Dashboard** - Real-time statistics and quick actions
-- 🔒 **Permission System** - Fine-grained access control
-- 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
+- 🔒 **Permission System** 
 - ⚡ **Blazing Fast** - Built with Vite and React 18 for optimal performance
-- 🔄 **Live Updates** - Real-time data synchronization
 - 🎯 **Smart Filters** - Advanced filtering and sorting options
+- 🌐 **Enhanced Domain Input** - Smart URL parsing with automatic cleaning and validation
 
 ## 📋 Prerequisites
 
-- ✅ Node.js 18+ 
+- ✅ Node.js 20+ (LTS recommended)
+- 📦 pnpm 8+ (Package Manager)
 - 🐳 Docker (optional, for containerized deployment)
 - 🔧 Running instance of Nginx Proxy Manager backend
 
@@ -53,10 +52,13 @@ NPMDeck is a **modern, responsive web interface** for [Nginx Proxy Manager](http
 git clone https://github.com/smartlabsAT/NPMDeck.git
 cd NPMDeck
 
-# 2. Install dependencies
-npm install
+# 2. Install pnpm (if not already installed)
+npm install -g pnpm
 
-# 3. Configure environment
+# 3. Install dependencies
+pnpm install
+
+# 4. Configure environment
 cp .env.example .env
 # Edit .env with your NPM backend URL
 ```
@@ -72,7 +74,7 @@ PORT=3000                         # Express server port
 ### 💻 Start Development
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 This starts two servers simultaneously:
@@ -97,10 +99,10 @@ This starts:
 
 ```bash
 # Build the application
-npm run build
+pnpm run build
 
 # Start production server
-npm start
+pnpm start
 ```
 
 The application will be available at http://localhost:3000
@@ -220,8 +222,7 @@ docker run -d \
 | `PORT` | Server port | `3000` |
 | `NODE_ENV` | Environment mode | `development` |
 | `NPM_API_URL` | NPM backend URL | `http://localhost:81` |
-| `ENABLE_LOGS` | Enable log features | `true` |
-| `ENABLE_METRICS` | Enable metrics | `true` |
+
 
 ## 🏗️ Architecture
 
@@ -248,12 +249,15 @@ NPMDeck acts as a proxy between the frontend and NPM backend:
 
 ### 📜 Available Scripts
 
-- `npm run dev` - 🚀 Start development servers
-- `npm run build` - 🏗️ Build for production
-- `npm start` - ▶️ Start production server
-- `npm run lint` - 🔍 Run ESLint
-- `npm run docker:build` - 🐳 Build Docker image
-- `npm run docker:run` - 🏃 Run Docker container
+- `pnpm run dev` - 🚀 Start development servers (Vite + Express)
+- `pnpm run build` - 🏗️ Build for production
+- `pnpm start` - ▶️ Start production server
+- `pnpm run lint` - 🔍 Run ESLint
+- `pnpm run typecheck` - 📝 Run TypeScript type checking
+- `pnpm run test` - 🧪 Run tests (when available)
+- `pnpm run docker:build` - 🐳 Build Docker image
+- `pnpm run docker:run` - 🏃 Run Docker container
+- `pnpm run clean` - 🧹 Clean build artifacts
 
 ### 🛠️ Tech Stack
 
@@ -262,6 +266,32 @@ NPMDeck acts as a proxy between the frontend and NPM backend:
 - **State Management**: 🐻 Zustand, React Query
 - **Routing**: 🛣️ React Router v6
 - **Build**: ⚡ Vite, 🐳 Docker
+
+## 🔄 CI/CD & Quality Checks
+
+### GitHub Actions
+
+This project uses GitHub Actions for continuous integration:
+
+- **Code Quality**: Automatic TypeScript and ESLint checks on every push
+- **Build Tests**: Ensures the project builds successfully
+- **Docker Build**: Validates Docker image creation
+- **PR Checks**: Automated quality gates for pull requests
+
+### Local Quality Checks
+
+Before committing, run:
+
+```bash
+# Type checking
+pnpm run typecheck
+
+# Linting
+pnpm run lint
+
+# Build test
+pnpm run build
+```
 
 ## 🤝 Contributing
 
@@ -282,6 +312,25 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🎯 [Nginx Proxy Manager](https://nginxproxymanager.com/) for the excellent backend
 - 💪 The NPM community for feedback and contributions
 - ❤️ All our contributors and supporters
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Cannot connect to NPM backend:**
+- Ensure NPM is running and accessible
+- Check `NPM_API_URL` in your `.env` file
+- For Docker: Use `host.docker.internal` on macOS or container name on Linux
+
+**Build fails with TypeScript errors:**
+```bash
+pnpm run typecheck  # Check for type errors
+pnpm run lint       # Check for linting issues
+```
+
+**Port already in use:**
+- Change the port in `.env` file
+- Or stop the conflicting service
 
 ## 💬 Support
 
