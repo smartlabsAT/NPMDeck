@@ -217,6 +217,24 @@ const SearchBar: React.FC = () => {
       loadingText="Loading resources..."
       noOptionsText={inputValue ? "No results found" : "Start typing to search..."}
       sx={{ width: '100%', maxWidth: 600 }}
+      disablePortal={false}
+      componentsProps={{
+        popper: {
+          placement: 'bottom-start',
+          sx: {
+            zIndex: 1300,
+          },
+          modifiers: [
+            {
+              name: 'preventOverflow',
+              enabled: true,
+              options: {
+                boundariesElement: 'viewport',
+              },
+            },
+          ],
+        },
+      }}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -302,7 +320,13 @@ const SearchBar: React.FC = () => {
         )
       }}
       PaperComponent={({ children }) => (
-        <Paper elevation={8} sx={{ maxHeight: 400, overflow: 'auto' }}>
+        <Paper 
+          elevation={8} 
+          sx={{ 
+            maxHeight: '60vh',
+            overflow: 'auto'
+          }}
+        >
           {children}
         </Paper>
       )}
