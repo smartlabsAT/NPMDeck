@@ -313,7 +313,6 @@ export default function CertificateDrawer({
       onAutoSave: async (data) => {
         if (isEditMode && isDirty && data.provider === 'letsencrypt') {
           // Auto-save Let's Encrypt configuration
-          console.log('Auto-saving certificate draft...', data)
         }
       }
     }

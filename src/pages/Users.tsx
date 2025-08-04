@@ -14,7 +14,6 @@ import {
   Delete as DeleteIcon,
   Login as LoginIcon,
   Person as PersonIcon,
-  Group as GroupIcon,
   AdminPanelSettings as AdminIcon,
   PersonOutline as UserIcon,
   Block as BlockIcon,
