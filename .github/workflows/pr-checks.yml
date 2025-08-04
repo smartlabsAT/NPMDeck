@@ -1,0 +1,87 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-quality:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check TypeScript
+        id: typecheck
+        run: |
+          echo "### 🔍 TypeScript Check" >> $GITHUB_STEP_SUMMARY
+          if pnpm run typecheck; then
+            echo "✅ TypeScript: **No errors**" >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ TypeScript: **Errors found**" >> $GITHUB_STEP_SUMMARY
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Check ESLint
+        id: lint
+        run: |
+          echo "### 🔍 ESLint Check" >> $GITHUB_STEP_SUMMARY
+          pnpm run lint 2>&1 | tee lint-output.txt || true
+          
+          ERRORS=$(grep -c "error" lint-output.txt || echo "0")
+          WARNINGS=$(grep -c "warning" lint-output.txt || echo "0")
+          
+          if [ "$ERRORS" -eq "0" ]; then
+            echo "✅ ESLint Errors: **0**" >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ ESLint Errors: **$ERRORS**" >> $GITHUB_STEP_SUMMARY
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "⚠️ ESLint Warnings: **$WARNINGS**" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$ERRORS" -gt "0" ]; then
+            exit 1
+          fi
+
+      - name: Set PR Status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const typecheck = '${{ steps.typecheck.outputs.status }}' === 'success';
+            const lint = '${{ steps.lint.outputs.status }}' === 'success';
+            
+            const status = typecheck && lint ? 'success' : 'failure';
+            const description = typecheck && lint 
+              ? '✅ All checks passed' 
+              : `❌ ${!typecheck ? 'TypeScript' : ''} ${!typecheck && !lint ? ' and ' : ''} ${!lint ? 'ESLint' : ''} failed`;
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state: status,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: description,
+              context: 'Quality Gates'
+            });

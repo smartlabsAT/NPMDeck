@@ -1,0 +1,65 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-typecheck:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run TypeScript type checking
+        run: pnpm run typecheck
+
+      - name: Run ESLint
+        run: pnpm run lint
+        continue-on-error: true # Allow warnings for now, but still report them
+
+      - name: Check for ESLint errors
+        run: |
+          pnpm run lint 2>&1 | tee lint-output.txt
+          if grep -q "error" lint-output.txt; then
+            echo "❌ ESLint errors found!"
+            grep "error" lint-output.txt
+            exit 1
+          else
+            echo "✅ No ESLint errors found!"
+          fi
+
+      - name: Generate lint report
+        if: always()
+        run: |
+          echo "## Lint Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if pnpm run lint 2>&1 | grep -q "0 errors"; then
+            echo "✅ **No ESLint errors**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **ESLint errors detected**" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run \`pnpm run lint\` locally to see all warnings and errors." >> $GITHUB_STEP_SUMMARY
