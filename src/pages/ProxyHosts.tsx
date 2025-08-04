@@ -22,7 +22,6 @@ import {
   Lock as LockIcon,
   LockOpen as LockOpenIcon,
   TrendingFlat as RedirectIcon,
-  SwapHoriz as ProxyIcon,
   ToggleOn as StatusIcon,
   MoreVert as ActionsIcon,
   CallMade as ForwardIcon,

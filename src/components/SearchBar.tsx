@@ -75,8 +75,7 @@ const SearchBar: React.FC = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   
-  logger.debug('SearchBar component rendering')
-  
+
   // Use GlobalSearch context - this must be called unconditionally
   const searchContext = useGlobalSearch()
   const { searchState, preloadData, searchResults, quickActions } = searchContext

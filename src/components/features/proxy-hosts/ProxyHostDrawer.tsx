@@ -26,7 +26,6 @@ import {
   Add as AddIcon,
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
-  SwapHoriz as ProxyIcon,
 } from '@mui/icons-material'
 import { ProxyHost, CreateProxyHost, UpdateProxyHost, proxyHostsApi } from '../../../api/proxyHosts'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
