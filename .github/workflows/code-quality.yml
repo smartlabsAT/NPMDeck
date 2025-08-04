@@ -32,12 +32,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: |
-          if [ -f "pnpm-lock.yaml" ]; then
-            pnpm install --frozen-lockfile
-          else
-            pnpm install
-          fi
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run TypeScript type checking
         run: pnpm run typecheck

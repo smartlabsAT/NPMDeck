@@ -731,13 +731,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@smartlabs/lintra@0.0.1':
-    resolution: {integrity: sha512-WpNuVAMdh1+xs4Yb6Mov87t8rV4BEIpOzPELJUDHHFAX25UM+Av0b6QYiytBwHxMbpOVu/EA1j/MLbAC9MVpzQ==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-    peerDependencies:
-      typescript: ^5.0.0
-
   '@tanstack/query-core@5.83.1':
     resolution: {integrity: sha512-OG69LQgT7jSp+5pPuCfzltq/+7l2xoweggjme9vlbCPa/d7D7zaqv5vN/S82SzSYZ4EDLTxNO1PWrv49RAS64Q==}
 
@@ -2999,10 +2992,6 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.46.2':
     optional: true
-
-  '@smartlabs/lintra@0.0.1(typescript@5.9.2)':
-    dependencies:
-      typescript: 5.9.2
 
   '@tanstack/query-core@5.83.1': {}
 
