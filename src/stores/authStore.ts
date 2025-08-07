@@ -14,6 +14,7 @@ import {
   shouldFilterByUser,
   canAccessResource
 } from '../utils/permissions'
+import { TOKEN_REFRESH_INTERVAL_MS, CONFIGURED_WARNING_MINUTES } from '../constants/auth'
 
 interface TokenInfo {
   token: string
@@ -25,11 +26,14 @@ interface TokenInfo {
 interface AuthState {
   user: User | null
   token: string | null
+  tokenExpiresAt: Date | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
   tokenStack: TokenInfo[]
   refreshInterval: NodeJS.Timeout | null
+  expiryWarningTimeout: NodeJS.Timeout | null
+  isRefreshing: boolean
   
   // Actions
   login: (credentials: LoginCredentials) => Promise<{ token: string; user: User } | void>
@@ -43,6 +47,8 @@ interface AuthState {
   startTokenRefresh: () => void
   stopTokenRefresh: () => void
   refreshToken: () => Promise<void>
+  scheduleExpiryWarning: () => void
+  clearExpiryWarning: () => void
   
   // Permission helpers
   hasPermission: (resource: Resource, level: PermissionLevel) => boolean
@@ -70,14 +76,48 @@ const saveTokenStack = (stack: TokenInfo[]) => {
   localStorage.setItem('npm_token_stack', JSON.stringify(stack))
 }
 
+// Helper to validate JWT format
+const isValidJWT = (token: string): boolean => {
+  if (!token || typeof token !== 'string') return false
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every(part => part.length > 0)
+}
+
+// Helper to extract expiry from JWT token
+const getTokenExpiry = (token: string): Date | null => {
+  try {
+    // Validate JWT format first
+    if (!isValidJWT(token)) {
+      logger.warn('Invalid JWT format')
+      return null
+    }
+    
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    
+    // Validate that exp exists and is a number
+    if (typeof payload.exp !== 'number') {
+      logger.warn('JWT payload missing or invalid exp field')
+      return null
+    }
+    
+    return new Date(payload.exp * 1000)
+  } catch (error) {
+    logger.error('Failed to parse JWT token:', error)
+    return null
+  }
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: localStorage.getItem('npm_token'),
+  tokenExpiresAt: localStorage.getItem('npm_token') ? getTokenExpiry(localStorage.getItem('npm_token')!) : null,
   isAuthenticated: !!localStorage.getItem('npm_token'),
   isLoading: false,
   error: null,
   tokenStack: loadTokenStack(),
   refreshInterval: null,
+  expiryWarningTimeout: null,
+  isRefreshing: false,
 
   login: async (credentials: LoginCredentials) => {
     set({ isLoading: true, error: null })
@@ -91,9 +131,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = await authApi.getMe()
       localStorage.setItem('npm_user', JSON.stringify(user))
       
+      const tokenExpiresAt = getTokenExpiry(tokenResponse.token)
+      
       set({
         user,
         token: tokenResponse.token,
+        tokenExpiresAt,
         isAuthenticated: true,
         isLoading: false,
         error: null
@@ -101,6 +144,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       // Start token refresh timer
       get().startTokenRefresh()
+      
+      // Schedule expiry warning
+      get().scheduleExpiryWarning()
       
       // Return the login data for checking default admin
       return { token: tokenResponse.token, user }
@@ -132,6 +178,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Stop token refresh
     state.stopTokenRefresh()
     
+    // Clear expiry warning
+    state.clearExpiryWarning()
+    
     // Clear auth data
     authApi.logout()
     
@@ -141,9 +190,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({
       user: null,
       token: null,
+      tokenExpiresAt: null,
       isAuthenticated: false,
       error: null,
-      tokenStack: []
+      tokenStack: [],
+      isRefreshing: false
     })
   },
 
@@ -164,8 +215,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = await authApi.getMe()
       localStorage.setItem('npm_user', JSON.stringify(user))
       
+      // Get token expiry
+      const tokenExpiresAt = token ? getTokenExpiry(token) : null
+      
       set({
         user,
+        tokenExpiresAt,
         isAuthenticated: true,
         isLoading: false
       })
@@ -175,14 +230,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (!state.refreshInterval) {
         state.startTokenRefresh()
       }
+      
+      // Schedule expiry warning
+      get().scheduleExpiryWarning()
     } catch {
       // If loading user fails, clear auth state
       authApi.logout()
+      get().clearExpiryWarning()
       set({
         user: null,
         token: null,
+        tokenExpiresAt: null,
         isAuthenticated: false,
-        isLoading: false
+        isLoading: false,
+        isRefreshing: false
       })
     }
   },
@@ -200,13 +261,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Stop current refresh timer
     state.stopTokenRefresh()
     
+    // Clear current expiry warning
+    state.clearExpiryWarning()
+    
     // Set new active token
     localStorage.setItem('npm_token', tokenInfo.token)
     localStorage.setItem('npm_user', JSON.stringify(tokenInfo.user))
     
+    const tokenExpiresAt = getTokenExpiry(tokenInfo.token)
+    
     set({
       token: tokenInfo.token,
       user: tokenInfo.user,
+      tokenExpiresAt,
       isAuthenticated: true,
       error: null
     })
@@ -218,6 +285,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     
     // Start refresh timer for new token
     state.startTokenRefresh()
+    
+    // Schedule expiry warning for new token
+    get().scheduleExpiryWarning()
   },
 
   pushCurrentToStack: () => {
@@ -256,10 +326,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearInterval(state.refreshInterval)
     }
     
-    // Refresh token every 15 minutes
+    // Refresh token at configured interval
     const interval = setInterval(() => {
       state.refreshToken()
-    }, 15 * 60 * 1000) // 15 minutes
+    }, TOKEN_REFRESH_INTERVAL_MS)
     
     set({ refreshInterval: interval })
     
@@ -277,15 +347,79 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   refreshToken: async () => {
+    const state = get()
+    
+    // Prevent duplicate refresh attempts
+    if (state.isRefreshing) {
+      logger.log('Token refresh already in progress')
+      return
+    }
+    
+    set({ isRefreshing: true })
+    
     try {
       const response = await authApi.refreshToken()
       localStorage.setItem('npm_token', response.token)
-      set({ token: response.token })
+      
+      const tokenExpiresAt = getTokenExpiry(response.token)
+      
+      set({ 
+        token: response.token,
+        tokenExpiresAt,
+        isRefreshing: false
+      })
+      
+      // Clear old warning and schedule new one
+      state.clearExpiryWarning()
+      get().scheduleExpiryWarning()
       
       logger.log('Token refreshed successfully')
     } catch (error) {
+      set({ isRefreshing: false })
       logger.error('Token refresh failed:', error)
       // Don't logout on refresh failure - the interceptor will handle 401s
+    }
+  },
+
+  scheduleExpiryWarning: () => {
+    const state = get()
+    
+    // Clear any existing warning timeout
+    state.clearExpiryWarning()
+    
+    if (!state.tokenExpiresAt) return
+    
+    const now = new Date()
+    const expiryTime = new Date(state.tokenExpiresAt)
+    const warningTime = new Date(expiryTime.getTime() - CONFIGURED_WARNING_MINUTES * 60 * 1000)
+    const timeUntilWarning = warningTime.getTime() - now.getTime()
+    
+    // Only schedule if warning is in the future
+    if (timeUntilWarning > 0) {
+      logger.log(`Scheduling token expiry warning in ${Math.round(timeUntilWarning / 1000)}s`)
+      
+      const timeout = setTimeout(() => {
+        // Show warning toast with refresh action
+        // Note: We'll need to access the toast context from outside the store
+        // For now, we'll dispatch a custom event that can be caught by a component
+        window.dispatchEvent(new CustomEvent('token-expiry-warning', {
+          detail: {
+            expiresAt: state.tokenExpiresAt,
+            onRefresh: () => get().refreshToken()
+          }
+        }))
+      }, timeUntilWarning)
+      
+      set({ expiryWarningTimeout: timeout })
+    }
+  },
+
+  clearExpiryWarning: () => {
+    const state = get()
+    
+    if (state.expiryWarningTimeout) {
+      clearTimeout(state.expiryWarningTimeout)
+      set({ expiryWarningTimeout: null })
     }
   },
 
