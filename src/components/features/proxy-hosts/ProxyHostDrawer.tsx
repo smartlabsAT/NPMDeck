@@ -12,20 +12,13 @@ import {
   Radio,
   FormLabel,
   Alert,
-  Button,
-  Autocomplete,
-  Typography,
-  Chip,
   InputAdornment,
 } from '@mui/material'
 import {
   Info as InfoIcon,
-  Lock as LockIcon,
   Code as CodeIcon,
   Security as SecurityIcon,
-  Add as AddIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material'
 import { ProxyHost, CreateProxyHost, UpdateProxyHost, proxyHostsApi } from '../../../api/proxyHosts'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
@@ -35,8 +28,10 @@ import BaseDrawer from '../../base/BaseDrawer'
 import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import DomainInput from '../../DomainInput'
+import CertificateSelector from '../../shared/CertificateSelector'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
+import { useNavigate } from 'react-router-dom'
 
 interface ProxyHostDrawerProps {
   open: boolean
@@ -72,24 +67,6 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
   const { showSuccess, showError } = useToast()
 
   const isEditMode = !!host
-
-  // Helper functions for certificate status
-  const getDaysUntilExpiry = (expiresOn: string | null) => {
-    if (!expiresOn) return null
-    const expiryDate = new Date(expiresOn)
-    const today = new Date()
-    const diffTime = expiryDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
-  
-  const getCertificateStatus = (cert: Certificate) => {
-    const days = getDaysUntilExpiry(cert.expires_on)
-    if (!days || days < 0) return { color: 'error' as const, text: 'Expired', icon: WarningIcon }
-    if (days <= 7) return { color: 'error' as const, text: `${days} days`, icon: WarningIcon }
-    if (days <= 30) return { color: 'warning' as const, text: `${days} days`, icon: WarningIcon }
-    return { color: 'success' as const, text: `${days} days`, icon: CheckCircleIcon }
-  }
 
   const {
     data,
@@ -226,16 +203,8 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       ])
       setAccessLists(accessListsData)
       
-      // Sort certificates by expiry status and name
+      // Sort certificates by name
       const sortedCertificates = [...certificatesData].sort((a, b) => {
-        const daysA = getDaysUntilExpiry(a.expires_on) || 0
-        const daysB = getDaysUntilExpiry(b.expires_on) || 0
-        
-        // First sort by expiry status (expired/expiring soon first)
-        if ((daysA <= 0) !== (daysB <= 0)) return daysA <= 0 ? -1 : 1
-        if ((daysA <= 30) !== (daysB <= 30)) return daysA <= 30 ? -1 : 1
-        
-        // Then by name
         const nameA = a.nice_name || a.domain_names[0] || ''
         const nameB = b.nice_name || b.domain_names[0] || ''
         return nameA.localeCompare(nameB)
@@ -243,7 +212,6 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       
       setCertificates(sortedCertificates)
     } catch (err) {
-      console.error('Failed to load selector data:', err)
       showError('proxy-host', 'load data', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoadingData(false)
@@ -316,7 +284,6 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
           errors={errors}
           certificates={certificates}
           _loadingData={loadingData}
-          getCertificateStatus={getCertificateStatus}
         />
       </TabPanel>
 
@@ -462,10 +429,10 @@ interface SSLTabProps {
   errors: Record<string, string>
   certificates: Certificate[]
   _loadingData: boolean
-  getCertificateStatus: (cert: Certificate) => { color: 'error' | 'warning' | 'success', text: string, icon: any }
 }
 
-const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, _loadingData: __loadingData, getCertificateStatus }: SSLTabProps) => {
+const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, _loadingData: __loadingData }: SSLTabProps) => {
+  const navigate = useNavigate()
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="SSL Configuration">
@@ -480,92 +447,19 @@ const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, _loading
         />
 
         {data.sslEnabled && (
-          <>
-            <Autocomplete
-              fullWidth
-              value={data.selectedCertificate}
-              onChange={(_, newValue) => {
-                setFieldValue('selectedCertificate', newValue)
-                setFieldValue('certificateId', newValue?.id || 0)
-              }}
-              options={certificates}
-              loading={__loadingData}
-              getOptionLabel={(option) => option.nice_name || option.domain_names.join(', ')}
-              renderOption={(props, option) => {
-                const status = getCertificateStatus(option)
-                const StatusIcon = status.icon
-                
-                return (
-                  <Box component="li" {...props}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Typography variant="body2">
-                          {option.nice_name || option.domain_names.join(', ')}
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <StatusIcon fontSize="small" color={status.color} />
-                          <Typography variant="caption" color={`${status.color}.main`}>
-                            {status.text}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                        <Chip 
-                          label={option.provider === 'letsencrypt' ? "Let's Encrypt" : 'Custom'} 
-                          size="small" 
-                          color={option.provider === 'letsencrypt' ? 'primary' : 'default'}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          {option.domain_names.slice(0, 2).join(', ')}
-                          {option.domain_names.length > 2 && ` +${option.domain_names.length - 2} more`}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-                )
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="SSL Certificate"
-                  placeholder="Search for a certificate..."
-                  error={!!errors.certificateId}
-                  helperText={errors.certificateId}
-                  InputProps={{
-                    ...params.InputProps,
-                    startAdornment: (
-                      <>
-                        <InputAdornment position="start">
-                          <LockIcon />
-                        </InputAdornment>
-                        {params.InputProps.startAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              noOptionsText={__loadingData ? "Loading certificates..." : "No certificates found"}
-            />
-            
-            {data.selectedCertificate && (
-              <Alert severity="info" sx={{ mt: 1 }}>
-                <Typography variant="caption">
-                  This certificate covers: {data.selectedCertificate.domain_names.join(', ')}
-                </Typography>
-              </Alert>
-            )}
-
-            <Box sx={{ mt: 2 }}>
-              <Button
-                variant="text"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={() => window.location.href = '/security/certificates'}
-              >
-                Request a new SSL Certificate
-              </Button>
-            </Box>
-          </>
+          <CertificateSelector
+            value={data.selectedCertificate}
+            onChange={(newValue) => {
+              setFieldValue('selectedCertificate', newValue)
+              setFieldValue('certificateId', newValue?.id || 0)
+            }}
+            certificates={certificates}
+            loading={__loadingData}
+            error={errors.certificateId}
+            showDomainInfo={true}
+            showAddButton={true}
+            onAddClick={() => navigate('/security/certificates/new/letsencrypt')}
+          />
         )}
       </FormSection>
 

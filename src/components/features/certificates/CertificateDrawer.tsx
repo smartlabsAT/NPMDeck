@@ -104,12 +104,22 @@ export default function CertificateDrawer({
       niceName: {
         initialValue: '',
         required: false,
-        validate: undefined // Remove nice name validation
+        validate: (name: string, formData: any) => {
+          if (formData?.provider === 'other' && !name) {
+            return 'Certificate name is required for custom certificates'
+          }
+          return null
+        }
       },
       domainNames: {
         initialValue: [],
-        required: true,
-        validate: (domains: string[]) => domains.length === 0 ? 'At least one domain name is required' : null
+        required: false,
+        validate: (domains: string[], formData: any) => {
+          if (formData?.provider === 'letsencrypt' && domains.length === 0) {
+            return 'At least one domain name is required for Let\'s Encrypt certificates'
+          }
+          return null
+        }
       },
       letsencryptEmail: {
         initialValue: '',
@@ -199,7 +209,7 @@ export default function CertificateDrawer({
       const payload: CreateCertificate = {
         provider: data.provider,
         nice_name: data.niceName || undefined,
-        domain_names: data.domainNames,
+        domain_names: data.provider === 'letsencrypt' ? data.domainNames : [],
       }
 
       if (data.provider === 'letsencrypt') {
@@ -274,8 +284,6 @@ export default function CertificateDrawer({
         onSave()
         onClose()
       } catch (error: any) {
-        console.error('Certificate creation error:', error)
-        
         // Check if it's a 500 error with debug info
         if (error.response?.status === 500 && error.response?.data?.debug?.stack) {
           // Extract all lines from stack and format them
@@ -420,20 +428,22 @@ export default function CertificateDrawer({
           </Alert>
         )}
 
-        {/* Domain Names Section */}
-        <FormSection title="Domain Names" required>
-          <DomainInput
-            value={data.domainNames}
-            onChange={(domainNames) => setFieldValue('domainNames', domainNames)}
-            helperText="Enter the domain names this certificate should cover. Wildcards (*.example.com) are supported."
-            error={Boolean(errors.domainNames && touched.domainNames)}
-            required
-            disabled={isEditMode}
-          />
-          {errors.domainNames && touched.domainNames && (
-            <Alert severity="error" sx={{ mt: 1 }}>{errors.domainNames}</Alert>
-          )}
-        </FormSection>
+        {/* Domain Names Section - Only for Let's Encrypt */}
+        {currentProvider === 'letsencrypt' && (
+          <FormSection title="Domain Names" required>
+            <DomainInput
+              value={data.domainNames}
+              onChange={(domainNames) => setFieldValue('domainNames', domainNames)}
+              helperText="Enter the domain names this certificate should cover. Wildcards (*.example.com) are supported."
+              error={Boolean(errors.domainNames && touched.domainNames)}
+              required
+              disabled={isEditMode}
+            />
+            {errors.domainNames && touched.domainNames && (
+              <Alert severity="error" sx={{ mt: 1 }}>{errors.domainNames}</Alert>
+            )}
+          </FormSection>
+        )}
 
 
         {/* Let's Encrypt Configuration */}
@@ -533,8 +543,22 @@ export default function CertificateDrawer({
 
         {/* Custom Certificate Upload */}
         {currentProvider === 'other' && !isEditMode && (
-          <FormSection title="Certificate Files" required>
-            <Stack spacing={3}>
+          <>
+            <FormSection title="Certificate Name" required>
+              <TextField
+                label="Certificate Name"
+                value={data.niceName}
+                onChange={(e) => setFieldValue('niceName', e.target.value)}
+                placeholder="e.g. Production SSL Certificate"
+                fullWidth
+                required
+                error={Boolean(errors.niceName && touched.niceName)}
+                helperText={errors.niceName && touched.niceName ? errors.niceName : "A friendly name to identify this certificate"}
+              />
+            </FormSection>
+
+            <FormSection title="Certificate Files" required>
+              <Stack spacing={3}>
               <FileDropzone
                 label="Certificate File"
                 icon={<FileIcon color="action" />}
@@ -565,13 +589,14 @@ export default function CertificateDrawer({
                 accept=".pem,.crt,.cer"
                 helperText="Optional intermediate certificate for certificate chain validation"
               />
-            </Stack>
-          </FormSection>
+              </Stack>
+            </FormSection>
+          </>
         )}
 
-        {/* Nice Name - Only show in edit mode */}
-        {isEditMode && (
-          <FormSection title="Certificate Name">
+        {/* Nice Name - Show for Let's Encrypt (optional) and in edit mode */}
+        {(currentProvider === 'letsencrypt' || isEditMode) && (
+          <FormSection title="Certificate Name" required={false}>
             <TextField
               label="Nice Name"
               value={data.niceName}
