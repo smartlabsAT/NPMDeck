@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   TextField,
-  Button,
   FormControl,
   FormControlLabel,
   Switch,
@@ -15,7 +14,6 @@ import {
   InputAdornment,
 } from '@mui/material'
 import {
-  Add as AddIcon,
   Code as CodeIcon,
   TrendingFlat as RedirectIcon,
   Lock as LockIcon,
@@ -205,7 +203,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
       const certs = await certificatesApi.getAll()
       setCertificates(certs)
     } catch (err: unknown) {
-      console.error('Failed to load certificates:', err)
+      // Failed to load certificates
     }
   }
 

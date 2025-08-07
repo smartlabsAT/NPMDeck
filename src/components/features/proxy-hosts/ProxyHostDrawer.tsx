@@ -12,14 +12,12 @@ import {
   Radio,
   FormLabel,
   Alert,
-  Button,
   InputAdornment,
 } from '@mui/material'
 import {
   Info as InfoIcon,
   Code as CodeIcon,
   Security as SecurityIcon,
-  Add as AddIcon,
   Lock as LockIcon,
 } from '@mui/icons-material'
 import { ProxyHost, CreateProxyHost, UpdateProxyHost, proxyHostsApi } from '../../../api/proxyHosts'
@@ -214,7 +212,6 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       
       setCertificates(sortedCertificates)
     } catch (err) {
-      console.error('Failed to load selector data:', err)
       showError('proxy-host', 'load data', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoadingData(false)

@@ -5,8 +5,6 @@ import {
   Switch,
   Box,
   Alert,
-  Button,
-  Typography,
   FormHelperText,
 } from '@mui/material'
 import {
@@ -181,7 +179,8 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       delay: 3000,
       onAutoSave: async (formData) => {
         if (isEditMode && isDirty) {
-          console.log('Auto-saving stream draft...', formData)
+
+          // Auto-saving stream draft...
         }
       }
     }
@@ -220,7 +219,6 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       const certs = await certificatesApi.getAll()
       setCertificates(certs)
     } catch (err: unknown) {
-      console.error('Failed to load certificates:', err)
     } finally {
       setLoadingCertificates(false)
     }

@@ -284,8 +284,6 @@ export default function CertificateDrawer({
         onSave()
         onClose()
       } catch (error: any) {
-        console.error('Certificate creation error:', error)
-        
         // Check if it's a 500 error with debug info
         if (error.response?.status === 500 && error.response?.data?.debug?.stack) {
           // Extract all lines from stack and format them
