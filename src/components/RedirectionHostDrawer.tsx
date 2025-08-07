@@ -8,21 +8,17 @@ import {
   FormControlLabel,
   Switch,
   Alert,
-  Chip,
-  InputAdornment,
   Select,
   MenuItem,
   InputLabel,
-  Autocomplete,
   FormHelperText,
+  InputAdornment,
 } from '@mui/material'
 import {
   Add as AddIcon,
-  Lock as LockIcon,
   Code as CodeIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
   TrendingFlat as RedirectIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material'
 import { RedirectionHost, CreateRedirectionHost, redirectionHostsApi } from '../api/redirectionHosts'
 import { Certificate, certificatesApi } from '../api/certificates'
@@ -32,6 +28,7 @@ import CertificateDrawer from './features/certificates/CertificateDrawer'
 import DomainInput from './DomainInput'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
+import CertificateSelector from './shared/CertificateSelector'
 import { useToast } from '../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
@@ -70,24 +67,6 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [certificateDrawerOpen, setCertificateDrawerOpen] = useState(false)
   const { showSuccess, showError } = useToast()
-  
-  // Helper functions for certificate status
-  const getDaysUntilExpiry = (expiresOn: string | null) => {
-    if (!expiresOn) return null
-    const expiryDate = new Date(expiresOn)
-    const today = new Date()
-    const diffTime = expiryDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
-  
-  const getCertificateStatus = (cert: Certificate) => {
-    const days = getDaysUntilExpiry(cert.expires_on)
-    if (!days || days < 0) return { color: 'error' as const, text: 'Expired', icon: WarningIcon }
-    if (days <= 7) return { color: 'error' as const, text: `${days} days`, icon: WarningIcon }
-    if (days <= 30) return { color: 'warning' as const, text: `${days} days`, icon: WarningIcon }
-    return { color: 'success' as const, text: `${days} days`, icon: CheckCircleIcon }
-  }
   
   // Form management with useDrawerForm
   const form = useDrawerForm<RedirectionHostFormData>({
@@ -384,13 +363,10 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         </TabPanel>
 
         <TabPanel value={activeTab} index={1} keepMounted animation="none">
-          <Autocomplete
+          <CertificateSelector
             value={certificates.find(c => c.id === form.data.certificate_id) || null}
-            onChange={(_, newValue) => {
-              if (newValue === 'new' as any) {
-                form.setFieldValue('certificate_id', 'new')
-                form.setFieldValue('use_lets_encrypt', true)
-              } else if (newValue) {
+            onChange={(newValue) => {
+              if (newValue) {
                 form.setFieldValue('certificate_id', newValue.id)
                 form.setFieldValue('use_lets_encrypt', false)
               } else {
@@ -398,57 +374,18 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
                 form.setFieldValue('use_lets_encrypt', false)
               }
             }}
-            options={[
-              ...(certificates || []),
-              { id: 'new', nice_name: 'Request a new SSL Certificate', provider: 'letsencrypt' } as any
-            ]}
-            getOptionLabel={(option: any) => option.nice_name || ''}
-            renderOption={(props, option: any) => (
-              <Box component="li" {...props}>
-                <Box sx={{ width: '100%' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">
-                      {option.nice_name}
-                    </Typography>
-                    {option.id !== 'new' && option.expires_on && (() => {
-                      const status = getCertificateStatus(option)
-                      const IconComponent = status.icon
-                      return (
-                        <Chip
-                          size="small"
-                          label={status.text}
-                          color={status.color}
-                          icon={<IconComponent />}
-                        />
-                      )
-                    })()}
-                  </Box>
-                  {option.domain_names && (
-                    <Typography variant="caption" color="text.secondary">
-                      {option.domain_names.join(', ')}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            )}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="SSL Certificate"
-                margin="normal"
-                helperText="Choose an existing certificate or request a new one"
-              />
-            )}
+            certificates={certificates}
+            loading={false}
+            helperText="Choose an existing certificate or request a new one"
+            showDomainInfo={false}
+            showAddButton={true}
+            onAddClick={() => setCertificateDrawerOpen(true)}
+            includeNewOption={true}
+            onNewOptionSelect={() => {
+              form.setFieldValue('certificate_id', 'new')
+              form.setFieldValue('use_lets_encrypt', true)
+            }}
           />
-
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={() => setCertificateDrawerOpen(true)}
-            sx={{ mt: 1 }}
-          >
-            Add Certificate
-          </Button>
 
           {(form.data.certificate_id !== 0 && form.data.certificate_id !== 'new') && (
             <Box sx={{ mt: 3 }}>
