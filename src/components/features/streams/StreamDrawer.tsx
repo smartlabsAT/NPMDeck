@@ -8,24 +8,20 @@ import {
   Button,
   Typography,
   FormHelperText,
-  Autocomplete,
-  InputAdornment,
-  Chip,
 } from '@mui/material'
 import {
   Info as InfoIcon,
   Lock as LockIcon,
-  Add as AddIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material'
 import { Stream, CreateStream, UpdateStream, streamsApi } from '../../../api/streams'
 import { Certificate, certificatesApi } from '../../../api/certificates'
 import BaseDrawer from '../../base/BaseDrawer'
 import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
+import CertificateSelector from '../../shared/CertificateSelector'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
+import { useNavigate } from 'react-router-dom'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
 
 interface StreamDrawerProps {
@@ -54,22 +50,6 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
   const isEditMode = !!stream
 
   // Helper functions for certificate status
-  const getDaysUntilExpiry = (expiresOn: string | null) => {
-    if (!expiresOn) return null
-    const expiryDate = new Date(expiresOn)
-    const today = new Date()
-    const diffTime = expiryDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
-  
-  const getCertificateStatus = (cert: Certificate) => {
-    const days = getDaysUntilExpiry(cert.expires_on)
-    if (!days || days < 0) return { color: 'error' as const, text: 'Expired', icon: WarningIcon }
-    if (days <= 7) return { color: 'error' as const, text: `${days} days`, icon: WarningIcon }
-    if (days <= 30) return { color: 'warning' as const, text: `${days} days`, icon: WarningIcon }
-    return { color: 'success' as const, text: `${days} days`, icon: CheckCircleIcon }
-  }
 
   const {
     data,
@@ -302,7 +282,6 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
           setFieldValue={setFieldValue}
           certificates={certificates}
           loadingCertificates={loadingCertificates}
-          getCertificateStatus={getCertificateStatus}
           onCertificateChange={handleCertificateChange}
         />
       </TabPanel>
@@ -400,7 +379,6 @@ interface SSLTabProps {
   setFieldValue: (field: keyof StreamFormData, value: any) => void
   certificates: Certificate[]
   loadingCertificates: boolean
-  getCertificateStatus: (cert: Certificate) => { color: 'error' | 'warning' | 'success', text: string, icon: any }
   onCertificateChange: (cert: Certificate | null) => void
 }
 
@@ -408,9 +386,9 @@ function SSLTab({
   data, 
   certificates, 
   loadingCertificates, 
-  getCertificateStatus, 
   onCertificateChange 
 }: SSLTabProps) {
+  const navigate = useNavigate()
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Alert severity="info">
@@ -418,85 +396,17 @@ function SSLTab({
       </Alert>
 
       <FormSection title="Certificate Selection">
-        <Autocomplete
-          fullWidth
+        <CertificateSelector
           value={data.selectedCertificate}
-          onChange={(_, newValue) => onCertificateChange(newValue)}
-          options={certificates}
+          onChange={onCertificateChange}
+          certificates={certificates}
           loading={loadingCertificates}
-          getOptionLabel={(option) => option.nice_name || option.domain_names.join(', ')}
-          renderOption={(props, option) => {
-            const status = getCertificateStatus(option)
-            const StatusIcon = status.icon
-            
-            return (
-              <Box component="li" {...props}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">
-                      {option.nice_name || option.domain_names.join(', ')}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <StatusIcon fontSize="small" color={status.color} />
-                      <Typography variant="caption" color={`${status.color}.main`}>
-                        {status.text}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                    <Chip 
-                      label={option.provider === 'letsencrypt' ? "Let's Encrypt" : 'Custom'} 
-                      size="small" 
-                      color={option.provider === 'letsencrypt' ? 'primary' : 'default'}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      {option.domain_names.slice(0, 2).join(', ')}
-                      {option.domain_names.length > 2 && ` +${option.domain_names.length - 2} more`}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-            )
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="SSL Certificate (Optional)"
-              placeholder="No certificate"
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: (
-                  <>
-                    <InputAdornment position="start">
-                      <LockIcon />
-                    </InputAdornment>
-                    {params.InputProps.startAdornment}
-                  </>
-                ),
-              }}
-            />
-          )}
-          noOptionsText={loadingCertificates ? "Loading certificates..." : "No certificates found"}
+          label="SSL Certificate (Optional)"
+          placeholder="No certificate"
+          showDomainInfo={true}
+          showAddButton={true}
+          onAddClick={() => navigate('/security/certificates/new/letsencrypt')}
         />
-        
-        {data.selectedCertificate && (
-          <Alert severity="info" sx={{ mt: 1 }}>
-            <Typography variant="caption">
-              This certificate covers: {data.selectedCertificate.domain_names.join(', ')}
-            </Typography>
-          </Alert>
-        )}
-
-        <Box sx={{ mt: 2 }}>
-          <Button
-            variant="text"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => window.location.href = '/security/certificates'}
-          >
-            Request a new SSL Certificate
-          </Button>
-        </Box>
       </FormSection>
     </Box>
   )
