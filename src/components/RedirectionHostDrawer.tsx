@@ -202,7 +202,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
     try {
       const certs = await certificatesApi.getAll()
       setCertificates(certs)
-    } catch (err: unknown) {
+    } catch {  
       // Failed to load certificates
     }
   }

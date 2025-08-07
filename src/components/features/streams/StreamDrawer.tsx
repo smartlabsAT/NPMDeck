@@ -177,7 +177,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     autoSave: {
       enabled: true,
       delay: 3000,
-      onAutoSave: async (formData) => {
+      onAutoSave: async (_formData) => {
         if (isEditMode && isDirty) {
 
           // Auto-saving stream draft...
@@ -218,7 +218,8 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       setLoadingCertificates(true)
       const certs = await certificatesApi.getAll()
       setCertificates(certs)
-    } catch (err: unknown) {
+    } catch {
+      // Error loading certificates
     } finally {
       setLoadingCertificates(false)
     }
