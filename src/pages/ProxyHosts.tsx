@@ -39,8 +39,8 @@ import PermissionButton from '../components/PermissionButton'
 import PageHeader from '../components/PageHeader'
 import PermissionIconButton from '../components/PermissionIconButton'
 import { useToast } from '../contexts/ToastContext'
-import { DataTable } from '../components/DataTable'
-import { TableColumn, Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { ResponsiveTable, ResponsiveTableColumn, ColumnPriority } from '../components/DataTable'
+import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 
@@ -244,28 +244,33 @@ export default function ProxyHosts() {
     )
   }
 
-  // Column definitions for DataTable
-  const columns: TableColumn<ProxyHost>[] = [
+  // Column definitions for DataTable with responsive priorities
+  const columns: ResponsiveTableColumn<ProxyHost>[] = [
     {
       id: 'status',
       label: 'Status',
       icon: <StatusIcon fontSize="small" />,
-      accessor: (item) => !item.enabled ? 0 : (item.meta.nginx_online === false ? 1 : 2),
+      accessor: (item: ProxyHost) => !item.enabled ? 0 : (item.meta.nginx_online === false ? 1 : 2),
       sortable: true,
       align: 'center',
-      render: (value, item) => getStatusIcon(item)
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      render: (value: any, item: ProxyHost) => getStatusIcon(item)
     },
     {
       id: 'domain_names',
       label: 'Domain Names',
       icon: <LanguageIcon fontSize="small" />,
-      accessor: (item) => item.domain_names[0] || '',
+      accessor: (item: ProxyHost) => item.domain_names[0] || '',
       sortable: true,
-      render: (value, item) => {
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      mobileLabel: 'Domains',
+      render: (value: any, item: ProxyHost) => {
         const linkedRedirections = getLinkedRedirections(item)
         return (
           <Box>
-            {item.domain_names.map((domain, index) => (
+            {item.domain_names.map((domain: string, index: number) => (
               <Box key={index} display="flex" alignItems="center" gap={0.5}>
                 <Typography variant="body2">
                   {domain}
@@ -335,9 +340,12 @@ export default function ProxyHosts() {
       id: 'forward_host',
       label: 'Forward Host',
       icon: <ForwardIcon fontSize="small" />,
-      accessor: (item) => `${item.forward_scheme}://${item.forward_host}:${item.forward_port}`,
+      accessor: (item: ProxyHost) => `${item.forward_scheme}://${item.forward_host}:${item.forward_port}`,
       sortable: true,
-      render: (value, item) => (
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
+      mobileLabel: 'Forward',
+      render: (value: any, item: ProxyHost) => (
         <Box display="flex" alignItems="center" gap={0.5}>
           <Typography variant="body2" color="text.secondary">
             {item.forward_scheme}://{item.forward_host}:{item.forward_port}
@@ -364,10 +372,12 @@ export default function ProxyHosts() {
       id: 'ssl',
       label: 'SSL',
       icon: <LockIcon fontSize="small" />,
-      accessor: (item) => !item.certificate_id ? 0 : (item.ssl_forced ? 2 : 1),
+      accessor: (item: ProxyHost) => !item.certificate_id ? 0 : (item.ssl_forced ? 2 : 1),
       sortable: true,
       align: 'center',
-      render: (value, item) => {
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: true,
+      render: (value: any, item: ProxyHost) => {
         if (!item.certificate_id) {
           return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
         }
@@ -381,9 +391,11 @@ export default function ProxyHosts() {
       id: 'access',
       label: 'Access',
       icon: <AccessIcon fontSize="small" />,
-      accessor: (item) => item.access_list?.name || '',
+      accessor: (item: ProxyHost) => item.access_list?.name || '',
       sortable: true,
-      render: (value, item) => {
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: false,
+      render: (value: any, item: ProxyHost) => {
         if (item.access_list) {
           return (
             <Chip 
@@ -415,10 +427,12 @@ export default function ProxyHosts() {
       id: 'actions',
       label: 'Actions',
       icon: <ActionsIcon fontSize="small" />,
-      accessor: (item) => item.id,
+      accessor: (item: ProxyHost) => item.id,
       sortable: false,
       align: 'right',
-      render: (value, item) => (
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      render: (value: any, item: ProxyHost) => (
         <Box display="flex" gap={0.5} justifyContent="flex-end">
           {togglingHosts.has(item.id) ? (
             <IconButton size="small" disabled>
@@ -624,10 +638,10 @@ export default function ProxyHosts() {
         </Box>
 
         {/* DataTable */}
-        <DataTable
+        <ResponsiveTable
           data={visibleHosts}
           columns={columns}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item: ProxyHost) => item.id.toString()}
           onRowClick={handleView}
           bulkActions={bulkActions}
           filters={filters}
@@ -646,6 +660,13 @@ export default function ProxyHosts() {
           rowsPerPageOptions={[10, 25, 50, 100]}
           groupConfig={groupConfig}
           showGroupToggle={true}
+          config={{
+            responsive: true,
+            cardBreakpoint: 'md',
+            compactBreakpoint: 'lg',
+            showPriorityBadges: false,
+            enableColumnToggle: false,
+          }}
         />
       </Box>
 
