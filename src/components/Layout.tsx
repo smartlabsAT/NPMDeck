@@ -69,6 +69,15 @@ const Layout = () => {
     setMobileOpen(!mobileOpen)
   }
 
+  // Auto-close mobile drawer after navigation
+  const handleMobileNavigate = (path: string) => {
+    handleNavigate(path)
+    // Close mobile drawer after navigation click
+    if (mobileOpen) {
+      setMobileOpen(false)
+    }
+  }
+
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
   }
@@ -189,7 +198,7 @@ const Layout = () => {
           <div key={item.text}>
             <ListItem disablePadding>
               <ListItemButton
-                onClick={item.onClick || (() => item.path && handleNavigate(item.path))}
+                onClick={item.onClick || (() => item.path && handleMobileNavigate(item.path))}
                 selected={item.path ? location.pathname === item.path : false}
                 sx={{
                   mr: 1,
@@ -224,7 +233,7 @@ const Layout = () => {
                         }
                       }}
                       selected={location.pathname === child.path}
-                      onClick={() => child.path && handleNavigate(child.path)}
+                      onClick={() => child.path && handleMobileNavigate(child.path)}
                     >
                       <ListItemIcon sx={{ minWidth: 40 }}>{child.icon}</ListItemIcon>
                       <ListItemText 
@@ -264,7 +273,7 @@ const Layout = () => {
                       <ListItemButton
                         key={child.text}
                         sx={{ pl: 4 }}
-                        onClick={() => child.path && handleNavigate(child.path)}
+                        onClick={() => child.path && handleMobileNavigate(child.path)}
                       >
                         <ListItemIcon>{child.icon}</ListItemIcon>
                         <ListItemText primary={child.text} />
@@ -328,8 +337,12 @@ const Layout = () => {
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          width: { lg: `calc(100% - ${drawerWidth}px)` },
+          ml: { lg: `${drawerWidth}px` },
+          transition: theme => theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
         }}
       >
         <Toolbar sx={{ px: 0 }}>
@@ -339,7 +352,7 @@ const Layout = () => {
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { sm: 'none' } }}
+              sx={{ mr: 2, display: { lg: 'none' } }}
             >
               <MenuIcon />
             </IconButton>
@@ -451,7 +464,7 @@ const Layout = () => {
           sx={{ 
             position: 'fixed', 
             top: 64, 
-            left: { sm: drawerWidth }, 
+            left: { lg: drawerWidth }, 
             right: 0, 
             zIndex: 1201 
           }} 
@@ -460,7 +473,7 @@ const Layout = () => {
       
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ width: { lg: drawerWidth }, flexShrink: { lg: 0 } }}
         aria-label="mailbox folders"
       >
         <Drawer
@@ -471,8 +484,15 @@ const Layout = () => {
             keepMounted: true,
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: 'block', lg: 'none' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              transition: theme => theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+            },
           }}
         >
           {drawer}
@@ -480,14 +500,18 @@ const Layout = () => {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
+            display: { xs: 'none', lg: 'block' },
             '& .MuiDrawer-paper': { 
               boxSizing: 'border-box', 
               width: drawerWidth,
               borderRight: 'none',
               boxShadow: '2px 0 4px rgba(0,0,0,0.08)',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              transition: theme => theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
             },
           }}
           open
@@ -500,7 +524,11 @@ const Layout = () => {
           component="main"
           sx={{
             flexGrow: 1,
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
+            width: { lg: `calc(100% - ${drawerWidth}px)` },
+            transition: theme => theme.transitions.create(['width', 'margin'], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.leavingScreen,
+            }),
             mt: 8,
             display: 'flex',
             flexDirection: 'column',
