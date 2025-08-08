@@ -54,7 +54,6 @@ const Layout = () => {
   const { user, logout, tokenStack, popFromStack } = useAuthStore()
   const { canView, isAdmin } = usePermissions()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [hostsOpen, setHostsOpen] = useState(true)
   const [securityOpen, setSecurityOpen] = useState(false)
