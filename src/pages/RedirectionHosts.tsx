@@ -33,6 +33,7 @@ import { getErrorMessage } from '../types/common'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData } from '../hooks/useFilteredData'
+import { useResponsive } from '../hooks/useResponsive'
 import RedirectionHostDrawer from '../components/RedirectionHostDrawer'
 import RedirectionHostDetailsDialog from '../components/RedirectionHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -41,7 +42,8 @@ import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
-import { TableColumn, Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
+import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 // Helper to extract base domain from a full domain
@@ -76,6 +78,7 @@ export default function RedirectionHosts() {
   
   const { canManage: canManageRedirectionHosts } = usePermissions()
   const { showSuccess, showError } = useToast()
+  const { isMobileTable } = useResponsive()
   
   // State
   const [hosts, setHosts] = useState<RedirectionHost[]>([])
@@ -249,8 +252,8 @@ export default function RedirectionHosts() {
     navigate(`/hosts/proxy/${proxyHost.id}/view/overview`)
   }
 
-  // Column definitions for DataTable
-  const columns: TableColumn<RedirectionHost>[] = [
+  // Column definitions for DataTable with responsive priorities
+  const columns: ResponsiveTableColumn<RedirectionHost>[] = [
     {
       id: 'status',
       label: 'Status',
@@ -258,6 +261,8 @@ export default function RedirectionHosts() {
       accessor: (item) => !item.enabled ? 0 : (item.meta.nginx_online === false ? 1 : 2),
       sortable: true,
       align: 'center',
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => getStatusIcon(item)
     },
     {
@@ -266,6 +271,9 @@ export default function RedirectionHosts() {
       icon: <LanguageIcon fontSize="small" />,
       accessor: (item) => item.domain_names[0] || '',
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      mobileLabel: 'Sources',
       render: (value, item) => (
         <Box>
           {item.domain_names.map((domain, index) => (
@@ -299,6 +307,9 @@ export default function RedirectionHosts() {
       icon: <ForwardIcon fontSize="small" />,
       accessor: (item) => `${item.forward_scheme}://${item.forward_domain_name}`,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      mobileLabel: '',
       render: (value, item) => {
         const linkedProxy = getLinkedProxyHost(item.forward_domain_name)
         return (
@@ -353,6 +364,9 @@ export default function RedirectionHosts() {
       icon: <CodeIcon fontSize="small" />,
       accessor: (item) => item.forward_http_code,
       sortable: true,
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
+      mobileLabel: '', // Empty string to hide label - HTTP code is self-explanatory
       render: (value, item) => (
         <Chip 
           label={getHttpStatusLabel(item.forward_http_code)} 
@@ -368,6 +382,8 @@ export default function RedirectionHosts() {
       accessor: (item) => !item.certificate_id ? 0 : (item.ssl_forced ? 2 : 1),
       sortable: true,
       align: 'center',
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: true,
       render: (value, item) => {
         if (!item.certificate_id) {
           return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
@@ -385,6 +401,8 @@ export default function RedirectionHosts() {
       accessor: (item) => item.id,
       sortable: false,
       align: 'right',
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => (
         <Box display="flex" gap={0.5} justifyContent="flex-end">
           {togglingHosts.has(item.id) ? (
@@ -580,15 +598,17 @@ export default function RedirectionHosts() {
             title={NAVIGATION_CONFIG.redirectionHosts.text}
             description="Configure permanent redirects from one domain to another"
           />
-          <PermissionButton
-            resource="redirection_hosts"
-            permissionAction="create"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
-          >
-            Add Redirection Host
-          </PermissionButton>
+          {!isMobileTable && (
+            <PermissionButton
+              resource="redirection_hosts"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+            >
+              Add Redirection Host
+            </PermissionButton>
+          )}
         </Box>
 
         {/* DataTable */}
@@ -614,7 +634,27 @@ export default function RedirectionHosts() {
           rowsPerPageOptions={[10, 25, 50, 100]}
           groupConfig={groupConfig}
           showGroupToggle={true}
+          responsive={true}
+          cardBreakpoint={900}
+          compactBreakpoint={1250}
         />
+        
+        {/* Mobile Add Button - shown at bottom */}
+        {isMobileTable && (
+          <Box mt={2} display="flex" justifyContent="center">
+            <PermissionButton
+              resource="redirection_hosts"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+              fullWidth
+              sx={{ maxWidth: 400 }}
+            >
+              Add Redirection Host
+            </PermissionButton>
+          </Box>
+        )}
       </Box>
 
       {canManageRedirectionHosts('redirection_hosts') && (
