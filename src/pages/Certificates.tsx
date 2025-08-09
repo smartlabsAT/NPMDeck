@@ -31,6 +31,7 @@ import { CertificateWithHosts } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData } from '../hooks/useFilteredData'
+import { useResponsive } from '../hooks/useResponsive'
 import ConfirmDialog from '../components/ConfirmDialog'
 import CertificateDrawer from '../components/features/certificates/CertificateDrawer'
 import CertificateDetailsDialog from '../components/CertificateDetailsDialog'
@@ -39,7 +40,8 @@ import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
-import { TableColumn, Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
+import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 // Helper to extract base domain for grouping
@@ -99,6 +101,7 @@ const Certificates = () => {
   const { } = useAuthStore() // eslint-disable-line no-empty-pattern
   const { } = usePermissions() // eslint-disable-line no-empty-pattern
   const { showSuccess, showError } = useToast()
+  const { isMobileTable } = useResponsive()
 
   useEffect(() => {
     loadCertificates()
@@ -267,14 +270,16 @@ const Certificates = () => {
     return proxyCount + redirectionCount + deadCount
   }
 
-  // Column definitions for DataTable
-  const columns: TableColumn<Certificate>[] = [
+  // Column definitions for DataTable with responsive priorities
+  const columns: ResponsiveTableColumn<Certificate>[] = [
     {
       id: 'nice_name',
       label: 'Name',
       icon: <CertificateIcon fontSize="small" />,
       accessor: (item) => item.nice_name || item.domain_names[0] || '',
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => (
         <Box display="flex" alignItems="center" gap={1}>
           <Typography variant="body2" fontWeight="medium">
@@ -289,6 +294,9 @@ const Certificates = () => {
       icon: <ProviderIcon fontSize="small" />,
       accessor: (item) => item.provider,
       sortable: true,
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
+      mobileLabel: '', // Empty string to hide label - provider chips are self-explanatory
       render: (value, item) => getProviderChip(item.provider)
     },
     {
@@ -297,6 +305,8 @@ const Certificates = () => {
       icon: <ExpiresIcon fontSize="small" />,
       accessor: (item) => item.expires_on ? new Date(item.expires_on).getTime() : 0,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible (expiry is important)
+      showInCard: true,
       render: (value, item) => getExpiryChip(item)
     },
     {
@@ -305,6 +315,8 @@ const Certificates = () => {
       icon: <HostsIcon fontSize="small" />,
       accessor: (item) => getUsageCount(item),
       sortable: true,
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: false,
       render: (value) => (
         <Typography variant="body2" color="text.secondary">
           {value} hosts
@@ -318,6 +330,8 @@ const Certificates = () => {
       accessor: (item) => item.id,
       sortable: false,
       align: 'right',
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => (
         <Box display="flex" gap={0.5} justifyContent="flex-end">
           <Tooltip title="View Details">
@@ -435,31 +449,33 @@ const Certificates = () => {
             title={NAVIGATION_CONFIG.certificates.text}
             description="Manage SSL certificates for secure HTTPS connections"
           />
-          <>
-            <PermissionButton
-              resource="certificates"
-              permissionAction="create"
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={(e) => setAddMenuAnchor(e.currentTarget)}
-            >
-              Add SSL Certificate
-            </PermissionButton>
-            <Menu
-              anchorEl={addMenuAnchor}
-              open={Boolean(addMenuAnchor)}
-              onClose={() => setAddMenuAnchor(null)}
-            >
-              <MenuItem onClick={handleAddLetsEncrypt}>
-                <LockIcon sx={{ mr: 1 }} />
-                Let&apos;s Encrypt
-              </MenuItem>
-              <MenuItem onClick={handleAddCustom}>
-                Custom
-              </MenuItem>
-            </Menu>
-          </>
+          {!isMobileTable && (
+            <>
+              <PermissionButton
+                resource="certificates"
+                permissionAction="create"
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={(e) => setAddMenuAnchor(e.currentTarget)}
+              >
+                Add SSL Certificate
+              </PermissionButton>
+              <Menu
+                anchorEl={addMenuAnchor}
+                open={Boolean(addMenuAnchor)}
+                onClose={() => setAddMenuAnchor(null)}
+              >
+                <MenuItem onClick={handleAddLetsEncrypt}>
+                  <LockIcon sx={{ mr: 1 }} />
+                  Let&apos;s Encrypt
+                </MenuItem>
+                <MenuItem onClick={handleAddCustom}>
+                  Custom
+                </MenuItem>
+              </Menu>
+            </>
+          )}
         </Box>
 
         {/* DataTable */}
@@ -483,7 +499,41 @@ const Certificates = () => {
           rowsPerPageOptions={[10, 25, 50, 100]}
           groupConfig={groupConfig}
           showGroupToggle={true}
+          responsive={true}
+          cardBreakpoint={900}
+          compactBreakpoint={1250}
         />
+        
+        {/* Mobile Add Button with Menu - shown at bottom */}
+        {isMobileTable && (
+          <Box mt={2} display="flex" justifyContent="center">
+            <PermissionButton
+              resource="certificates"
+              permissionAction="create"
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={(e) => setAddMenuAnchor(e.currentTarget)}
+              fullWidth
+              sx={{ maxWidth: 400 }}
+            >
+              Add SSL Certificate
+            </PermissionButton>
+            <Menu
+              anchorEl={addMenuAnchor}
+              open={Boolean(addMenuAnchor)}
+              onClose={() => setAddMenuAnchor(null)}
+            >
+              <MenuItem onClick={handleAddLetsEncrypt}>
+                <LockIcon sx={{ mr: 1 }} />
+                Let&apos;s Encrypt
+              </MenuItem>
+              <MenuItem onClick={handleAddCustom}>
+                Custom
+              </MenuItem>
+            </Menu>
+          </Box>
+        )}
       </Box>
 
       <ConfirmDialog

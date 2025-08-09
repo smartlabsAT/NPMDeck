@@ -13,6 +13,7 @@ import {
   Button,
   Tooltip,
   Paper,
+  Container,
   useTheme,
 } from '@mui/material'
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -42,8 +43,11 @@ import {
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { auditLogApi, AuditLogEntry } from '../api/auditLog'
+import { useResponsive } from '../hooks/useResponsive'
 import PageHeader from '../components/PageHeader'
-import { DataTable, TableColumn, Filter } from '../components/DataTable'
+import { DataTable } from '../components/DataTable'
+import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
+import { Filter } from '../components/DataTable/types'
 import { useToast } from '../contexts/ToastContext'
 import ActionChip from '../components/shared/ActionChip'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
@@ -51,6 +55,7 @@ import { NAVIGATION_CONFIG } from '../constants/navigation'
 const AuditLog = () => {
   const navigate = useNavigate()
   const theme = useTheme()
+  const { } = useResponsive() // eslint-disable-line no-empty-pattern
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -233,14 +238,16 @@ const AuditLog = () => {
     ))
   }
 
-  // Table column definitions
-  const columns: TableColumn<AuditLogEntry>[] = useMemo(() => [
+  // Table column definitions with responsive priorities
+  const columns: ResponsiveTableColumn<AuditLogEntry>[] = useMemo(() => [
     {
       id: 'user',
       label: 'User',
       icon: <PersonIcon fontSize="small" />,
       accessor: (entry) => entry.user.name,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (_, entry) => (
         <Box display="flex" alignItems="center" gap={1.5}>
           <Avatar
@@ -277,6 +284,8 @@ const AuditLog = () => {
       icon: <CategoryIcon fontSize="small" />,
       accessor: (entry) => entry.object_type,
       sortable: true,
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
       render: (_, entry) => (
         <Box display="flex" alignItems="center" gap={1}>
           {getObjectIcon(entry.object_type)}
@@ -292,6 +301,8 @@ const AuditLog = () => {
       icon: <ActionIcon fontSize="small" />,
       accessor: (entry) => entry.action,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (_, entry) => (
         <ActionChip action={entry.action as any} />
       ),
@@ -308,6 +319,9 @@ const AuditLog = () => {
         if (entry.meta.incoming_port) return `Port ${entry.meta.incoming_port}`
         return `#${entry.object_id}`
       },
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      mobileLabel: '',
       render: (_, entry) => (
         <Box display="flex" flexWrap="wrap" alignItems="center">
           {getObjectDisplayName(entry)}
@@ -320,6 +334,8 @@ const AuditLog = () => {
       icon: <DateIcon fontSize="small" />,
       accessor: (entry) => entry.created_on,
       sortable: true,
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
       render: (date) => (
         <Box>
           <Typography variant="body2">
@@ -337,6 +353,8 @@ const AuditLog = () => {
       icon: <ActionsIcon fontSize="small" />,
       align: 'right',
       accessor: () => null,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (_, entry) => (
         <Tooltip title="View metadata">
           <IconButton
@@ -394,30 +412,35 @@ const AuditLog = () => {
   ], [])
 
   return (
-    <Box>
-      <Box mb={3}>
-        <PageHeader
-          icon={React.createElement(NAVIGATION_CONFIG.auditLog.icon, { sx: { color: NAVIGATION_CONFIG.auditLog.color } })}
-          title={NAVIGATION_CONFIG.auditLog.text}
-          description="View all system activities and changes"
+    <Container maxWidth={false}>
+      <Box py={3}>
+        <Box mb={3}>
+          <PageHeader
+            icon={React.createElement(NAVIGATION_CONFIG.auditLog.icon, { sx: { color: NAVIGATION_CONFIG.auditLog.color } })}
+            title={NAVIGATION_CONFIG.auditLog.text}
+            description="View all system activities and changes"
+          />
+        </Box>
+
+        <DataTable
+          data={logs}
+          columns={columns}
+          keyExtractor={(entry) => entry.id}
+          filters={filters}
+          searchPlaceholder="Search by user name, email, or entity..."
+          loading={loading}
+          error={error}
+          emptyMessage="No audit logs found."
+          defaultSortField="created_on"
+          defaultSortDirection="desc"
+          defaultRowsPerPage={50}
+          rowsPerPageOptions={[25, 50, 100, 200]}
+          stickyHeader
+          responsive={true}
+          cardBreakpoint={900}
+          compactBreakpoint={1250}
         />
       </Box>
-
-      <DataTable
-        data={logs}
-        columns={columns}
-        keyExtractor={(entry) => entry.id}
-        filters={filters}
-        searchPlaceholder="Search by user name, email, or entity..."
-        loading={loading}
-        error={error}
-        emptyMessage="No audit logs found."
-        defaultSortField="created_on"
-        defaultSortDirection="desc"
-        defaultRowsPerPage={50}
-        rowsPerPageOptions={[25, 50, 100, 200]}
-        stickyHeader
-      />
 
       <Dialog
         open={metaDialogOpen}
@@ -494,7 +517,7 @@ const AuditLog = () => {
           <Button onClick={handleCloseMetaDialog}>Close</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   )
 }
 

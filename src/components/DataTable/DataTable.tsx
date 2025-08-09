@@ -29,6 +29,9 @@ import { DataTableProps } from './types'
 import { useDataTable } from '../../hooks/useDataTable'
 import DataTableToolbar from './DataTableToolbar'
 import DataTableBulkActions from './DataTableBulkActions'
+import MobileCard from './MobileCard'
+import { useResponsiveMode } from '../../hooks/useResponsive'
+import { ResponsiveTableColumn, getVisibleColumns, shouldUseCardLayout } from './ResponsiveTypes'
 
 export function DataTable<T extends object>({
   data,
@@ -54,6 +57,10 @@ export function DataTable<T extends object>({
   dense = false,
   groupConfig,
   showGroupToggle = true,
+  responsive = false,
+  cardBreakpoint = 'md',
+  compactBreakpoint = 'lg',
+  renderCard,
 }: DataTableProps<T>) {
   const {
     sortField,
@@ -90,6 +97,22 @@ export function DataTable<T extends object>({
     searchFields,
   }, groupConfig)
 
+  const mode = useResponsiveMode()
+  const useCards = responsive && shouldUseCardLayout(mode, { 
+    responsive, 
+    cardBreakpoint, 
+    compactBreakpoint 
+  })
+  
+  // Filter columns based on priority for responsive mode
+  const visibleColumns = React.useMemo(() => {
+    if (!responsive) return columns
+    // Check if columns have priority properties
+    const hasResponsiveColumns = columns.some((col: any) => col.priority)
+    if (!hasResponsiveColumns) return columns
+    return getVisibleColumns(columns as ResponsiveTableColumn<T>[], mode)
+  }, [columns, mode, responsive])
+  
   const showBulkActions = selectable && selectedCount > 0 && bulkActions.length > 0
   const hasActiveFilters = Object.values(activeFilters).some(
     value => value !== '' && value !== 'all' && value != null
@@ -123,9 +146,10 @@ export function DataTable<T extends object>({
         _hasActiveFilters={hasActiveFilters}
         searchable={searchable}
         searchPlaceholder={searchPlaceholder}
+        isMobile={useCards}
       />
 
-      {groupConfig && showGroupToggle && (
+      {groupConfig && showGroupToggle && !useCards && (
         <Box display="flex" justifyContent="space-between" alignItems="center" px={2} py={1}>
           <Box display="flex" alignItems="center" gap={2}>
             <FormControlLabel
@@ -159,7 +183,7 @@ export function DataTable<T extends object>({
         </Box>
       )}
 
-      {showBulkActions && (
+      {showBulkActions && !useCards && (
         <DataTableBulkActions
           selectedCount={selectedCount}
           actions={bulkActions}
@@ -168,23 +192,69 @@ export function DataTable<T extends object>({
         />
       )}
 
-      <TableContainer component={Paper}>
-        <Table stickyHeader={stickyHeader} size={dense ? 'small' : 'medium'}>
-          <TableHead>
-            <TableRow>
-              {selectable && (
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    indeterminate={isIndeterminate}
-                    checked={isAllSelected}
-                    onChange={handleSelectAll}
-                    inputProps={{
-                      'aria-label': 'select all items',
-                    }}
-                  />
-                </TableCell>
-              )}
-              {columns.map((column) => (
+      {/* Render card layout for mobile when responsive mode is enabled */}
+      {useCards ? (
+        <Box sx={{ 
+          width: '100%', 
+          p: 0, // No padding - cards use full width
+          minWidth: 0, // Ensure proper flex behavior
+          overflow: 'hidden', // Prevent horizontal scroll
+        }}>
+          {paginatedData.length === 0 ? (
+            <Alert severity="info" sx={{ mb: 2, mx: 0 }}>
+              {searchQuery || hasActiveFilters
+                ? 'No results found. Try adjusting your search or filters.'
+                : emptyMessage}
+            </Alert>
+          ) : (
+            paginatedData.map((item) => {
+              const itemKey = keyExtractor(item)
+              
+              // Use custom card renderer if provided
+              if (renderCard) {
+                return (
+                  <Box key={itemKey}>
+                    {renderCard(item, columns as ResponsiveTableColumn<T>[], {
+                      isSelected: false, // Selection disabled in card view
+                      onSelect: () => {}, // No-op selection in card view
+                      onRowClick: onRowClick ? () => onRowClick(item) : undefined,
+                    })}
+                  </Box>
+                )
+              }
+              
+              // Use default MobileCard component
+              return (
+                <MobileCard
+                  key={itemKey}
+                  row={item}
+                  columns={columns as ResponsiveTableColumn<T>[]}
+                  onRowClick={onRowClick}
+                  // No checkbox in card view - selection disabled for mobile
+                />
+              )
+            })
+          )}
+        </Box>
+      ) : (
+        /* Original table layout */
+        <TableContainer component={Paper}>
+          <Table stickyHeader={stickyHeader} size={dense ? 'small' : 'medium'}>
+            <TableHead>
+              <TableRow>
+                {selectable && (
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      indeterminate={isIndeterminate}
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      inputProps={{
+                        'aria-label': 'select all items',
+                      }}
+                    />
+                  </TableCell>
+                )}
+                {visibleColumns.map((column) => (
                 <TableCell
                   key={column.id}
                   align={column.align || 'left'}
@@ -221,13 +291,13 @@ export function DataTable<T extends object>({
                   )}
                 </TableCell>
               ))}
-            </TableRow>
-          </TableHead>
+              </TableRow>
+            </TableHead>
           <TableBody>
             {paginatedData.length === 0 && (!groupingEnabled || groups.length === 0) ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + (selectable ? 1 : 0)}
+                  colSpan={visibleColumns.length + (selectable ? 1 : 0)}
                   align="center"
                   sx={{ py: 4 }}
                 >
@@ -251,7 +321,7 @@ export function DataTable<T extends object>({
                     }}
                     onClick={() => handleToggleGroup(group.id)}
                   >
-                    <TableCell colSpan={columns.length + (selectable ? 1 : 0)}>
+                    <TableCell colSpan={visibleColumns.length + (selectable ? 1 : 0)}>
                       <Box display="flex" alignItems="center" gap={1}>
                         <IconButton size="small" sx={{ p: 0.5 }}>
                           {group.isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
@@ -301,7 +371,7 @@ export function DataTable<T extends object>({
                             />
                           </TableCell>
                         )}
-                        {columns.map((column) => {
+                        {visibleColumns.map((column) => {
                           const value = column.accessor(item)
                           return (
                             <TableCell key={column.id} align={column.align || 'left'}>
@@ -341,7 +411,7 @@ export function DataTable<T extends object>({
                         />
                       </TableCell>
                     )}
-                    {columns.map((column) => {
+                    {visibleColumns.map((column) => {
                       const value = column.accessor(item)
                       return (
                         <TableCell key={column.id} align={column.align || 'left'}>
@@ -354,8 +424,9 @@ export function DataTable<T extends object>({
               })
             )}
           </TableBody>
-        </Table>
-      </TableContainer>
+          </Table>
+        </TableContainer>
+      )}
 
       {showPagination && (
         <TablePagination

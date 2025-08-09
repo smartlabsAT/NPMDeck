@@ -7,6 +7,7 @@ import {
   Typography,
   Avatar,
   Chip,
+  Container,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -27,11 +28,14 @@ import {
 import { usersApi, User } from '../api/users'
 import { getErrorMessage } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
+import { useResponsive } from '../hooks/useResponsive'
 import UserDrawer from '../components/UserDrawer'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
-import { DataTable, TableColumn, Filter, BulkAction } from '../components/DataTable'
+import { DataTable } from '../components/DataTable'
+import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
+import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 const Users = () => {
@@ -48,6 +52,7 @@ const Users = () => {
   
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
   const { showSuccess, showError } = useToast()
+  const { isMobileTable } = useResponsive()
   const isAdmin = currentUser?.roles?.includes('admin')
 
   useEffect(() => {
@@ -222,13 +227,15 @@ const Users = () => {
     ).join(', ')
   }
 
-  // Table column definitions
-  const columns: TableColumn<User>[] = useMemo(() => [
+  // Table column definitions with responsive priorities
+  const columns: ResponsiveTableColumn<User>[] = useMemo(() => [
     {
       id: 'avatar',
       label: '',
       width: 60,
       accessor: (user) => user.avatar,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (_, user) => (
         <Box position="relative" display="inline-block">
           <Avatar
@@ -257,6 +264,8 @@ const Users = () => {
       icon: <PersonIcon />,
       accessor: (user) => user.name,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (_, user) => (
         <Box>
           <Typography variant="body2" fontWeight="medium">
@@ -274,6 +283,8 @@ const Users = () => {
       icon: <EmailIcon />,
       accessor: (user) => user.email,
       sortable: true,
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
     },
     {
       id: 'roles',
@@ -281,6 +292,8 @@ const Users = () => {
       icon: <ShieldIcon />,
       accessor: (user) => user.roles,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible (important for permissions)
+      showInCard: true,
       render: (roles) => (
         <Chip
           size="small"
@@ -296,6 +309,8 @@ const Users = () => {
       icon: <StatusIcon />,
       accessor: (user) => user.is_disabled,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (_, user) => (
         <Chip
           size="small"
@@ -311,6 +326,8 @@ const Users = () => {
       icon: <CalendarIcon />,
       accessor: (user) => user.created_on,
       sortable: true,
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: false,
       render: (date) => new Date(date).toLocaleDateString(),
     },
     // TODO: Enable when last_login is available in API
@@ -327,6 +344,8 @@ const Users = () => {
       icon: <SettingsIcon />,
       align: 'right',
       accessor: () => null,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (_, user) => (
         <Box display="flex" gap={0.5} justifyContent="flex-end" onClick={(e) => e.stopPropagation()}>
           <IconButton
@@ -425,42 +444,62 @@ const Users = () => {
   ], [currentUser])
 
   return (
-    <Box>
-      <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <PageHeader
-          icon={React.createElement(NAVIGATION_CONFIG.users.icon, { sx: { color: NAVIGATION_CONFIG.users.color } })}
-          title={NAVIGATION_CONFIG.users.text}
-          description="Manage user accounts and permissions"
-        />
-        {isAdmin && (
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
-          >
-            Add User
-          </Button>
-        )}
-      </Box>
+    <Container maxWidth={false}>
+      <Box py={3}>
+        <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
+          <PageHeader
+            icon={React.createElement(NAVIGATION_CONFIG.users.icon, { sx: { color: NAVIGATION_CONFIG.users.color } })}
+            title={NAVIGATION_CONFIG.users.text}
+            description="Manage user accounts and permissions"
+          />
+          {isAdmin && !isMobileTable && (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+            >
+              Add User
+            </Button>
+          )}
+        </Box>
 
-      <DataTable
-        data={users}
-        columns={columns}
-        keyExtractor={(user) => user.id}
-        onRowClick={handleRowClick}
-        bulkActions={isAdmin ? bulkActions : []}
-        filters={filters}
-        searchPlaceholder="Search by name, nickname, or email..."
-        loading={loading}
-        error={error}
-        emptyMessage="No users configured yet."
-        selectable={isAdmin}
-        defaultSortField="name"
-        defaultSortDirection="asc"
-        defaultRowsPerPage={100}
-        rowsPerPageOptions={[10, 25, 50, 100]}
-      />
+        <DataTable
+          data={users}
+          columns={columns}
+          keyExtractor={(user) => user.id}
+          onRowClick={handleRowClick}
+          bulkActions={isAdmin ? bulkActions : []}
+          filters={filters}
+          searchPlaceholder="Search by name, nickname, or email..."
+          loading={loading}
+          error={error}
+          emptyMessage="No users configured yet."
+          selectable={isAdmin}
+          defaultSortField="name"
+          defaultSortDirection="asc"
+          defaultRowsPerPage={100}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          responsive={true}
+          cardBreakpoint={900}
+          compactBreakpoint={1250}
+        />
+        
+        {/* Mobile Add Button - shown at bottom */}
+        {isAdmin && isMobileTable && (
+          <Box mt={2} display="flex" justifyContent="center">
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+              fullWidth
+              sx={{ maxWidth: 400 }}
+            >
+              Add User
+            </Button>
+          </Box>
+        )}
 
 
       <UserDrawer
@@ -490,8 +529,8 @@ const Users = () => {
         confirmColor="error"
         loading={bulkProcessing}
       />
-
-    </Box>
+      </Box>
+    </Container>
   )
 }
 

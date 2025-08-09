@@ -23,6 +23,7 @@ import {
 } from '@mui/icons-material'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
+import { useResponsive } from '../hooks/useResponsive'
 import { AccessList, accessListsApi } from '../api/accessLists'
 import { getErrorMessage } from '../types/common'
 import AccessListDrawer from '../components/features/access-lists/AccessListDrawer'
@@ -34,7 +35,8 @@ import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
-import { TableColumn, Filter, BulkAction } from '../components/DataTable/types'
+import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
+import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 export default function AccessLists() {
@@ -43,6 +45,7 @@ export default function AccessLists() {
   const location = useLocation()
   const { canManage: canManageAccessLists, isAdmin } = usePermissions()
   const { showSuccess, showError } = useToast()
+  const { isMobileTable } = useResponsive()
 
   // State
   const [accessLists, setAccessLists] = useState<AccessList[]>([])
@@ -164,14 +167,16 @@ export default function AccessLists() {
     )
   }
 
-  // Column definitions for DataTable
-  const columns: TableColumn<AccessList>[] = [
+  // Column definitions for DataTable with responsive priorities
+  const columns: ResponsiveTableColumn<AccessList>[] = [
     {
       id: 'name',
       label: 'Name',
       icon: <LockIcon fontSize="small" />,
       accessor: (item) => item.name,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, _item) => (
         <Box display="flex" alignItems="center" gap={1}>
           <LockIcon fontSize="small" color="action" />
@@ -186,6 +191,8 @@ export default function AccessLists() {
       accessor: (item) => item.items?.length || 0,
       sortable: true,
       align: 'left',
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
       render: (value, item) => getUsersChip(item) || (
         <Typography variant="body2" color="text.secondary">
           No users
@@ -199,6 +206,9 @@ export default function AccessLists() {
       accessor: (item) => item.clients?.length || 0,
       sortable: true,
       align: 'left',
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
+      mobileLabel: '', // Empty string to hide label - rule chips are self-explanatory
       render: (value, item) => getRulesChip(item) || (
         <Typography variant="body2" color="text.secondary">
           No rules
@@ -212,6 +222,8 @@ export default function AccessLists() {
       accessor: (item) => ({ satisfy_any: item.satisfy_any, pass_auth: item.pass_auth }),
       sortable: false,
       align: 'left',
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: false,
       render: (value, item) => (
         <Box display="flex" gap={0.5}>
           {item.satisfy_any && (
@@ -230,6 +242,8 @@ export default function AccessLists() {
       accessor: (item) => new Date(item.created_on).getTime(),
       sortable: true,
       align: 'left',
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: false,
       render: (value, item) => (
         <Typography variant="body2" color="text.secondary">
           {new Date(item.created_on).toLocaleDateString()}
@@ -243,6 +257,8 @@ export default function AccessLists() {
       accessor: (item) => item.id,
       sortable: false,
       align: 'right',
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => (
         <Box display="flex" justifyContent="flex-end" gap={1}>
           <Tooltip title="View Details">
@@ -343,15 +359,17 @@ export default function AccessLists() {
             title={NAVIGATION_CONFIG.accessLists.text}
             description="Control access to your services with authentication and IP restrictions"
           />
-          <PermissionButton
-            resource="access_lists"
-            permissionAction="create"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleCreateAccessList}
-          >
-            Add Access List
-          </PermissionButton>
+          {!isMobileTable && (
+            <PermissionButton
+              resource="access_lists"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateAccessList}
+            >
+              Add Access List
+            </PermissionButton>
+          )}
         </Box>
 
         {filterInfo.isFiltered && (
@@ -380,7 +398,27 @@ export default function AccessLists() {
           showPagination={true}
           defaultRowsPerPage={100}
           rowsPerPageOptions={[10, 25, 50, 100]}
+          responsive={true}
+          cardBreakpoint={900}
+          compactBreakpoint={1250}
         />
+        
+        {/* Mobile Add Button - shown at bottom */}
+        {isMobileTable && (
+          <Box mt={2} display="flex" justifyContent="center">
+            <PermissionButton
+              resource="access_lists"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateAccessList}
+              fullWidth
+              sx={{ maxWidth: 400 }}
+            >
+              Add Access List
+            </PermissionButton>
+          </Box>
+        )}
       </Box>
 
       {/* Drawer for create/edit */}

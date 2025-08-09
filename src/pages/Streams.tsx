@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData } from '../hooks/useFilteredData'
+import { useResponsive } from '../hooks/useResponsive'
 import { Stream, streamsApi } from '../api/streams'
 import { getErrorMessage } from '../types/common'
 import StreamDrawer from '../components/features/streams/StreamDrawer'
@@ -37,7 +38,8 @@ import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
-import { TableColumn, Filter, BulkAction } from '../components/DataTable/types'
+import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
+import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 export default function Streams() {
@@ -47,6 +49,7 @@ export default function Streams() {
   
   const { canManage: canManageStreams } = usePermissions()
   const { showSuccess, showError } = useToast()
+  const { isMobileTable } = useResponsive()
 
   // State
   const [streams, setStreams] = useState<Stream[]>([])
@@ -193,14 +196,16 @@ export default function Streams() {
     return chips
   }
 
-  // Column definitions for DataTable
-  const columns: TableColumn<Stream>[] = [
+  // Column definitions for DataTable with responsive priorities
+  const columns: ResponsiveTableColumn<Stream>[] = [
     {
       id: 'status',
       label: 'Status',
       accessor: (item) => !item.enabled ? 0 : (item.meta.nginx_online === false ? 1 : 2),
       sortable: true,
       align: 'center',
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => getStatusIcon(item)
     },
     {
@@ -209,6 +214,9 @@ export default function Streams() {
       icon: <IncomingIcon fontSize="small" />,
       accessor: (item) => item.incoming_port,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      mobileLabel: 'Port',
       render: (value, item) => (
         <Typography variant="body2" fontWeight="bold">
           {item.incoming_port}
@@ -221,6 +229,9 @@ export default function Streams() {
       icon: <ForwardIcon fontSize="small" />,
       accessor: (item) => `${item.forwarding_host}:${item.forwarding_port}`,
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      mobileLabel: '',
       render: (value, item) => (
         <Box display="flex" alignItems="center" gap={0.5}>
           <Typography variant="body2">
@@ -250,6 +261,9 @@ export default function Streams() {
       icon: <ProtocolIcon fontSize="small" />,
       accessor: (item) => (item.tcp_forwarding ? 2 : 0) + (item.udp_forwarding ? 1 : 0),
       sortable: true,
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
+      mobileLabel: '', // Empty string to hide label - TCP/UDP chips are self-explanatory
       render: (value, item) => (
         <Box display="flex" gap={0.5}>
           {getProtocolChips(item)}
@@ -263,6 +277,8 @@ export default function Streams() {
       accessor: (item) => item.certificate_id || 0,
       sortable: true,
       align: 'center',
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: true,
       render: (value, item) => (
         item.certificate_id ? (
           <Tooltip title="SSL enabled">
@@ -282,6 +298,8 @@ export default function Streams() {
       accessor: (item) => item.id,
       sortable: false,
       align: 'right',
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => (
         <Box display="flex" gap={0.5} justifyContent="flex-end">
           <Tooltip title="View Details">
@@ -476,15 +494,17 @@ export default function Streams() {
             title={NAVIGATION_CONFIG.streams.text}
             description="Manage TCP/UDP port forwarding"
           />
-          <PermissionButton
-            resource="streams"
-            permissionAction="create"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleCreateStream}
-          >
-            Add Stream
-          </PermissionButton>
+          {!isMobileTable && (
+            <PermissionButton
+              resource="streams"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateStream}
+            >
+              Add Stream
+            </PermissionButton>
+          )}
         </Box>
 
         {/* DataTable */}
@@ -508,7 +528,27 @@ export default function Streams() {
           showPagination={true}
           defaultRowsPerPage={10}
           rowsPerPageOptions={[10, 25, 50, 100]}
+          responsive={true}
+          cardBreakpoint={900}
+          compactBreakpoint={1250}
         />
+        
+        {/* Mobile Add Button - shown at bottom */}
+        {isMobileTable && (
+          <Box mt={2} display="flex" justifyContent="center">
+            <PermissionButton
+              resource="streams"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateStream}
+              fullWidth
+              sx={{ maxWidth: 400 }}
+            >
+              Add Stream
+            </PermissionButton>
+          </Box>
+        )}
       </Box>
 
       {/* Drawer for create/edit */}

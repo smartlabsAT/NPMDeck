@@ -73,6 +73,11 @@ export interface DataTableProps<T> {
   dense?: boolean
   groupConfig?: GroupConfig<T>
   showGroupToggle?: boolean
+  // Responsive settings
+  responsive?: boolean
+  cardBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
+  compactBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
+  renderCard?: (item: T, columns: any[], options: { isSelected: boolean; onSelect: () => void; onRowClick?: () => void }) => ReactNode
 }
 
 export interface DataTableState {
