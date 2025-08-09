@@ -38,11 +38,11 @@ export interface ResponsiveTableConfig {
   /** Enable responsive mode */
   responsive?: boolean
   
-  /** Breakpoint for switching to card layout (default: 'md') */
-  cardBreakpoint?: 'sm' | 'md' | 'lg'
+  /** Breakpoint for switching to card layout (default: 'md') - can be predefined or custom pixel value */
+  cardBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
   
-  /** Breakpoint for compact mode (default: 'lg') */
-  compactBreakpoint?: 'md' | 'lg' | 'xl'
+  /** Breakpoint for compact mode (default: 'lg') - can be predefined or custom pixel value */
+  compactBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
   
   /** Custom card renderer */
   renderCard?: (row: any, columns: ResponsiveTableColumn[]) => React.ReactNode
@@ -103,12 +103,22 @@ export function shouldUseCardLayout(
   
   const breakpoint = config.cardBreakpoint || 'md'
   
+  // If breakpoint is a number, we'll use a simple comparison
+  // For now, treat numeric breakpoints as mobile-only since mode is already determined
+  if (typeof breakpoint === 'number') {
+    // The mode is already calculated based on screen width in useResponsiveMode
+    // So we just check if we're in mobile mode
+    return mode === 'mobile'
+  }
+  
   switch (breakpoint) {
     case 'sm':
       return mode === 'mobile'
     case 'md':
       return mode === 'mobile'
     case 'lg':
+      return mode === 'mobile' || mode === 'compact'
+    case 'xl':
       return mode === 'mobile' || mode === 'compact'
     default:
       return mode === 'mobile'
