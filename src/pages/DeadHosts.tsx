@@ -31,6 +31,7 @@ import { deadHostsApi, DeadHost } from '../api/deadHosts'
 import { getErrorMessage } from '../types/common'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData } from '../hooks/useFilteredData'
+import { useResponsive } from '../hooks/useResponsive'
 import { DeadHostDrawer } from '../components/features'
 import DeadHostDetailsDialog from '../components/DeadHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -39,7 +40,8 @@ import PermissionIconButton from '../components/PermissionIconButton'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
-import { TableColumn, Filter, BulkAction } from '../components/DataTable/types'
+import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
+import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 export default function DeadHosts() {
@@ -49,6 +51,7 @@ export default function DeadHosts() {
   
   const { canManage: canManageDeadHosts } = usePermissions()
   const { showSuccess, showError } = useToast()
+  const { isMobileTable } = useResponsive()
   
   // State
   const [hosts, setHosts] = useState<DeadHost[]>([])
@@ -198,8 +201,8 @@ export default function DeadHosts() {
     return <Tooltip title="Online"><CheckCircleIcon color="success" /></Tooltip>
   }
 
-  // Column definitions for DataTable
-  const columns: TableColumn<DeadHost>[] = [
+  // Column definitions for DataTable with responsive priorities
+  const columns: ResponsiveTableColumn<DeadHost>[] = [
     {
       id: 'status',
       label: 'Status',
@@ -207,6 +210,8 @@ export default function DeadHosts() {
       accessor: (item) => !item.enabled ? 0 : (item.meta.nginx_online === false ? 1 : 2),
       sortable: true,
       align: 'center',
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => getStatusIcon(item)
     },
     {
@@ -215,6 +220,9 @@ export default function DeadHosts() {
       icon: <LanguageIcon fontSize="small" />,
       accessor: (item) => item.domain_names[0] || '',
       sortable: true,
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
+      mobileLabel: 'Domains',
       render: (value, item) => (
         <Box>
           {item.domain_names.map((domain, index) => (
@@ -245,6 +253,9 @@ export default function DeadHosts() {
       icon: <ResponseIcon fontSize="small" />,
       accessor: () => '404',
       sortable: false,
+      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      showInCard: true,
+      mobileLabel: '', // Empty string to hide label - "404 Not Found" is self-explanatory
       render: () => (
         <Box display="flex" alignItems="center" gap={0.5}>
           <BlockIcon fontSize="small" color="action" />
@@ -261,6 +272,8 @@ export default function DeadHosts() {
       accessor: (item) => !item.certificate_id ? 0 : (item.ssl_forced ? 2 : 1),
       sortable: true,
       align: 'center',
+      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      showInCard: true,
       render: (value, item) => {
         if (!item.certificate_id) {
           return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
@@ -278,6 +291,8 @@ export default function DeadHosts() {
       accessor: (item) => item.id,
       sortable: false,
       align: 'right',
+      priority: 'P1' as ColumnPriority, // Essential - always visible
+      showInCard: true,
       render: (value, item) => (
         <Box display="flex" gap={0.5} justifyContent="flex-end">
           {togglingHosts.has(item.id) ? (
@@ -434,15 +449,17 @@ export default function DeadHosts() {
             title={NAVIGATION_CONFIG.deadHosts.text}
             description="Configure custom 404 error pages for unmatched domains"
           />
-          <PermissionButton
-            resource="dead_hosts"
-            permissionAction="create"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
-          >
-            Add 404 Host
-          </PermissionButton>
+          {!isMobileTable && (
+            <PermissionButton
+              resource="dead_hosts"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+            >
+              Add 404 Host
+            </PermissionButton>
+          )}
         </Box>
 
         {/* DataTable */}
@@ -466,7 +483,27 @@ export default function DeadHosts() {
           showPagination={true}
           defaultRowsPerPage={10}
           rowsPerPageOptions={[10, 25, 50, 100]}
+          responsive={true}
+          cardBreakpoint={900}
+          compactBreakpoint={1250}
         />
+        
+        {/* Mobile Add Button - shown at bottom */}
+        {isMobileTable && (
+          <Box mt={2} display="flex" justifyContent="center">
+            <PermissionButton
+              resource="dead_hosts"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+              fullWidth
+              sx={{ maxWidth: 400 }}
+            >
+              Add 404 Host
+            </PermissionButton>
+          </Box>
+        )}
       </Box>
 
       {canManageDeadHosts('dead_hosts') && (
