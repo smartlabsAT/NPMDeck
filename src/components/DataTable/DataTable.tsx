@@ -209,9 +209,6 @@ export function DataTable<T extends object>({
           ) : (
             paginatedData.map((item) => {
               const itemKey = keyExtractor(item)
-              const isSelected = selected.some(
-                selectedItem => keyExtractor(selectedItem) === itemKey
-              )
               
               // Use custom card renderer if provided
               if (renderCard) {
@@ -219,7 +216,7 @@ export function DataTable<T extends object>({
                   <Box key={itemKey}>
                     {renderCard(item, columns as ResponsiveTableColumn<T>[], {
                       isSelected: false, // Selection disabled in card view
-                      onSelect: undefined, // No selection in card view
+                      onSelect: () => {}, // No-op selection in card view
                       onRowClick: onRowClick ? () => onRowClick(item) : undefined,
                     })}
                   </Box>
