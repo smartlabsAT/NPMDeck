@@ -26,6 +26,7 @@ interface DataTableToolbarProps {
   _hasActiveFilters: boolean
   searchable: boolean
   searchPlaceholder: string
+  isMobile?: boolean
 }
 
 export default function DataTableToolbar({
@@ -38,6 +39,7 @@ export default function DataTableToolbar({
   _hasActiveFilters,
   searchable,
   searchPlaceholder,
+  isMobile = false,
 }: DataTableToolbarProps) {
   const handleFilterChange = (filterId: string) => (event: SelectChangeEvent) => {
     const value = event.target.value
@@ -59,7 +61,12 @@ export default function DataTableToolbar({
   return (
     <Paper sx={{ mb: 2 }}>
       <Box p={2}>
-        <Box display="flex" gap={2} alignItems="stretch">
+        <Box 
+          display="flex" 
+          gap={2} 
+          alignItems="stretch"
+          flexDirection={isMobile ? 'column' : 'row'}
+        >
           {searchable && (
             <TextField
               variant="outlined"
@@ -67,7 +74,10 @@ export default function DataTableToolbar({
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => onSearch(e.target.value)}
-              sx={{ flex: 1 }}
+              sx={{ 
+                flex: isMobile ? 'unset' : 1,
+                width: isMobile ? '100%' : 'auto',
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -94,7 +104,14 @@ export default function DataTableToolbar({
             const hasValue = currentValue !== 'all'
             
             return (
-              <FormControl key={filter.id} sx={{ width: 200, flexShrink: 0 }} size="small">
+              <FormControl 
+                key={filter.id} 
+                sx={{ 
+                  width: isMobile ? '100%' : 200, 
+                  flexShrink: 0 
+                }} 
+                size="small"
+              >
                 <InputLabel>{filter.label}</InputLabel>
                 <Select
                   value={currentValue}
