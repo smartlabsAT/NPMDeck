@@ -55,7 +55,7 @@ import { NAVIGATION_CONFIG } from '../constants/navigation'
 const AuditLog = () => {
   const navigate = useNavigate()
   const theme = useTheme()
-  const { isMobileTable } = useResponsive()
+  const { } = useResponsive() // eslint-disable-line no-empty-pattern
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
