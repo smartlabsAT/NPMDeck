@@ -14,9 +14,12 @@ export function useResponsive() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg')) // >= 1200px
   
   // Specific breakpoints for tables
-  const isMobileTable = useMediaQuery(theme.breakpoints.down('md')) // < 960px (use cards)
-  const isCompactTable = useMediaQuery(theme.breakpoints.between('md', 'lg')) // 960px - 1200px (hide columns)
-  const isFullTable = useMediaQuery(theme.breakpoints.up('lg')) // >= 1200px (all columns)
+  const isMobileTable = useMediaQuery('(max-width:900px)') // < 900px (use cards)
+  const isCompactTable = useMediaQuery('(min-width:901px) and (max-width:1250px)') // 901px - 1250px (hide some columns)
+  const isFullTable = useMediaQuery('(min-width:1251px)') // >= 1251px (all columns)
+  
+  // Extra small screens for very mobile-friendly layouts
+  const isExtraSmall = useMediaQuery('(max-width:480px)') // < 480px (very compact cards)
   
   // Precompute all breakpoint states
   const isXl = useMediaQuery(theme.breakpoints.up('xl'))
@@ -63,6 +66,7 @@ export function useResponsive() {
     isMobileTable,
     isCompactTable,
     isFullTable,
+    isExtraSmall,
     
     // Utility functions
     getCurrentBreakpoint,
@@ -73,8 +77,8 @@ export function useResponsive() {
     breakpoints: {
       xs: 0,
       sm: 600,
-      md: 960,
-      lg: 1200,
+      md: 850,  // Adjusted to account for container margins (~50px total)
+      lg: 1250,  // Adjusted to account for container margins
       xl: 1920,
     }
   }
