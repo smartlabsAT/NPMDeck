@@ -32,6 +32,7 @@ import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData } from '../hooks/useFilteredData'
+import { useResponsive } from '../hooks/useResponsive'
 import ProxyHostDrawer from '../components/features/proxy-hosts/ProxyHostDrawer'
 import ProxyHostDetailsDialog from '../components/ProxyHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -39,7 +40,8 @@ import PermissionButton from '../components/PermissionButton'
 import PageHeader from '../components/PageHeader'
 import PermissionIconButton from '../components/PermissionIconButton'
 import { useToast } from '../contexts/ToastContext'
-import { ResponsiveTable, ResponsiveTableColumn, ColumnPriority } from '../components/DataTable'
+import { DataTable } from '../components/DataTable'
+import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
@@ -66,6 +68,7 @@ export default function ProxyHosts() {
   
   const { canManage: canManageProxyHosts } = usePermissions()
   const { showSuccess, showError } = useToast()
+  const { isMobileTable } = useResponsive()
   
   // State
   const [hosts, setHosts] = useState<ProxyHost[]>([])
@@ -344,7 +347,7 @@ export default function ProxyHosts() {
       sortable: true,
       priority: 'P2' as ColumnPriority, // Important - hidden on mobile
       showInCard: true,
-      mobileLabel: 'Forward',
+      mobileLabel: '', // Empty string to hide label - the URL is self-explanatory
       render: (value: any, item: ProxyHost) => (
         <Box display="flex" alignItems="center" gap={0.5}>
           <Typography variant="body2" color="text.secondary">
@@ -626,19 +629,21 @@ export default function ProxyHosts() {
             title={NAVIGATION_CONFIG.proxyHosts.text}
             description="Manage reverse proxy configurations for your web services"
           />
-          <PermissionButton
-            resource="proxy_hosts"
-            permissionAction="create"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
-          >
-            Add Proxy Host
-          </PermissionButton>
+          {!isMobileTable && (
+            <PermissionButton
+              resource="proxy_hosts"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+            >
+              Add Proxy Host
+            </PermissionButton>
+          )}
         </Box>
 
         {/* DataTable */}
-        <ResponsiveTable
+        <DataTable
           data={visibleHosts}
           columns={columns}
           keyExtractor={(item: ProxyHost) => item.id.toString()}
@@ -660,14 +665,27 @@ export default function ProxyHosts() {
           rowsPerPageOptions={[10, 25, 50, 100]}
           groupConfig={groupConfig}
           showGroupToggle={true}
-          config={{
-            responsive: true,
-            cardBreakpoint: 'md',
-            compactBreakpoint: 'lg',
-            showPriorityBadges: false,
-            enableColumnToggle: false,
-          }}
+          responsive={true}
+          cardBreakpoint={900}
+          compactBreakpoint={1250}
         />
+        
+        {/* Mobile Add Button - shown at bottom */}
+        {isMobileTable && (
+          <Box mt={2} display="flex" justifyContent="center">
+            <PermissionButton
+              resource="proxy_hosts"
+              permissionAction="create"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+              fullWidth
+              sx={{ maxWidth: 400 }}
+            >
+              Add Proxy Host
+            </PermissionButton>
+          </Box>
+        )}
       </Box>
 
       {canManageProxyHosts('proxy_hosts') && (
