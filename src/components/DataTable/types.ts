@@ -75,8 +75,8 @@ export interface DataTableProps<T> {
   showGroupToggle?: boolean
   // Responsive settings
   responsive?: boolean
-  cardBreakpoint?: 'sm' | 'md' | 'lg' | 'xl'
-  compactBreakpoint?: 'sm' | 'md' | 'lg' | 'xl'
+  cardBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
+  compactBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
   renderCard?: (item: T, columns: any[], options: { isSelected: boolean; onSelect: () => void; onRowClick?: () => void }) => ReactNode
 }
 
