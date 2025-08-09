@@ -49,10 +49,11 @@ export function MobileCard<T extends Record<string, any>>({
     }
   }
   
-  // Separate columns by display type
-  const primaryColumns = columns.filter(col => col.priority === 'P1' && col.showInCard !== false)
-  const secondaryColumns = columns.filter(col => col.priority === 'P2' && col.showInCard !== false)
-  const detailColumns = columns.filter(col => col.priority === 'P3' && col.showInCard !== false)
+  // Separate columns by display type (exclude actions column from regular columns)
+  const primaryColumns = columns.filter(col => col.priority === 'P1' && col.showInCard !== false && col.id !== 'actions')
+  const secondaryColumns = columns.filter(col => col.priority === 'P2' && col.showInCard !== false && col.id !== 'actions')
+  const detailColumns = columns.filter(col => col.priority === 'P3' && col.showInCard !== false && col.id !== 'actions')
+  // Action column is handled separately in the actions section
   const actionColumn = columns.find(col => col.id === 'actions')
   
   // Get primary display value (usually name or title)
@@ -69,6 +70,7 @@ export function MobileCard<T extends Record<string, any>>({
     <Card
       sx={{
         mb: 1,
+        width: '100%', // Full width
         cursor: onRowClick ? 'pointer' : 'default',
         '&:hover': onRowClick ? {
           boxShadow: theme.shadows[4],
@@ -79,19 +81,43 @@ export function MobileCard<T extends Record<string, any>>({
       }}
       onClick={() => onRowClick?.(row)}
     >
-      <CardContent sx={{ pb: 1 }}>
-        {/* Primary Section */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-          <Box sx={{ flex: 1 }}>
+      <CardContent sx={{ 
+        pb: 1,
+        p: { xs: 1.5, sm: 2 }, // Consistent padding
+      }}>
+        {/* Primary Section - More flexible layout for small screens */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'flex-start', 
+          gap: 1,
+          flexDirection: 'row', // Always horizontal to maximize space
+          width: '100%',
+        }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             {/* Primary Value */}
             {primaryValue && (
-              <Typography variant="subtitle1" component="div" sx={{ fontWeight: 500 }}>
+              <Typography 
+                variant="subtitle1" 
+                component="div" 
+                sx={{ 
+                  fontWeight: 500,
+                  fontSize: '1rem',
+                  wordBreak: 'break-word',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
                 {primaryValue}
               </Typography>
             )}
             
-            {/* Secondary Values in same line */}
-            <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: 'wrap', gap: 0.5 }}>
+            {/* Secondary Values - More flexible wrapping */}
+            <Box sx={{ 
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 0.5,
+              mt: 0.5,
+            }}>
               {primaryColumns.slice(1).map((col) => {
                 const value = col.cardDisplay ? 
                   col.cardDisplay(col.accessor(row), row) :
@@ -102,13 +128,22 @@ export function MobileCard<T extends Record<string, any>>({
                 if (!value) return null
                 
                 return (
-                  <Box key={col.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box key={col.id} sx={{ display: 'flex', alignItems: 'center' }}>
                     {typeof value === 'string' || typeof value === 'number' ? (
                       <Chip
                         label={value}
                         size="small"
                         variant="outlined"
-                        sx={{ height: 20 }}
+                        sx={{ 
+                          height: 24,
+                          maxWidth: '200px',
+                          '& .MuiChip-label': {
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            px: 1,
+                          }
+                        }}
                       />
                     ) : (
                       value
@@ -116,9 +151,9 @@ export function MobileCard<T extends Record<string, any>>({
                   </Box>
                 )
               })}
-            </Stack>
+            </Box>
             
-            {/* Secondary Information */}
+            {/* Secondary Information - Responsive layout */}
             {secondaryColumns.length > 0 && (
               <Stack spacing={0.5} sx={{ mt: 1 }}>
                 {secondaryColumns.map((col) => {
@@ -130,12 +165,38 @@ export function MobileCard<T extends Record<string, any>>({
                   
                   if (!value) return null
                   
+                  // If no mobileLabel and label is explicitly set to empty, show value only
+                  const showLabel = col.mobileLabel !== '' && (col.mobileLabel || col.label)
+                  
                   return (
-                    <Box key={col.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ minWidth: 80 }}>
-                        {col.mobileLabel || col.label}:
-                      </Typography>
-                      <Typography variant="body2">
+                    <Box key={col.id} sx={{ 
+                      display: 'flex', 
+                      alignItems: 'flex-start',
+                      gap: 1,
+                      flexWrap: 'wrap',
+                    }}>
+                      {showLabel && (
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          sx={{ 
+                            minWidth: 80,
+                            fontSize: '0.75rem',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {col.mobileLabel || col.label}:
+                        </Typography>
+                      )}
+                      <Typography 
+                        variant="body2"
+                        sx={{
+                          fontSize: '0.875rem',
+                          wordBreak: 'break-word',
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
                         {typeof value === 'string' || typeof value === 'number' ? value : <>{value}</>}
                       </Typography>
                     </Box>
@@ -145,20 +206,26 @@ export function MobileCard<T extends Record<string, any>>({
             )}
           </Box>
           
-          {/* Actions Section */}
+          {/* Actions Section - Show action buttons and expand button */}
           {(actionColumn || actions || detailColumns.length > 0) && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              {/* Quick Actions */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 1,
+              flexShrink: 0,
+            }}>
+              {/* Action buttons from column (edit, delete, etc.) */}
               {actionColumn && (
                 <Box sx={{ display: 'flex', flexDirection: 'row', gap: 0.5 }}>
                   {actionColumn.render?.(actionColumn.accessor(row), row)}
                 </Box>
               )}
               
-              {/* Custom Actions */}
+              {/* Custom Actions (like checkbox) */}
               {actions}
               
-              {/* Expand Button if there are detail columns */}
+              {/* Expand Button if there are detail columns - always at the end */}
               {detailColumns.length > 0 && (
                 <IconButton
                   size="small"
@@ -166,6 +233,8 @@ export function MobileCard<T extends Record<string, any>>({
                   sx={{
                     transform: localExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                     transition: theme.transitions.create('transform'),
+                    p: { xs: 0.5, sm: 1 },
+                    ml: 'auto', // Push to the right
                   }}
                 >
                   <ExpandMoreIcon />
