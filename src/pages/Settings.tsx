@@ -64,6 +64,7 @@ import { useUISettingsStore } from '../stores/uiSettingsStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { EntityType, ContainerType, ENTITY_DISPLAY_NAMES } from '../types/uiSettings'
 import { useToast } from '../contexts/ToastContext'
+import { useResponsive } from '../hooks/useResponsive'
 
 // HTML Templates
 const HTML_TEMPLATES = {
@@ -406,6 +407,7 @@ const Settings = () => {
   const { tab } = useParams<{ tab?: string }>()
   const navigate = useNavigate()
   const { showSuccess, showError } = useToast()
+  const { isMobile } = useResponsive()
   
   // Map tab names to indices
   const tabNameToIndex: Record<string, number> = {
@@ -491,11 +493,17 @@ const Settings = () => {
   
   // Update active tab when URL changes
   useEffect(() => {
-    const newTab = getInitialTab()
-    if (newTab !== activeTab) {
-      setActiveTab(newTab)
+    if (tab && tabNameToIndex[tab] !== undefined) {
+      const newTabIndex = tabNameToIndex[tab]
+      if (newTabIndex !== activeTab) {
+        setActiveTab(newTabIndex)
+      }
+    } else if (!tab && activeTab !== 0) {
+      setActiveTab(0)
     }
-  }, [tab])
+    // tabNameToIndex is a constant, so it's safe to exclude from dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, activeTab])
 
   const fetchSettings = async (showLoader = true) => {
     try {
@@ -595,7 +603,20 @@ const Settings = () => {
             const tabNames = ['default-site', 'ui-preferences']
             navigate(`/admin/settings/${tabNames[value]}`, { replace: true })
           }}
-          sx={{ borderBottom: 1, borderColor: 'divider' }}
+          variant={isMobile ? "scrollable" : "standard"}
+          scrollButtons={isMobile ? "auto" : false}
+          allowScrollButtonsMobile={isMobile}
+          sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            // Adjust padding on mobile
+            ...(isMobile && {
+              '& .MuiTab-root': {
+                minWidth: 'auto',
+                px: 2
+              }
+            })
+          }}
         >
           {tabs.map((tab, _index) => (
             <Tab
@@ -611,7 +632,7 @@ const Settings = () => {
         </Tabs>
 
         {/* Default Site Tab */}
-        <TabPanel value={activeTab} index={0} padding={3} animation="none">
+        <TabPanel value={activeTab} index={0} padding={isMobile ? 2 : 3} animation="none">
           <FormSection title="Choose Default Page" sx={{ mb: 4 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Select what visitors see when they access your server directly or via an unmatched domain
@@ -624,40 +645,64 @@ const Settings = () => {
 
           {defaultSiteType === 'html' && (
             <FormSection title="Custom HTML Content">
-              <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ 
+                mb: 2, 
+                display: 'flex', 
+                gap: 1, 
+                flexDirection: isMobile ? 'column' : 'row',
+                flexWrap: isMobile ? 'nowrap' : 'wrap',
+                alignItems: isMobile ? 'stretch' : 'flex-start'
+              }}>
                 <Typography variant="body2" color="text.secondary" sx={{ width: '100%', mb: 1 }}>
                   Quick Templates:
                 </Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setDefaultSiteHtml(HTML_TEMPLATES.basic)}
-                >
-                  Basic Page
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setDefaultSiteHtml(HTML_TEMPLATES.styled)}
-                >
-                  Styled Welcome
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setDefaultSiteHtml(HTML_TEMPLATES.maintenance)}
-                >
-                  Maintenance
-                </Button>
-                <Box sx={{ flexGrow: 1 }} />
-                <Tooltip title="Copy HTML">
-                  <IconButton size="small" onClick={() => {
-                    navigator.clipboard.writeText(defaultSiteHtml)
-                    showSuccess('settings', 'copied', 'HTML')
-                  }}>
-                    <CopyIcon />
-                  </IconButton>
-                </Tooltip>
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: 1,
+                  width: isMobile ? '100%' : 'auto',
+                  flex: isMobile ? '1' : 'none'
+                }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setDefaultSiteHtml(HTML_TEMPLATES.basic)}
+                    fullWidth={isMobile}
+                  >
+                    Basic Page
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setDefaultSiteHtml(HTML_TEMPLATES.styled)}
+                    fullWidth={isMobile}
+                  >
+                    Styled Welcome
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setDefaultSiteHtml(HTML_TEMPLATES.maintenance)}
+                    fullWidth={isMobile}
+                  >
+                    Maintenance
+                  </Button>
+                </Box>
+                {!isMobile && <Box sx={{ flexGrow: 1 }} />}
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: isMobile ? 'center' : 'flex-end',
+                  width: isMobile ? '100%' : 'auto'
+                }}>
+                  <Tooltip title="Copy HTML">
+                    <IconButton size="small" onClick={() => {
+                      navigator.clipboard.writeText(defaultSiteHtml)
+                      showSuccess('settings', 'copied', 'HTML')
+                    }}>
+                      <CopyIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </Box>
               
               <Paper
@@ -666,6 +711,7 @@ const Settings = () => {
                   backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fafafa',
                   borderRadius: 1,
                   overflow: 'hidden',
+                  width: '100%',
                   '& pre': {
                     margin: 0,
                   },
@@ -707,13 +753,15 @@ const Settings = () => {
                   value={defaultSiteHtml}
                   onValueChange={setDefaultSiteHtml}
                   highlight={code => highlight(code, languages.html, 'html')}
-                  padding={16}
+                  padding={isMobile ? 12 : 16}
                   style={{
                     fontFamily: '"Fira code", "Fira Mono", monospace',
-                    fontSize: 14,
-                    minHeight: 400,
+                    fontSize: isMobile ? 12 : 14,
+                    minHeight: isMobile ? 300 : 400,
+                    width: '100%',
                     color: theme.palette.mode === 'dark' ? '#abb2bf' : '#383a42',
                     backgroundColor: 'transparent',
+                    overflowX: 'auto'
                   }}
                   placeholder="Enter your custom HTML content here..."
                 />
@@ -749,99 +797,187 @@ const Settings = () => {
         </TabPanel>
 
         {/* UI Preferences Tab */}
-        <TabPanel value={activeTab} index={1} padding={3} animation="none">
+        <TabPanel value={activeTab} index={1} padding={isMobile ? 2 : 3} animation="none">
           <FormSection title="Container Display Preferences" sx={{ mb: 4 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Choose whether to use drawers or dialogs for different operations
             </Typography>
 
-            <TableContainer component={Paper} variant="outlined">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Resource</TableCell>
-                    <TableCell align="center">
-                      <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
-                        <ViewIcon fontSize="small" sx={{ color: '#467fcf' }} />
-                        View Details
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
-                        <EditIcon fontSize="small" sx={{ color: '#f59f00' }} />
-                        Edit
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
-                        <AddIcon fontSize="small" sx={{ color: '#5eba00' }} />
-                        Create New
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {getVisibleResources().map((resource) => {
-                    const entityKey = resource as EntityType
-                    const hasManagePermission = canManage(resource)
-                    
-                    return (
-                      <TableRow key={resource}>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {RESOURCE_ICONS[entityKey] ? (
-                              React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement, {
-                                fontSize: 'small'
-                              })
-                            ) : (
-                              <CodeIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                            )}
+{/* Mobile: Card layout */}
+            {isMobile ? (
+              <Stack spacing={2}>
+                {getVisibleResources().map((resource) => {
+                  const entityKey = resource as EntityType
+                  const hasManagePermission = canManage(resource)
+                  
+                  return (
+                    <Card key={resource} variant="outlined">
+                      <CardContent sx={{ pb: 2 }}>
+                        {/* Resource Header */}
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 1, 
+                          mb: 2,
+                          pb: 1,
+                          borderBottom: 1,
+                          borderColor: 'divider'
+                        }}>
+                          {RESOURCE_ICONS[entityKey] ? (
+                            React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement, {
+                              fontSize: 'small'
+                            })
+                          ) : (
+                            <CodeIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                          )}
+                          <Typography variant="subtitle1" fontWeight="medium">
                             {ENTITY_DISPLAY_NAMES[entityKey]}
+                          </Typography>
+                        </Box>
+                        
+                        {/* View Details Setting */}
+                        <Box sx={{ mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                            <ViewIcon fontSize="small" sx={{ color: '#467fcf' }} />
+                            <Typography variant="body2" fontWeight="medium">
+                              View Details
+                            </Typography>
                           </Box>
-                        </TableCell>
-                        <TableCell align="center">
                           <ToggleButtonGroup
                             size="small"
                             value={containerPreferences[entityKey]?.view || 'dialog'}
                             exclusive
                             onChange={(_, value) => value && setContainerPreference(entityKey, 'view', value as ContainerType)}
-                            sx={{ height: 32 }}
+                            fullWidth
+                            sx={{ height: 36 }}
                           >
-                            <ToggleButton value="dialog" sx={{ px: 2 }}>
+                            <ToggleButton value="dialog">
                               Dialog
                             </ToggleButton>
-                            <ToggleButton value="drawer" sx={{ px: 2 }}>
+                            <ToggleButton value="drawer">
                               Drawer
                             </ToggleButton>
                           </ToggleButtonGroup>
-                        </TableCell>
-                        <TableCell align="center">
+                        </Box>
+                        
+                        {/* Edit Setting */}
+                        <Box sx={{ mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                            <EditIcon fontSize="small" sx={{ color: '#f59f00' }} />
+                            <Typography variant="body2" fontWeight="medium">
+                              Edit
+                            </Typography>
+                          </Box>
                           {hasManagePermission ? (
                             <ToggleButtonGroup
                               size="small"
                               value={containerPreferences[entityKey]?.edit || 'drawer'}
                               exclusive
                               onChange={(_, value) => value && setContainerPreference(entityKey, 'edit', value as ContainerType)}
-                              sx={{ height: 32 }}
+                              fullWidth
+                              sx={{ height: 36 }}
                             >
-                              <ToggleButton value="dialog" sx={{ px: 2 }}>
+                              <ToggleButton value="dialog">
                                 Dialog
                               </ToggleButton>
-                              <ToggleButton value="drawer" sx={{ px: 2 }}>
+                              <ToggleButton value="drawer">
                                 Drawer
                               </ToggleButton>
                             </ToggleButtonGroup>
                           ) : (
-                            <Chip label="No Permission" size="small" variant="outlined" />
+                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                              <Chip label="No Permission" size="small" variant="outlined" />
+                            </Box>
                           )}
-                        </TableCell>
-                        <TableCell align="center">
+                        </Box>
+                        
+                        {/* Create New Setting */}
+                        <Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                            <AddIcon fontSize="small" sx={{ color: '#5eba00' }} />
+                            <Typography variant="body2" fontWeight="medium">
+                              Create New
+                            </Typography>
+                          </Box>
                           {hasManagePermission ? (
                             <ToggleButtonGroup
                               size="small"
                               value={containerPreferences[entityKey]?.create || 'drawer'}
                               exclusive
                               onChange={(_, value) => value && setContainerPreference(entityKey, 'create', value as ContainerType)}
+                              fullWidth
+                              sx={{ height: 36 }}
+                            >
+                              <ToggleButton value="dialog">
+                                Dialog
+                              </ToggleButton>
+                              <ToggleButton value="drawer">
+                                Drawer
+                              </ToggleButton>
+                            </ToggleButtonGroup>
+                          ) : (
+                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                              <Chip label="No Permission" size="small" variant="outlined" />
+                            </Box>
+                          )}
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </Stack>
+            ) : (
+              /* Desktop: Table layout */
+              <TableContainer component={Paper} variant="outlined">
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Resource</TableCell>
+                      <TableCell align="center">
+                        <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                          <ViewIcon fontSize="small" sx={{ color: '#467fcf' }} />
+                          View Details
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                          <EditIcon fontSize="small" sx={{ color: '#f59f00' }} />
+                          Edit
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                          <AddIcon fontSize="small" sx={{ color: '#5eba00' }} />
+                          Create New
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {getVisibleResources().map((resource) => {
+                      const entityKey = resource as EntityType
+                      const hasManagePermission = canManage(resource)
+                      
+                      return (
+                        <TableRow key={resource}>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {RESOURCE_ICONS[entityKey] ? (
+                                React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement, {
+                                  fontSize: 'small'
+                                })
+                              ) : (
+                                <CodeIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                              )}
+                              {ENTITY_DISPLAY_NAMES[entityKey]}
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <ToggleButtonGroup
+                              size="small"
+                              value={containerPreferences[entityKey]?.view || 'dialog'}
+                              exclusive
+                              onChange={(_, value) => value && setContainerPreference(entityKey, 'view', value as ContainerType)}
                               sx={{ height: 32 }}
                             >
                               <ToggleButton value="dialog" sx={{ px: 2 }}>
@@ -851,20 +987,58 @@ const Settings = () => {
                                 Drawer
                               </ToggleButton>
                             </ToggleButtonGroup>
-                          ) : (
-                            <Chip label="No Permission" size="small" variant="outlined" />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                          </TableCell>
+                          <TableCell align="center">
+                            {hasManagePermission ? (
+                              <ToggleButtonGroup
+                                size="small"
+                                value={containerPreferences[entityKey]?.edit || 'drawer'}
+                                exclusive
+                                onChange={(_, value) => value && setContainerPreference(entityKey, 'edit', value as ContainerType)}
+                                sx={{ height: 32 }}
+                              >
+                                <ToggleButton value="dialog" sx={{ px: 2 }}>
+                                  Dialog
+                                </ToggleButton>
+                                <ToggleButton value="drawer" sx={{ px: 2 }}>
+                                  Drawer
+                                </ToggleButton>
+                              </ToggleButtonGroup>
+                            ) : (
+                              <Chip label="No Permission" size="small" variant="outlined" />
+                            )}
+                          </TableCell>
+                          <TableCell align="center">
+                            {hasManagePermission ? (
+                              <ToggleButtonGroup
+                                size="small"
+                                value={containerPreferences[entityKey]?.create || 'drawer'}
+                                exclusive
+                                onChange={(_, value) => value && setContainerPreference(entityKey, 'create', value as ContainerType)}
+                                sx={{ height: 32 }}
+                              >
+                                <ToggleButton value="dialog" sx={{ px: 2 }}>
+                                  Dialog
+                                </ToggleButton>
+                                <ToggleButton value="drawer" sx={{ px: 2 }}>
+                                  Drawer
+                                </ToggleButton>
+                              </ToggleButtonGroup>
+                            ) : (
+                              <Chip label="No Permission" size="small" variant="outlined" />
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </FormSection>
 
           <FormSection title="Drawer Settings">
-            <Stack spacing={4}>
+            <Stack spacing={isMobile ? 3 : 4}>
               {/* Drawer Position */}
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
@@ -875,16 +1049,35 @@ const Settings = () => {
                   exclusive
                   onChange={(_, value) => value && setDrawerPosition(value)}
                   fullWidth
+                  sx={{
+                    ...(isMobile && {
+                      '& .MuiToggleButton-root': {
+                        flexDirection: 'column',
+                        gap: 0.5,
+                        py: 1.5
+                      }
+                    })
+                  }}
                 >
                   <ToggleButton value="left">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: isMobile ? 0.5 : 1,
+                      flexDirection: isMobile ? 'column' : 'row'
+                    }}>
                       <LeftIcon />
-                      <Typography>Left Side</Typography>
+                      <Typography variant={isMobile ? "caption" : "body2"}>Left Side</Typography>
                     </Box>
                   </ToggleButton>
                   <ToggleButton value="right">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography>Right Side</Typography>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: isMobile ? 0.5 : 1,
+                      flexDirection: isMobile ? 'column' : 'row'
+                    }}>
+                      <Typography variant={isMobile ? "caption" : "body2"}>Right Side</Typography>
                       <RightIcon />
                     </Box>
                   </ToggleButton>
@@ -903,14 +1096,46 @@ const Settings = () => {
                   max={1200}
                   step={50}
                   marks={[
-                    { value: 400, label: 'Compact' },
-                    { value: 600, label: 'Default' },
-                    { value: 800, label: 'Wide' },
-                    { value: 1000, label: 'Extra Wide' },
-                    { value: 1200, label: 'Maximum' },
+                    { value: 400, label: isMobile ? '' : 'Compact' },
+                    { value: 600, label: isMobile ? '' : 'Default' },
+                    { value: 800, label: isMobile ? '' : 'Wide' },
+                    { value: 1000, label: isMobile ? '' : 'Extra Wide' },
+                    { value: 1200, label: isMobile ? '' : 'Maximum' },
                   ]}
-                  sx={{ mt: 2, mb: 1 }}
+                  sx={{ 
+                    mt: 2, 
+                    mb: 1,
+                    ...(isMobile && {
+                      '& .MuiSlider-markLabel': {
+                        fontSize: '0.75rem'
+                      }
+                    })
+                  }}
                 />
+                {isMobile && (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    mt: 1,
+                    px: 1
+                  }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Compact
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Default
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Wide
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Extra
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Max
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </Stack>
           </FormSection>
@@ -922,15 +1147,27 @@ const Settings = () => {
             </Typography>
           </Alert>
 
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ 
+            mt: 4, 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: isMobile ? 'center' : 'space-between', 
+            alignItems: 'center',
+            gap: isMobile ? 2 : 0
+          }}>
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={resetToDefaults}
+              fullWidth={isMobile}
             >
               Reset to Defaults
             </Button>
-            <Typography variant="body2" color="text.secondary">
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              textAlign={isMobile ? 'center' : 'right'}
+            >
               Changes are saved automatically
             </Typography>
           </Box>
