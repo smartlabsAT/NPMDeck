@@ -1,5 +1,4 @@
 export { DataTable } from './DataTable'
-export { ResponsiveTable } from './ResponsiveTable'
 export { MobileCard } from './MobileCard'
 export type {
   TableColumn,
@@ -21,4 +20,3 @@ export {
   getVisibleColumns,
   shouldUseCardLayout,
 } from './ResponsiveTypes'
-export { withResponsiveTable, useResponsiveTable } from './ResponsiveTable'
