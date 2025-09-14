@@ -13,6 +13,7 @@ import {
 } from '@mui/icons-material'
 import { BulkAction } from './types'
 import ConfirmDialog from '../ConfirmDialog'
+import logger from '../../utils/logger'
 
 interface DataTableBulkActionsProps<T> {
   selectedCount: number
@@ -44,7 +45,7 @@ export default function DataTableBulkActions<T>({
       await action.action(selectedItems)
       onClearSelection()
     } catch (error) {
-      console.error('Bulk action failed:', error)
+      logger.error('Bulk action failed:', error)
     } finally {
       setProcessing(false)
       setConfirmAction(null)

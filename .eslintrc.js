@@ -56,5 +56,11 @@ module.exports = {
         'no-console': 'off',
       },
     },
+    {
+      files: ['src/utils/logger.ts'],
+      rules: {
+        'no-console': 'off',
+      },
+    },
   ],
 };
