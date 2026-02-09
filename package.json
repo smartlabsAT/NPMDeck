@@ -1,6 +1,6 @@
 {
   "name": "npmDeck",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Modern frontend for Nginx Proxy Manager",
   "main": "server/index.js",
   "scripts": {
