@@ -16,13 +16,7 @@ const queryClient = new QueryClient({
   },
 })
 
-const router = createBrowserRouter(routes, {
-  future: {
-    v7_relativeSplatPath: true,
-    // @ts-expect-error - v7_startTransition will be available in React Router v7
-    v7_startTransition: true,
-  },
-})
+const router = createBrowserRouter(routes)
 
 function App() {
   return (
@@ -32,7 +26,7 @@ function App() {
           <ThemeProvider>
             <ToastProvider>
               <AuthInitializer>
-                <RouterProvider router={router} future={{ v7_startTransition: true }} />
+                <RouterProvider router={router} />
               </AuthInitializer>
             </ToastProvider>
           </ThemeProvider>
