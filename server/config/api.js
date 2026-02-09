@@ -172,7 +172,7 @@ class APIConfig {
     return {
       target: this.config.npmApiUrl,
       changeOrigin: true,
-      pathRewrite: { '^/api': '/api' },
+      pathRewrite: (path) => `/api${path}`,
       timeout: this.config.timeouts.request,
       proxyTimeout: this.config.timeouts.proxy,
       
