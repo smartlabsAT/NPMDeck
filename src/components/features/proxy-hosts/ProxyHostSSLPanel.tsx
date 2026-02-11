@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Typography,
   Box,
@@ -18,10 +17,10 @@ interface ProxyHostSSLPanelProps {
   onNavigateToCertificate: () => void
 }
 
-const ProxyHostSSLPanel: React.FC<ProxyHostSSLPanelProps> = ({
+const ProxyHostSSLPanel = ({
   host,
   onNavigateToCertificate,
-}) => {
+}: ProxyHostSSLPanelProps) => {
   return (
     <Grid container spacing={3}>
       {/* SSL Certificate Info */}

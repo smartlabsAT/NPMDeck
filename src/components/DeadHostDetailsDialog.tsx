@@ -62,12 +62,12 @@ interface DeadHostDetailsDialogProps {
   onEdit?: (host: DeadHost) => void
 }
 
-const DeadHostDetailsDialog: React.FC<DeadHostDetailsDialogProps> = ({
+const DeadHostDetailsDialog = ({
   open,
   onClose,
   host,
   onEdit,
-}) => {
+}: DeadHostDetailsDialogProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const [activeTab, setActiveTab] = useState(0)

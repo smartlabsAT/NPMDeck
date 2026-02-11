@@ -1,4 +1,3 @@
-import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Box, 
@@ -10,7 +9,7 @@ import {
 } from '@mui/material'
 import { Lock as LockIcon } from '@mui/icons-material'
 
-const Forbidden: React.FC = () => {
+const Forbidden = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as { 
@@ -33,6 +32,7 @@ const Forbidden: React.FC = () => {
 
   return (
     <Container maxWidth="sm">
+      <title>Access Denied - NPMDeck</title>
       <Box
         sx={{
           marginTop: 8,

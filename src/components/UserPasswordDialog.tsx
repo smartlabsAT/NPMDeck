@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -23,7 +23,7 @@ interface UserPasswordDialogProps {
   onSave: () => void
 }
 
-const UserPasswordDialog: React.FC<UserPasswordDialogProps> = ({ open, onClose, user, onSave }) => {
+const UserPasswordDialog = ({ open, onClose, user, onSave }: UserPasswordDialogProps) => {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')

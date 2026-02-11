@@ -131,7 +131,7 @@ const PERMISSION_PRESETS: PermissionPreset[] = [
   },
 ]
 
-const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose, user, onSave }) => {
+const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
   const [activeTab, setActiveTab] = useState(0)
   const [selectedPreset, setSelectedPreset] = useState<string>('custom')
   const { user: currentUser } = useAuthStore()

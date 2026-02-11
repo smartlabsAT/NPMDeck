@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -50,7 +50,7 @@ const defaultPermissions: Permissions = {
   certificates: 'manage',
 }
 
-const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({ open, onClose, user, onSave }) => {
+const UserPermissionsDialog = ({ open, onClose, user, onSave }: UserPermissionsDialogProps) => {
   const [permissions, setPermissions] = useState<Permissions>(defaultPermissions)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

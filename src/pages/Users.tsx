@@ -445,6 +445,7 @@ const Users = () => {
 
   return (
     <Container maxWidth={false}>
+      <title>Users - NPMDeck</title>
       <Box py={3}>
         <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
           <PageHeader

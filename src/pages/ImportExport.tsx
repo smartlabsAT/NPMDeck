@@ -169,6 +169,7 @@ export default function ImportExport() {
 
   return (
     <Container maxWidth="lg">
+      <title>Import &amp; Export - NPMDeck</title>
       <Box py={3}>
         <Typography variant="h4" gutterBottom>
           Import / Export

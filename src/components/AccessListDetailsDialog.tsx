@@ -34,12 +34,12 @@ interface AccessListDetailsDialogProps {
   onEdit?: (accessList: AccessList) => void
 }
 
-const AccessListDetailsDialog: React.FC<AccessListDetailsDialogProps> = ({
+const AccessListDetailsDialog = ({
   open,
   onClose,
   accessList,
   onEdit,
-}) => {
+}: AccessListDetailsDialogProps) => {
   const [copiedText, setCopiedText] = useState<string>('')
   // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 

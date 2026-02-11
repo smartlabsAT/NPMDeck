@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useOptimistic } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
   Container,
-  IconButton,
   Typography,
-  CircularProgress,
   Tooltip,
   // Chip,
 } from '@mui/material'
@@ -57,7 +55,13 @@ export default function DeadHosts() {
   const [hosts, setHosts] = useState<DeadHost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [togglingHosts, setTogglingHosts] = useState<Set<number>>(new Set())
+  const [optimisticHosts, setOptimisticHost] = useOptimistic(
+    hosts,
+    (state, toggledItem: { id: number; enabled: boolean }) =>
+      state.map(item =>
+        item.id === toggledItem.id ? { ...item, enabled: toggledItem.enabled } : item
+      )
+  )
   
   // Dialogs
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -127,12 +131,12 @@ export default function DeadHosts() {
   }
 
   const handleToggleEnabled = async (host: DeadHost) => {
-    // Add host ID to toggling set
-    setTogglingHosts(prev => new Set(prev).add(host.id))
-    
+    // Optimistic update - UI changes instantly
+    setOptimisticHost({ id: host.id, enabled: !host.enabled })
+
     try {
       const hostName = host.domain_names[0] || `#${host.id}`
-      
+
       if (host.enabled) {
         await deadHostsApi.disable(host.id)
         showSuccess('dead-host', 'disabled', hostName, host.id)
@@ -145,13 +149,7 @@ export default function DeadHosts() {
       const hostName = host.domain_names[0] || `#${host.id}`
       showError('dead-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
       setError(getErrorMessage(err))
-    } finally {
-      // Remove host ID from toggling set
-      setTogglingHosts(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(host.id)
-        return newSet
-      })
+      await loadHosts()
     }
   }
 
@@ -189,7 +187,7 @@ export default function DeadHosts() {
   }
 
   // Apply visibility filtering
-  const visibleHosts = useFilteredData(hosts)
+  const visibleHosts = useFilteredData(optimisticHosts)
 
   const getStatusIcon = (host: DeadHost) => {
     if (!host.enabled) {
@@ -295,25 +293,19 @@ export default function DeadHosts() {
       showInCard: true,
       render: (value, item) => (
         <Box display="flex" gap={0.5} justifyContent="flex-end">
-          {togglingHosts.has(item.id) ? (
-            <IconButton size="small" disabled>
-              <CircularProgress size={18} />
-            </IconButton>
-          ) : (
-            <PermissionIconButton
-              resource="dead_hosts"
-              permissionAction="edit"
-              size="small"
-              tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
-              onClick={(e) => {
-                e.stopPropagation()
-                handleToggleEnabled(item)
-              }}
-              color={item.enabled ? 'default' : 'success'}
-            >
-              <PowerIcon />
-            </PermissionIconButton>
-          )}
+          <PermissionIconButton
+            resource="dead_hosts"
+            permissionAction="edit"
+            size="small"
+            tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleToggleEnabled(item)
+            }}
+            color={item.enabled ? 'default' : 'success'}
+          >
+            <PowerIcon />
+          </PermissionIconButton>
           <PermissionIconButton
             resource="dead_hosts"
             permissionAction="edit"
@@ -441,6 +433,7 @@ export default function DeadHosts() {
 
   return (
     <Container maxWidth={false}>
+      <title>404 Hosts - NPMDeck</title>
       <Box py={3}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>

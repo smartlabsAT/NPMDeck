@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Typography,
   Box,
@@ -28,12 +27,12 @@ interface CertificateInfoPanelProps {
   onCopyToClipboard: (text: string, label?: string) => void
 }
 
-const CertificateInfoPanel: React.FC<CertificateInfoPanelProps> = ({
+const CertificateInfoPanel = ({
   certificate,
   expandedSections: _expandedSections,
   onToggleSection: _onToggleSection,
   onCopyToClipboard,
-}) => {
+}: CertificateInfoPanelProps) => {
   const getDaysUntilExpiry = (expiresOn: string | null) => {
     if (!expiresOn) return null
     const expiryDate = new Date(expiresOn)

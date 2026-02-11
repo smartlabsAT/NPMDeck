@@ -1,7 +1,7 @@
 import { GlobalSearchProvider } from '../contexts/GlobalSearchContext'
 import Layout from './Layout'
 
-const LayoutWithSearch: React.FC = () => {
+const LayoutWithSearch = () => {
   return (
     <GlobalSearchProvider>
       <Layout />

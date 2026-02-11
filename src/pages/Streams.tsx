@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useOptimistic } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -6,7 +6,6 @@ import {
   IconButton,
   Typography,
   Chip,
-  CircularProgress,
   Tooltip,
 } from '@mui/material'
 import {
@@ -55,7 +54,13 @@ export default function Streams() {
   const [streams, setStreams] = useState<Stream[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [togglingStreams, setTogglingStreams] = useState<Set<number>>(new Set())
+  const [optimisticStreams, setOptimisticStream] = useOptimistic(
+    streams,
+    (state, toggledItem: { id: number; enabled: boolean }) =>
+      state.map(item =>
+        item.id === toggledItem.id ? { ...item, enabled: toggledItem.enabled } : item
+      )
+  )
   
   // Dialogs
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -132,12 +137,12 @@ export default function Streams() {
   }
 
   const handleToggleEnabled = async (stream: Stream) => {
-    // Add stream ID to toggling set
-    setTogglingStreams(prev => new Set(prev).add(stream.id))
-    
+    // Optimistic update - UI changes instantly
+    setOptimisticStream({ id: stream.id, enabled: !stream.enabled })
+
     try {
       const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
-      
+
       if (stream.enabled) {
         await streamsApi.disable(stream.id)
         showSuccess('stream', 'disabled', streamName, stream.id)
@@ -150,13 +155,7 @@ export default function Streams() {
       const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
       showError('stream', stream.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', streamName, stream.id)
       setError(getErrorMessage(err))
-    } finally {
-      // Remove stream ID from toggling set
-      setTogglingStreams(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(stream.id)
-        return newSet
-      })
+      await loadStreams()
     }
   }
 
@@ -173,7 +172,7 @@ export default function Streams() {
   }
 
   // Apply visibility filtering
-  const visibleStreams = useFilteredData(streams)
+  const visibleStreams = useFilteredData(optimisticStreams)
 
   const getStatusIcon = (stream: Stream) => {
     if (!stream.enabled) {
@@ -313,25 +312,19 @@ export default function Streams() {
               <ViewIcon />
             </IconButton>
           </Tooltip>
-          {togglingStreams.has(item.id) ? (
-            <IconButton size="small" disabled>
-              <CircularProgress size={18} />
-            </IconButton>
-          ) : (
-            <PermissionIconButton
-              resource="streams"
-              permissionAction="edit"
-              size="small"
-              tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
-              onClick={(e) => {
-                e.stopPropagation()
-                handleToggleEnabled(item)
-              }}
-              color={item.enabled ? 'default' : 'success'}
-            >
-              <PowerIcon />
-            </PermissionIconButton>
-          )}
+          <PermissionIconButton
+            resource="streams"
+            permissionAction="edit"
+            size="small"
+            tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleToggleEnabled(item)
+            }}
+            color={item.enabled ? 'default' : 'success'}
+          >
+            <PowerIcon />
+          </PermissionIconButton>
           <PermissionIconButton
             resource="streams"
             permissionAction="edit"
@@ -486,6 +479,7 @@ export default function Streams() {
 
   return (
     <Container maxWidth={false}>
+      <title>Streams - NPMDeck</title>
       <Box py={3}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>

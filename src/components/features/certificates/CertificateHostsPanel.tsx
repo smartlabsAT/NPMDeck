@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Typography,
   Box,
@@ -20,10 +19,10 @@ interface CertificateHostsPanelProps {
   onNavigateToHost: (hostType: string, hostId: number) => void
 }
 
-const CertificateHostsPanel: React.FC<CertificateHostsPanelProps> = ({
+const CertificateHostsPanel = ({
   certificate,
   onNavigateToHost,
-}) => {
+}: CertificateHostsPanelProps) => {
   const totalHosts = 
     (certificate.proxy_hosts?.length || 0) +
     (certificate.redirection_hosts?.length || 0) +

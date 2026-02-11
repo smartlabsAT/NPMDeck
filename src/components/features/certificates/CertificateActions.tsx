@@ -1,4 +1,3 @@
-import React from 'react'
 import { Button } from '@mui/material'
 import { Edit as EditIcon } from '@mui/icons-material'
 import { Certificate } from '../../../api/certificates'
@@ -10,11 +9,11 @@ interface CertificateActionsProps {
   onEdit?: (certificate: Certificate) => void
 }
 
-const CertificateActions: React.FC<CertificateActionsProps> = ({
+const CertificateActions = ({
   certificate,
   onClose,
   onEdit,
-}) => {
+}: CertificateActionsProps) => {
   return (
     <>
       {onEdit && (

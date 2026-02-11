@@ -11,7 +11,7 @@ import {
   Button,
   Divider,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   ListItemSecondaryAction,
@@ -238,6 +238,7 @@ const Dashboard = () => {
 
   return (
     <Box>
+      <title>Dashboard - NPMDeck</title>
       <Grid container spacing={2}>
         {/* Quick Actions - Now at the top */}
         <Grid item xs={12}>
@@ -339,8 +340,7 @@ const Dashboard = () => {
                     return (
                       <React.Fragment key={cert.id}>
                         {index > 0 && <Divider />}
-                        <ListItem 
-                          button
+                        <ListItemButton
                           onClick={() => navigate(`/security/certificates/${cert.id}/view`)}
                         >
                           <ListItemIcon>
@@ -367,7 +367,7 @@ const Dashboard = () => {
                               variant="outlined"
                             />
                           </ListItemSecondaryAction>
-                        </ListItem>
+                        </ListItemButton>
                       </React.Fragment>
                     )
                   })}

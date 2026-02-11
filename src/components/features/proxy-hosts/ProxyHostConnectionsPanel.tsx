@@ -26,12 +26,12 @@ interface ProxyHostConnectionsPanelProps {
   onEditRedirection: (redirectionId: number) => void
 }
 
-const ProxyHostConnectionsPanel: React.FC<ProxyHostConnectionsPanelProps> = ({
+const ProxyHostConnectionsPanel = ({
   linkedRedirections,
   loadingConnections,
   onNavigateToRedirection,
   onEditRedirection,
-}) => {
+}: ProxyHostConnectionsPanelProps) => {
   return (
     <Box>
       <Box display="flex" alignItems="center" gap={1} mb={3}>

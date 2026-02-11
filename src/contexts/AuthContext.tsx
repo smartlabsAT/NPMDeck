@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from 'react'
+import { createContext, useContext, useEffect, type ReactNode } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import type { StoreApi } from 'zustand'
 
@@ -9,7 +9,7 @@ export type AuthStore = ReturnType<typeof useAuthStore>
 const AuthStoreContext = createContext<StoreApi<AuthStore> | null>(null)
 
 // Provider component
-export const AuthStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthStoreProvider = ({ children }: { children: ReactNode }) => {
   // Get the store API from zustand
   const storeApi = (useAuthStore as any).api
   

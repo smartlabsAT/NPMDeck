@@ -413,6 +413,7 @@ const AuditLog = () => {
 
   return (
     <Container maxWidth={false}>
+      <title>Audit Log - NPMDeck</title>
       <Box py={3}>
         <Box mb={3}>
           <PageHeader

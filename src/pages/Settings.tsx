@@ -585,6 +585,7 @@ const Settings = () => {
 
   return (
     <Box>
+      <title>Settings - NPMDeck</title>
       <Box mb={3}>
         <PageHeader
           icon={React.createElement(NAVIGATION_CONFIG.settings.icon, { sx: { color: NAVIGATION_CONFIG.settings.color } })}

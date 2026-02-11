@@ -57,12 +57,12 @@ interface ProxyHostDetailsDialogProps {
   onEdit?: (host: ProxyHost) => void
 }
 
-const ProxyHostDetailsDialog: React.FC<ProxyHostDetailsDialogProps> = ({
+const ProxyHostDetailsDialog = ({
   open,
   onClose,
   host,
   onEdit,
-}) => {
+}: ProxyHostDetailsDialogProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { } = usePermissions() // eslint-disable-line no-empty-pattern

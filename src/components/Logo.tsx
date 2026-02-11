@@ -5,7 +5,7 @@ interface LogoProps {
   color?: string
 }
 
-const Logo: React.FC<LogoProps> = ({ width = 210, color = 'currentColor' }) => {
+const Logo = ({ width = 210, color = 'currentColor' }: LogoProps) => {
   // Calculate proportional dimensions
   const aspectRatio = 210 / 83
   const actualHeight = width / aspectRatio

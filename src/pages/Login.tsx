@@ -70,6 +70,7 @@ const Login = () => {
 
   return (
     <Container component="main" maxWidth="xs">
+      <title>Login - NPMDeck</title>
       <Box
         sx={{
           marginTop: 8,

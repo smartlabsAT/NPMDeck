@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logger from '../utils/logger'
 import {
@@ -71,7 +71,7 @@ const getStatusIcon = (status?: string) => {
   }
 }
 
-const SearchBar: React.FC = () => {
+const SearchBar = () => {
   const navigate = useNavigate()
   const theme = useTheme()
   
@@ -217,7 +217,7 @@ const SearchBar: React.FC = () => {
       noOptionsText={inputValue ? "No results found" : "Start typing to search..."}
       sx={{ width: '100%', maxWidth: 600 }}
       disablePortal={false}
-      componentsProps={{
+      slotProps={{
         popper: {
           placement: 'bottom-start',
           sx: {
@@ -292,7 +292,7 @@ const SearchBar: React.FC = () => {
             </ListItemIcon>
             <ListItemText
               primary={
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box component="span" display="flex" alignItems="center" gap={1}>
                   {option.title}
                   {option.metadata?.ssl && (
                     <VpnKey sx={{ fontSize: 16, color: 'success.main' }} />
@@ -301,14 +301,14 @@ const SearchBar: React.FC = () => {
                 </Box>
               }
               secondary={
-                <Box>
+                <Box component="span">
                   {option.subtitle && (
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" component="span" color="text.secondary">
                       {option.subtitle}
                     </Typography>
                   )}
                   {option.metadata?.owner && (
-                    <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                    <Typography variant="caption" component="span" color="text.secondary" sx={{ ml: 1 }}>
                       • {option.metadata.owner}
                     </Typography>
                   )}

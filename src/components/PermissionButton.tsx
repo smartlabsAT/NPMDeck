@@ -10,7 +10,7 @@ interface PermissionButtonProps extends Omit<ButtonProps, 'action'> {
   tooltipWhenDisabled?: string
 }
 
-const PermissionButton: React.FC<PermissionButtonProps> = ({
+const PermissionButton = ({
   resource,
   level,
   permissionAction,
@@ -19,7 +19,7 @@ const PermissionButton: React.FC<PermissionButtonProps> = ({
   children,
   disabled,
   ...buttonProps
-}) => {
+}: PermissionButtonProps) => {
   const { hasPermission, canAccess } = useAuthStore()
 
   // Use either level-based or action-based permission check

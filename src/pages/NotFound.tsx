@@ -5,8 +5,10 @@ const NotFound = () => {
   const navigate = useNavigate()
 
   return (
-    <Box textAlign="center" mt={8}>
-      <Typography variant="h1" color="error">404</Typography>
+    <>
+      <title>Page Not Found - NPMDeck</title>
+      <Box textAlign="center" mt={8}>
+        <Typography variant="h1" color="error">404</Typography>
       <Typography variant="h5" mt={2}>Page Not Found</Typography>
       <Button 
         variant="contained" 
@@ -15,7 +17,8 @@ const NotFound = () => {
       >
         Back to Dashboard
       </Button>
-    </Box>
+      </Box>
+    </>
   )
 }
 
