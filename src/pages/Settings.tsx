@@ -473,7 +473,7 @@ const Settings = () => {
                 mr: 2
               }}
             >
-              {React.cloneElement(option.icon as React.ReactElement, { fontSize: 'large' })}
+              {React.cloneElement(option.icon as React.ReactElement<any>, { fontSize: 'large' })}
             </Box>
             <Typography variant="h6" component="div">
               {option.label}
@@ -824,7 +824,7 @@ const Settings = () => {
                           borderColor: 'divider'
                         }}>
                           {RESOURCE_ICONS[entityKey] ? (
-                            React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement, {
+                            React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement<any>, {
                               fontSize: 'small'
                             })
                           ) : (
@@ -963,7 +963,7 @@ const Settings = () => {
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               {RESOURCE_ICONS[entityKey] ? (
-                                React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement, {
+                                React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement<any>, {
                                   fontSize: 'small'
                                 })
                               ) : (

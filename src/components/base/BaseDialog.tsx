@@ -104,11 +104,9 @@ export interface BaseDialogProps {
 /**
  * Slide up transition for dialogs
  */
-const SlideTransition = React.forwardRef<unknown, TransitionProps & { children: React.ReactElement<any, any> }>(
-  function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />
-  }
-)
+function SlideTransition({ ref, ...props }: TransitionProps & { children: React.ReactElement<any, any>; ref?: React.Ref<unknown> }) {
+  return <Slide direction="up" ref={ref} {...props} />
+}
 
 /**
  * BaseDialog - A reusable dialog component for confirmations, forms, and content

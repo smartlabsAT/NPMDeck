@@ -85,7 +85,7 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
                 backgroundColor: `${color}15`,
                 display: 'inline-flex'
               }}>
-                {React.cloneElement(icon as React.ReactElement, { 
+                {React.cloneElement(icon as React.ReactElement<any>, { 
                   sx: { fontSize: 24, color } 
                 })}
               </Box>
@@ -292,7 +292,7 @@ const Dashboard = () => {
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.3 }}>
                         <AddIcon sx={{ fontSize: 16 }} />
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {React.cloneElement(action.icon as React.ReactElement, {
+                          {React.cloneElement(action.icon as React.ReactElement<any>, {
                             sx: { fontSize: 16 }
                           })}
                           <Typography variant="caption" sx={{ fontWeight: 500, letterSpacing: 0.3 }}>
