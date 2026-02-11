@@ -162,7 +162,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
 
   // Refs for managing side effects
   const initialDataRef = useRef(initialData);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isSubmittingRef = useRef(false);
 
   /**

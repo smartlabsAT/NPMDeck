@@ -51,14 +51,45 @@ export interface TabPanelProps {
 }
 
 /**
+ * Transition props type shared by all transition wrapper components
+ */
+type TransitionWrapperProps = TransitionProps & { children: React.ReactElement<any, any>; ref?: React.Ref<unknown> }
+
+/**
  * Slide transition component factory
  */
 const createSlideTransition = (direction: SlideDirection) => {
-  return React.forwardRef<unknown, TransitionProps & { children: React.ReactElement<any, any> }>(
-    function SlideTransition(props, ref) {
-      return <Slide direction={direction} ref={ref} {...props} />
-    }
-  )
+  return function SlideTransition({ ref, ...props }: TransitionWrapperProps) {
+    return <Slide direction={direction} ref={ref} {...props} />
+  }
+}
+
+/**
+ * Grow transition component
+ */
+function GrowTransition({ ref, ...props }: TransitionWrapperProps) {
+  return <Grow ref={ref} {...props} />
+}
+
+/**
+ * Collapse transition component
+ */
+function CollapseTransition({ ref, ...props }: TransitionWrapperProps) {
+  return <Collapse ref={ref} {...props} />
+}
+
+/**
+ * Fade transition component
+ */
+function FadeTransition({ ref, ...props }: TransitionWrapperProps) {
+  return <Fade ref={ref} {...props} />
+}
+
+/**
+ * No-op transition component (renders children directly)
+ */
+function NoTransition({ ref, children }: TransitionWrapperProps) {
+  return React.cloneElement(children, { ref })
 }
 
 /**
@@ -130,30 +161,14 @@ export default function TabPanel({
       case 'slide':
         return createSlideTransition(slideDirection)
       case 'grow':
-        return React.forwardRef<unknown, TransitionProps & { children: React.ReactElement<any, any> }>(
-          function GrowTransition(props, ref) {
-            return <Grow ref={ref} {...props} />
-          }
-        )
+        return GrowTransition
       case 'collapse':
-        return React.forwardRef<unknown, TransitionProps & { children: React.ReactElement<any, any> }>(
-          function CollapseTransition(props, ref) {
-            return <Collapse ref={ref} {...props} />
-          }
-        )
+        return CollapseTransition
       case 'fade':
-        return React.forwardRef<unknown, TransitionProps & { children: React.ReactElement<any, any> }>(
-          function FadeTransition(props, ref) {
-            return <Fade ref={ref} {...props} />
-          }
-        )
+        return FadeTransition
       case 'none':
       default:
-        return React.forwardRef<unknown, TransitionProps & { children: React.ReactElement<any, any> }>(
-          function NoTransition(props, ref) {
-            return React.cloneElement(props.children, { ref })
-          }
-        )
+        return NoTransition
     }
   }
 

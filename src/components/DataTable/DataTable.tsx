@@ -276,7 +276,7 @@ export function DataTable<T extends object>({
                         </Typography>
                       </Box>
                       {sortField === column.id ? (
-                        <Box component="span" sx={visuallyHidden}>
+                        <Box component="span" sx={visuallyHidden as Record<string, unknown>}>
                           {sortDirection === 'desc' ? 'sorted descending' : 'sorted ascending'}
                         </Box>
                       ) : null}
