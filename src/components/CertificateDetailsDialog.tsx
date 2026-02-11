@@ -49,12 +49,12 @@ function TabPanel(props: TabPanelProps) {
   )
 }
 
-const CertificateDetailsDialog: React.FC<CertificateDetailsDialogProps> = ({
+const CertificateDetailsDialog = ({
   open,
   onClose,
   certificate,
   onEdit,
-}) => {
+}: CertificateDetailsDialogProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { } = usePermissions() // eslint-disable-line no-empty-pattern

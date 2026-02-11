@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Typography,
   Box,
@@ -42,14 +41,14 @@ interface ProxyHostInfoPanelProps {
   onNavigateToAccess: () => void
 }
 
-const ProxyHostInfoPanel: React.FC<ProxyHostInfoPanelProps> = ({
+const ProxyHostInfoPanel = ({
   host,
   expandedSections,
   copiedText: _copiedText,
   onToggleSection,
   onCopyToClipboard,
   onNavigateToAccess,
-}) => {
+}: ProxyHostInfoPanelProps) => {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString('en-US', {

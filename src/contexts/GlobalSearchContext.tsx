@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePermissions } from '../hooks/usePermissions'
 import { proxyHostsApi } from '../api/proxyHosts'
@@ -35,7 +35,7 @@ interface GlobalSearchProviderProps {
   children: ReactNode
 }
 
-export const GlobalSearchProvider: React.FC<GlobalSearchProviderProps> = ({ children }) => {
+export const GlobalSearchProvider = ({ children }: GlobalSearchProviderProps) => {
   const navigate = useNavigate()
   const { canView, canManage, isAdmin } = usePermissions()
   

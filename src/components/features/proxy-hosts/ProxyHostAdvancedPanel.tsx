@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Typography,
   Paper,
@@ -10,9 +9,9 @@ interface ProxyHostAdvancedPanelProps {
   host: ProxyHost
 }
 
-const ProxyHostAdvancedPanel: React.FC<ProxyHostAdvancedPanelProps> = ({
+const ProxyHostAdvancedPanel = ({
   host,
-}) => {
+}: ProxyHostAdvancedPanelProps) => {
   return (
     <>
       {host.advanced_config ? (

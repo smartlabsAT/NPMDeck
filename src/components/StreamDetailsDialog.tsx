@@ -32,12 +32,12 @@ interface StreamDetailsDialogProps {
   onEdit?: (stream: Stream) => void
 }
 
-const StreamDetailsDialog: React.FC<StreamDetailsDialogProps> = ({
+const StreamDetailsDialog = ({
   open,
   onClose,
   stream,
   onEdit,
-}) => {
+}: StreamDetailsDialogProps) => {
   const [copiedText, setCopiedText] = useState<string>('')
   // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 

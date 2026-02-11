@@ -6,7 +6,7 @@ interface PageHeaderProps {
   description: string
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ icon, title, description }) => {
+const PageHeader = ({ icon, title, description }: PageHeaderProps) => {
   return (
     <Box display="flex" alignItems="center" gap={2} mb={3}>
       <Box sx={{ fontSize: '2.5rem' }}>

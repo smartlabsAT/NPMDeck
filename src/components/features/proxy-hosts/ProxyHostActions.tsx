@@ -1,4 +1,3 @@
-import React from 'react'
 import { Button } from '@mui/material'
 import { Edit as EditIcon } from '@mui/icons-material'
 import { ProxyHost } from '../../../api/proxyHosts'
@@ -10,11 +9,11 @@ interface ProxyHostActionsProps {
   onEdit?: (host: ProxyHost) => void
 }
 
-const ProxyHostActions: React.FC<ProxyHostActionsProps> = ({
+const ProxyHostActions = ({
   host,
   onClose,
   onEdit,
-}) => {
+}: ProxyHostActionsProps) => {
   return (
     <>
       <Button onClick={onClose}>Close</Button>

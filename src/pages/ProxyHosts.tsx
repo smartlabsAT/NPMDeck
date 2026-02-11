@@ -1,5 +1,5 @@
 import { getErrorMessage } from '../types/common'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useOptimistic } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -7,7 +7,6 @@ import {
   IconButton,
   Typography,
   Chip,
-  CircularProgress,
   Tooltip,
 } from '@mui/material'
 import {
@@ -75,7 +74,13 @@ export default function ProxyHosts() {
   const [redirectionsByTarget, setRedirectionsByTarget] = useState<Map<string, RedirectionHost[]>>(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [togglingHosts, setTogglingHosts] = useState<Set<number>>(new Set())
+  const [optimisticHosts, setOptimisticHost] = useOptimistic(
+    hosts,
+    (state, toggledItem: { id: number; enabled: boolean }) =>
+      state.map(item =>
+        item.id === toggledItem.id ? { ...item, enabled: toggledItem.enabled } : item
+      )
+  )
   
   // Dialogs
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -160,12 +165,12 @@ export default function ProxyHosts() {
   }
 
   const handleToggleEnabled = async (host: ProxyHost) => {
-    // Add host ID to toggling set
-    setTogglingHosts(prev => new Set(prev).add(host.id))
-    
+    // Optimistic update - UI changes instantly
+    setOptimisticHost({ id: host.id, enabled: !host.enabled })
+
     try {
       const hostName = host.domain_names[0] || `#${host.id}`
-      
+
       if (host.enabled) {
         await proxyHostsApi.disable(host.id)
         showSuccess('proxy-host', 'disabled', hostName, host.id)
@@ -178,13 +183,7 @@ export default function ProxyHosts() {
       const hostName = host.domain_names[0] || `#${host.id}`
       showError('proxy-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
       setError(getErrorMessage(err))
-    } finally {
-      // Remove host ID from toggling set
-      setTogglingHosts(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(host.id)
-        return newSet
-      })
+      await loadHosts()
     }
   }
 
@@ -223,7 +222,7 @@ export default function ProxyHosts() {
 
 
   // Apply visibility filtering
-  const visibleHosts = useFilteredData(hosts)
+  const visibleHosts = useFilteredData(optimisticHosts)
 
   const getStatusIcon = (host: ProxyHost) => {
     if (!host.enabled) {
@@ -437,25 +436,19 @@ export default function ProxyHosts() {
       showInCard: true,
       render: (value: any, item: ProxyHost) => (
         <Box display="flex" gap={0.5} justifyContent="flex-end">
-          {togglingHosts.has(item.id) ? (
-            <IconButton size="small" disabled>
-              <CircularProgress size={18} />
-            </IconButton>
-          ) : (
-            <PermissionIconButton
-              resource="proxy_hosts"
-              permissionAction="edit"
-              size="small"
-              tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
-              onClick={(e) => {
-                e.stopPropagation()
-                handleToggleEnabled(item)
-              }}
-              color={item.enabled ? 'default' : 'success'}
-            >
-              <PowerIcon />
-            </PermissionIconButton>
-          )}
+          <PermissionIconButton
+            resource="proxy_hosts"
+            permissionAction="edit"
+            size="small"
+            tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleToggleEnabled(item)
+            }}
+            color={item.enabled ? 'default' : 'success'}
+          >
+            <PowerIcon />
+          </PermissionIconButton>
           <PermissionIconButton
             resource="proxy_hosts"
             permissionAction="edit"
@@ -621,6 +614,7 @@ export default function ProxyHosts() {
 
   return (
     <Container maxWidth={false}>
+      <title>Proxy Hosts - NPMDeck</title>
       <Box py={3}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>

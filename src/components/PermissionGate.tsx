@@ -12,7 +12,7 @@ interface PermissionGateProps {
   tooltipText?: string
 }
 
-const PermissionGate: React.FC<PermissionGateProps> = ({
+const PermissionGate = ({
   children,
   resource,
   level,
@@ -20,7 +20,7 @@ const PermissionGate: React.FC<PermissionGateProps> = ({
   fallback = null,
   showTooltip = false,
   tooltipText
-}) => {
+}: PermissionGateProps) => {
   const { hasPermission, canAccess } = useAuthStore()
 
   // Use either level-based or action-based permission check

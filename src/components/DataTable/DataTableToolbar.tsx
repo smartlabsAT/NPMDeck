@@ -100,8 +100,8 @@ export default function DataTableToolbar({
           )}
 
           {filters.map((filter) => {
-            const currentValue = activeFilters[filter.id] || filter.defaultValue || 'all'
-            const hasValue = currentValue !== 'all'
+            const currentValue = activeFilters[filter.id] ?? filter.defaultValue ?? ''
+            const hasValue = currentValue !== ''
             
             return (
               <FormControl 

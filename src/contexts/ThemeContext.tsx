@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { ThemeProvider as MUIThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { lightTheme, darkTheme } from '../theme/index'
@@ -26,7 +26,7 @@ interface ThemeProviderProps {
   children: ReactNode
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [mode, setMode] = useState<ThemeMode>(() => {
     // Check localStorage first
     const saved = localStorage.getItem(THEME_KEY)

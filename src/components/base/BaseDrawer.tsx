@@ -135,7 +135,7 @@ export interface BaseDrawerProps {
  * </BaseDrawer>
  * ```
  */
-export const BaseDrawer: React.FC<BaseDrawerProps> = ({
+export const BaseDrawer = ({
   open,
   onClose,
   title,
@@ -162,7 +162,7 @@ export const BaseDrawer: React.FC<BaseDrawerProps> = ({
   className,
   disableBackdropClick = false,
   disableEscapeKeyDown = false,
-}) => {
+}: BaseDrawerProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [showConfirmClose, setShowConfirmClose] = useState(false);

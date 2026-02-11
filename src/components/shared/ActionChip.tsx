@@ -1,4 +1,3 @@
-import React from 'react'
 import { Chip, ChipProps } from '@mui/material'
 import {
   Add as AddIcon,
@@ -54,7 +53,7 @@ const getActionColor = (action: ActionType): 'primary' | 'secondary' | 'error' |
   }
 }
 
-const ActionChip: React.FC<ActionChipProps> = ({ action, label, sx, ...props }) => {
+const ActionChip = ({ action, label, sx, ...props }: ActionChipProps) => {
   return (
     <Chip
       size="small"

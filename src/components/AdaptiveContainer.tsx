@@ -27,7 +27,7 @@ interface AdaptiveContainerProps {
   fullWidth?: boolean
 }
 
-const AdaptiveContainer: React.FC<AdaptiveContainerProps> = ({
+const AdaptiveContainer = ({
   open,
   onClose,
   entity,
@@ -37,7 +37,7 @@ const AdaptiveContainer: React.FC<AdaptiveContainerProps> = ({
   actions,
   maxWidth = 'md',
   fullWidth = true
-}) => {
+}: AdaptiveContainerProps) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const { getContainerType, drawerPosition, drawerWidth } = useUISettingsStore()

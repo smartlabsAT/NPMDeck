@@ -1,4 +1,3 @@
-import React from 'react'
 import { Box, Typography, Avatar, Tooltip } from '@mui/material'
 import { Person as PersonIcon } from '@mui/icons-material'
 import { Owner } from '../../types/common'
@@ -11,13 +10,13 @@ interface OwnerDisplayProps {
   showEmail?: boolean
 }
 
-const OwnerDisplay: React.FC<OwnerDisplayProps> = ({
+const OwnerDisplay = ({
   owner,
   userId,
   showAvatar = false,
   size = 'medium',
   showEmail = false
-}) => {
+}: OwnerDisplayProps) => {
   // If no owner object but userId is provided, show user ID
   if (!owner && userId) {
     return (

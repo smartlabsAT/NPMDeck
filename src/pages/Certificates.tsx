@@ -441,6 +441,7 @@ const Certificates = () => {
 
   return (
     <Container maxWidth={false}>
+      <title>SSL Certificates - NPMDeck</title>
       <Box py={3}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>

@@ -351,6 +351,7 @@ export default function AccessLists() {
 
   return (
     <Container maxWidth={false}>
+      <title>Access Lists - NPMDeck</title>
       <Box py={3}>
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>

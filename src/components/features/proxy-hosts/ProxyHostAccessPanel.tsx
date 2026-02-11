@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Typography,
   Box,
@@ -30,12 +29,12 @@ interface ProxyHostAccessPanelProps {
   onNavigateToFullAccessList: () => void
 }
 
-const ProxyHostAccessPanel: React.FC<ProxyHostAccessPanelProps> = ({
+const ProxyHostAccessPanel = ({
   host,
   fullAccessList,
   loadingAccessList,
   onNavigateToFullAccessList,
-}) => {
+}: ProxyHostAccessPanelProps) => {
   if (!host.access_list) {
     return null
   }

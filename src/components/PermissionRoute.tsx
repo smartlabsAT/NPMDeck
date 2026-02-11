@@ -7,11 +7,11 @@ interface PermissionRouteProps {
   level?: PermissionLevel
 }
 
-const PermissionRoute: React.FC<PermissionRouteProps> = ({ 
-  children, 
-  resource, 
-  level = 'view' 
-}) => {
+const PermissionRoute = ({
+  children,
+  resource,
+  level = 'view'
+}: PermissionRouteProps) => {
   return (
     <ProtectedRoute requiredResource={resource} requiredLevel={level}>
       {children}

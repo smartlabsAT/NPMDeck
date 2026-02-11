@@ -311,10 +311,12 @@ export default function BaseDialog({
           })
         }
       }}
-      BackdropProps={{
-        sx: {
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(2px)',
+      slotProps={{
+        backdrop: {
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(2px)',
+          }
         }
       }}
     >
