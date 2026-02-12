@@ -77,13 +77,33 @@ export default function DataTableBulkActions<T>({
         }}
       >
         <Box sx={{ p: 2 }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Stack direction="row" spacing={3} alignItems="center">
-              <Box display="flex" alignItems="center" gap={1.5} sx={{ minWidth: 150 }}>
-                <Typography variant="h6" fontWeight="bold" color="primary">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}>
+            <Stack direction="row" spacing={3} sx={{
+              alignItems: "center"
+            }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  minWidth: 150
+                }}>
+                <Typography variant="h6" color="primary" sx={{
+                  fontWeight: "bold"
+                }}>
                   {selectedCount}
                 </Typography>
-                <Typography variant="body1" fontWeight="medium" whiteSpace="nowrap">
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontWeight: "medium",
+                    whiteSpace: "nowrap"
+                  }}>
                   {selectedCount === 1 ? 'item selected' : 'items selected'}
                 </Typography>
               </Box>
@@ -123,7 +143,6 @@ export default function DataTableBulkActions<T>({
           </Box>
         </Box>
       </Paper>
-
       <ConfirmDialog
         open={!!confirmAction}
         onClose={() => setConfirmAction(null)}
@@ -135,5 +154,5 @@ export default function DataTableBulkActions<T>({
         loading={processing}
       />
     </>
-  )
+  );
 }

@@ -281,8 +281,15 @@ const Certificates = () => {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (value, item) => (
-        <Box display="flex" alignItems="center" gap={1}>
-          <Typography variant="body2" fontWeight="medium">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1
+          }}>
+          <Typography variant="body2" sx={{
+            fontWeight: "medium"
+          }}>
             {item.nice_name || item.domain_names[0] || 'Unnamed Certificate'}
           </Typography>
         </Box>
@@ -318,7 +325,9 @@ const Certificates = () => {
       priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
       showInCard: false,
       render: (value) => (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {value} hosts
         </Typography>
       )
@@ -333,7 +342,12 @@ const Certificates = () => {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (value, item) => (
-        <Box display="flex" gap={0.5} justifyContent="flex-end">
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.5,
+            justifyContent: "flex-end"
+          }}>
           <Tooltip title="View Details">
             <IconButton
               size="small"
@@ -392,12 +406,21 @@ const Certificates = () => {
     defaultEnabled: localStorage.getItem('npm.certificates.groupByDomain') === 'true',
     defaultExpanded: true,
     groupHeaderRender: (groupId, _items, _isExpanded) => (
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1
+        }}>
         <LockIcon fontSize="small" color="primary" />
-        <Typography variant="subtitle2" fontWeight="bold">
+        <Typography variant="subtitle2" sx={{
+          fontWeight: "bold"
+        }}>
           {groupId}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           ({_items.length})
         </Typography>
       </Box>
@@ -442,9 +465,17 @@ const Certificates = () => {
   return (
     <Container maxWidth={false}>
       <title>SSL Certificates - NPMDeck</title>
-      <Box py={3}>
+      <Box sx={{
+        py: 3
+      }}>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3
+          }}>
           <PageHeader
             icon={React.createElement(NAVIGATION_CONFIG.certificates.icon, { sx: { color: NAVIGATION_CONFIG.certificates.color } })}
             title={NAVIGATION_CONFIG.certificates.text}
@@ -507,7 +538,12 @@ const Certificates = () => {
         
         {/* Mobile Add Button with Menu - shown at bottom */}
         {isMobileTable && (
-          <Box mt={2} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <PermissionButton
               resource="certificates"
               permissionAction="create"
@@ -536,7 +572,6 @@ const Certificates = () => {
           </Box>
         )}
       </Box>
-
       <ConfirmDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
@@ -547,7 +582,6 @@ const Certificates = () => {
         confirmText="Delete"
         confirmColor="error"
       />
-
       <CertificateDrawer
         open={drawerOpen}
         onClose={() => {
@@ -561,7 +595,6 @@ const Certificates = () => {
         }}
         initialProvider={initialProvider}
       />
-
       <CertificateDetailsDialog
         open={detailsDialogOpen}
         onClose={() => {
@@ -571,7 +604,7 @@ const Certificates = () => {
         certificate={viewingCert}
       />
     </Container>
-  )
+  );
 }
 
 export default Certificates

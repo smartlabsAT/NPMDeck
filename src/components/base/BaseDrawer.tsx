@@ -316,16 +316,18 @@ export const BaseDrawer = ({
         open={open}
         onClose={disableBackdropClick ? undefined : handleClose}
         className={className}
-        PaperProps={{
-          sx: {
-            width: drawerWidth,
-            maxWidth: '100vw',
-            display: 'flex',
-            flexDirection: 'column',
-          },
-        }}
         ModalProps={{
           keepMounted: false, // Better performance on mobile
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              width: drawerWidth,
+              maxWidth: '100vw',
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          }
         }}
       >
         {/* Header */}
@@ -361,13 +363,12 @@ export const BaseDrawer = ({
             {subtitle && (
               <Typography
                 variant="body2"
-                color="text.secondary"
                 sx={{
+                  color: "text.secondary",
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+                  whiteSpace: 'nowrap'
+                }}>
                 {subtitle}
               </Typography>
             )}
@@ -404,7 +405,9 @@ export const BaseDrawer = ({
             }}
           >
             <CircularProgress />
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {loadingMessage}
             </Typography>
           </Box>
@@ -427,7 +430,7 @@ export const BaseDrawer = ({
               onChange={handleTabChange}
               variant={isMobile ? 'scrollable' : 'standard'}
               scrollButtons="auto"
-              allowScrollButtonsMobile
+              sx={{ '& .MuiTabScrollButton-root': { display: 'flex' } }}
               aria-label="Drawer navigation tabs"
             >
               {tabs.map((tab, index) => renderTab(tab, index))}
@@ -479,7 +482,6 @@ export const BaseDrawer = ({
           </Box>
         )}
       </Drawer>
-
       {/* Close Confirmation Dialog */}
       <Dialog
         open={showConfirmClose}

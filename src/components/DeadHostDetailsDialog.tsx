@@ -129,7 +129,9 @@ const DeadHostDetailsDialog = ({
             <BlockIcon sx={{ color: '#cd201f' }} />
             <Typography variant="h6">404 Host</Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {host.domain_names.join(', ') || 'Details'}
           </Typography>
         </Box>
@@ -166,7 +168,6 @@ const DeadHostDetailsDialog = ({
           <Tab label="Advanced" icon={<SettingsIcon />} iconPosition="start" />
         </Tabs>
       </Box>
-
       <Box sx={{ overflow: 'auto' }}>
         {copiedText && (
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -179,8 +180,13 @@ const DeadHostDetailsDialog = ({
           {/* Status Overview */}
           <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: 'background.default' }}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <Box display="flex" alignItems="center" gap={1}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   {host.enabled ? (
                     host.meta.nginx_online !== false ? (
                       <CheckIcon color="success" />
@@ -191,30 +197,61 @@ const DeadHostDetailsDialog = ({
                     <BlockIcon color="disabled" />
                   )}
                   <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight="bold">Status</Typography>
-                    <Typography variant="body2" fontWeight="medium">
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: "bold"
+                      }}>Status</Typography>
+                    <Typography variant="body2" sx={{
+                      fontWeight: "medium"
+                    }}>
                       {!host.enabled ? 'Disabled' : host.meta.nginx_online === false ? 'Error' : 'Online'}
                     </Typography>
                   </Box>
                 </Box>
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <Box display="flex" alignItems="center" gap={1}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   {host.certificate_id ? <HttpsIcon color="primary" /> : <HttpIcon color="action" />}
                   <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight="bold">SSL</Typography>
-                    <Typography variant="body2" fontWeight="medium">
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: "bold"
+                      }}>SSL</Typography>
+                    <Typography variant="body2" sx={{
+                      fontWeight: "medium"
+                    }}>
                       {host.certificate_id ? (host.ssl_forced ? 'Forced' : 'Enabled') : 'Disabled'}
                     </Typography>
                   </Box>
                 </Box>
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <Box display="flex" alignItems="center" gap={1}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   <BlockIcon color="action" />
                   <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight="bold">Type</Typography>
-                    <Typography variant="body2" fontWeight="medium">
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: "bold"
+                      }}>Type</Typography>
+                    <Typography variant="body2" sx={{
+                      fontWeight: "medium"
+                    }}>
                       404 Host
                     </Typography>
                   </Box>
@@ -225,19 +262,38 @@ const DeadHostDetailsDialog = ({
 
           <Grid container spacing={3}>
             {/* Basic Information */}
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+            <Grid size={12}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <InfoIcon color="primary" />
                 <Typography variant="h6">Basic Information</Typography>
               </Box>
               
               <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Typography
+                    variant="subtitle2"
+                    gutterBottom
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: "bold"
+                    }}>
                     Host ID
                   </Typography>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Typography variant="body2" fontFamily="monospace">
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1
+                    }}>
+                    <Typography variant="body2" sx={{
+                      fontFamily: "monospace"
+                    }}>
                       #{host.id}
                     </Typography>
                     <IconButton 
@@ -249,8 +305,14 @@ const DeadHostDetailsDialog = ({
                   </Box>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Typography
+                    variant="subtitle2"
+                    gutterBottom
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: "bold"
+                    }}>
                     Response
                   </Typography>
                   <Typography variant="body2">
@@ -258,8 +320,14 @@ const DeadHostDetailsDialog = ({
                   </Typography>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Typography
+                    variant="subtitle2"
+                    gutterBottom
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: "bold"
+                    }}>
                     Created
                   </Typography>
                   <Typography variant="body2">
@@ -267,8 +335,14 @@ const DeadHostDetailsDialog = ({
                   </Typography>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Typography
+                    variant="subtitle2"
+                    gutterBottom
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: "bold"
+                    }}>
                     Last Modified
                   </Typography>
                   <Typography variant="body2">
@@ -277,11 +351,22 @@ const DeadHostDetailsDialog = ({
                 </Grid>
 
                 {host.owner_user_id && (
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Typography
+                      variant="subtitle2"
+                      gutterBottom
+                      sx={{
+                        color: "text.secondary",
+                        fontWeight: "bold"
+                      }}>
                       Owner
                     </Typography>
-                    <Box display="flex" alignItems="center" gap={0.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5
+                      }}>
                       <PersonIcon fontSize="small" color="action" />
                       <Typography variant="body2">
                         User #{host.owner_user_id}
@@ -292,13 +377,19 @@ const DeadHostDetailsDialog = ({
               </Grid>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Divider />
             </Grid>
 
             {/* Domain Names */}
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+            <Grid size={12}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <LanguageIcon color="primary" />
                 <Typography variant="h6">
                   Domain Names ({host.domain_names.length})
@@ -326,21 +417,38 @@ const DeadHostDetailsDialog = ({
             </Grid>
 
             {/* Configuration */}
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Divider />
             </Grid>
 
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+            <Grid size={12}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <SettingsIcon color="primary" />
                 <Typography variant="h6">Configuration</Typography>
               </Box>
               
               <Grid container spacing={2}>
                 {host.http2_support !== undefined && (
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" alignItems="center" gap={1} mb={1}>
-                      <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 1
+                      }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          color: "text.secondary",
+                          fontWeight: "bold"
+                        }}>
                         HTTP/2 Support
                       </Typography>
                     </Box>
@@ -354,9 +462,20 @@ const DeadHostDetailsDialog = ({
                 )}
 
                 {host.hsts_enabled !== undefined && (
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" alignItems="center" gap={1} mb={1}>
-                      <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 1
+                      }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          color: "text.secondary",
+                          fontWeight: "bold"
+                        }}>
                         HSTS
                       </Typography>
                     </Box>
@@ -374,12 +493,18 @@ const DeadHostDetailsDialog = ({
             {/* SSL Certificate Info */}
             {host.certificate_id && (
               <>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Divider />
                 </Grid>
                 
-                <Grid item xs={12}>
-                  <Box display="flex" alignItems="center" gap={1} mb={2}>
+                <Grid size={12}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 2
+                    }}>
                     <LockIcon color="primary" />
                     <Typography variant="h6">SSL Certificate</Typography>
                   </Box>
@@ -387,16 +512,28 @@ const DeadHostDetailsDialog = ({
                   {host.certificate && (
                     <Paper variant="outlined" sx={{ p: 2 }}>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Typography
+                            variant="subtitle2"
+                            gutterBottom
+                            sx={{
+                              color: "text.secondary",
+                              fontWeight: "bold"
+                            }}>
                             Certificate Name
                           </Typography>
                           <Typography variant="body2">
                             {host.certificate.nice_name || host.certificate.domain_names.join(', ')}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Typography
+                            variant="subtitle2"
+                            gutterBottom
+                            sx={{
+                              color: "text.secondary",
+                              fontWeight: "bold"
+                            }}>
                             Provider
                           </Typography>
                           <Chip 
@@ -405,7 +542,7 @@ const DeadHostDetailsDialog = ({
                             color={host.certificate.provider === 'letsencrypt' ? 'primary' : 'default'}
                           />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                           <Button
                             variant="text"
                             size="small"
@@ -427,16 +564,23 @@ const DeadHostDetailsDialog = ({
             {/* Nginx Error */}
             {host.meta.nginx_online === false && host.meta.nginx_err && (
               <>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Divider />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Alert severity="error">
-                    <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+                    <Typography variant="subtitle2" gutterBottom sx={{
+                      fontWeight: "bold"
+                    }}>
                       Nginx Configuration Error
                     </Typography>
-                    <Typography variant="body2" fontFamily="monospace" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontFamily: "monospace",
+                        whiteSpace: 'pre-wrap'
+                      }}>
                       {host.meta.nginx_err}
                     </Typography>
                   </Alert>
@@ -450,20 +594,25 @@ const DeadHostDetailsDialog = ({
           {/* Advanced Tab */}
           {host.advanced_config ? (
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+              <Typography
+                variant="subtitle2"
+                gutterBottom
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: "bold"
+                }}>
                 Custom Nginx Configuration
               </Typography>
-              <Typography 
-                variant="body2" 
-                fontFamily="monospace" 
-                sx={{ 
+              <Typography
+                variant="body2"
+                sx={{
+                  fontFamily: "monospace",
                   whiteSpace: 'pre-wrap',
                   backgroundColor: 'background.default',
                   p: 2,
                   borderRadius: 1,
                   mt: 1
-                }}
-              >
+                }}>
                 {host.advanced_config}
               </Typography>
             </Paper>
@@ -474,7 +623,6 @@ const DeadHostDetailsDialog = ({
           )}
         </TabPanel>
       </Box>
-      
       {/* Export Dialog */}
       {/* {host && (
         <ExportDialog
@@ -486,7 +634,7 @@ const DeadHostDetailsDialog = ({
         />
       )} */}
     </AdaptiveContainer>
-  )
+  );
 }
 
 export default DeadHostDetailsDialog

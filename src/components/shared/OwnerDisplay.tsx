@@ -20,25 +20,37 @@ const OwnerDisplay = ({
   // If no owner object but userId is provided, show user ID
   if (!owner && userId) {
     return (
-      <Box display="flex" alignItems="center" gap={0.5}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5
+        }}>
         <PersonIcon fontSize="small" color="action" />
         <Typography variant={size === 'small' ? 'caption' : 'body2'}>
           User #{userId}
         </Typography>
       </Box>
-    )
+    );
   }
 
   // If no owner at all
   if (!owner) {
     return (
-      <Box display="flex" alignItems="center" gap={0.5}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5
+        }}>
         <PersonIcon fontSize="small" color="action" />
-        <Typography variant={size === 'small' ? 'caption' : 'body2'} color="text.secondary">
+        <Typography variant={size === 'small' ? 'caption' : 'body2'} sx={{
+          color: "text.secondary"
+        }}>
           Unknown
         </Typography>
       </Box>
-    )
+    );
   }
 
   // Get display name - prefer nickname, fallback to name
@@ -54,7 +66,12 @@ const OwnerDisplay = ({
   const tooltipText = owner.id ? `#${owner.id}` : userId ? `#${userId}` : ''
 
   const content = (
-    <Box display="flex" alignItems="center" gap={1}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1
+      }}>
       {showAvatar ? (
         <Avatar 
           sx={{ width: avatarSize, height: avatarSize }}
@@ -65,11 +82,15 @@ const OwnerDisplay = ({
         <PersonIcon fontSize="small" color="action" />
       )}
       <Box>
-        <Typography variant={size === 'small' ? 'caption' : 'body2'} fontWeight="medium">
+        <Typography variant={size === 'small' ? 'caption' : 'body2'} sx={{
+          fontWeight: "medium"
+        }}>
           {displayName}
         </Typography>
         {showEmail && owner.email && owner.email !== displayName && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {owner.email}
           </Typography>
         )}

@@ -237,7 +237,11 @@ const Users = () => {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (_, user) => (
-        <Box position="relative" display="inline-block">
+        <Box
+          sx={{
+            position: "relative",
+            display: "inline-block"
+          }}>
           <Avatar
             src={user.avatar || '/images/default-avatar.jpg'}
             alt={user.name}
@@ -245,16 +249,17 @@ const Users = () => {
             <PersonIcon />
           </Avatar>
           <Box
-            position="absolute"
-            bottom={0}
-            right={0}
-            width={12}
-            height={12}
-            borderRadius="50%"
-            bgcolor={user.is_disabled ? 'error.main' : 'success.main'}
-            border="2px solid"
-            borderColor="background.paper"
-          />
+            sx={{
+              position: "absolute",
+              bottom: 0,
+              right: 0,
+              width: 12,
+              height: 12,
+              borderRadius: "50%",
+              bgcolor: user.is_disabled ? 'error.main' : 'success.main',
+              border: "2px solid",
+              borderColor: "background.paper"
+            }} />
         </Box>
       ),
     },
@@ -268,10 +273,14 @@ const Users = () => {
       showInCard: true,
       render: (_, user) => (
         <Box>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{
+            fontWeight: "medium"
+          }}>
             {user.name}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {user.nickname || user.email}
           </Typography>
         </Box>
@@ -347,7 +356,13 @@ const Users = () => {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (_, user) => (
-        <Box display="flex" gap={0.5} justifyContent="flex-end" onClick={(e) => e.stopPropagation()}>
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            display: "flex",
+            gap: 0.5,
+            justifyContent: "flex-end"
+          }}>
           <IconButton
             size="small"
             onClick={() => handleEdit(user)}
@@ -446,8 +461,16 @@ const Users = () => {
   return (
     <Container maxWidth={false}>
       <title>Users - NPMDeck</title>
-      <Box py={3}>
-        <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
+      <Box sx={{
+        py: 3
+      }}>
+        <Box
+          sx={{
+            mb: 3,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
           <PageHeader
             icon={React.createElement(NAVIGATION_CONFIG.users.icon, { sx: { color: NAVIGATION_CONFIG.users.color } })}
             title={NAVIGATION_CONFIG.users.text}
@@ -488,7 +511,12 @@ const Users = () => {
         
         {/* Mobile Add Button - shown at bottom */}
         {isAdmin && isMobileTable && (
-          <Box mt={2} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <Button
               variant="contained"
               color="primary"
@@ -532,7 +560,7 @@ const Users = () => {
       />
       </Box>
     </Container>
-  )
+  );
 }
 
 export default Users

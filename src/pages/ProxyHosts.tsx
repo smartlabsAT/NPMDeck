@@ -273,7 +273,13 @@ export default function ProxyHosts() {
         return (
           <Box>
             {item.domain_names.map((domain: string, index: number) => (
-              <Box key={index} display="flex" alignItems="center" gap={0.5}>
+              <Box
+                key={index}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5
+                }}>
                 <Typography variant="body2">
                   {domain}
                 </Typography>
@@ -306,15 +312,7 @@ export default function ProxyHosts() {
                   </Box>
                 }
               >
-                <Box 
-                  display="flex" 
-                  alignItems="center" 
-                  gap={0.5} 
-                  ml={3}
-                  sx={{ 
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.8 }
-                  }}
+                <Box
                   onClick={(e) => {
                     e.stopPropagation()
                     if (linkedRedirections.length === 1) {
@@ -325,8 +323,17 @@ export default function ProxyHosts() {
                       navigate(`/hosts/proxy/${item.id}/view/connections`)
                     }
                   }}
-                >
-                  <Typography variant="caption" color="text.secondary">↳</Typography>
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    ml: 3,
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.8 }
+                  }}>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>↳</Typography>
                   <RedirectIcon fontSize="small" sx={{ fontSize: '0.875rem' }} color="action" />
                   <Typography variant="caption" color="primary">
                     {linkedRedirections.length} Redirection{linkedRedirections.length > 1 ? 's' : ''}
@@ -335,7 +342,7 @@ export default function ProxyHosts() {
               </Tooltip>
             )}
           </Box>
-        )
+        );
       }
     },
     {
@@ -348,8 +355,15 @@ export default function ProxyHosts() {
       showInCard: true,
       mobileLabel: '', // Empty string to hide label - the URL is self-explanatory
       render: (value: any, item: ProxyHost) => (
-        <Box display="flex" alignItems="center" gap={0.5}>
-          <Typography variant="body2" color="text.secondary">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5
+          }}>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {item.forward_scheme}://{item.forward_host}:{item.forward_port}
           </Typography>
           <IconButton
@@ -419,10 +433,11 @@ export default function ProxyHosts() {
           )
         }
         return (
-          <Typography variant="body2" color="text.secondary">
-            Public
-          </Typography>
-        )
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>Public
+                      </Typography>
+        );
       }
     },
     {
@@ -435,7 +450,12 @@ export default function ProxyHosts() {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (value: any, item: ProxyHost) => (
-        <Box display="flex" gap={0.5} justifyContent="flex-end">
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.5,
+            justifyContent: "flex-end"
+          }}>
           <PermissionIconButton
             resource="proxy_hosts"
             permissionAction="edit"
@@ -600,12 +620,21 @@ export default function ProxyHosts() {
     groupLabel: (_groupId, _items) => `domain`,
     defaultEnabled: false,
     groupHeaderRender: (groupId, items, _isExpanded) => (
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1
+        }}>
         <LanguageIcon fontSize="small" color="primary" />
-        <Typography variant="subtitle2" fontWeight="bold">
+        <Typography variant="subtitle2" sx={{
+          fontWeight: "bold"
+        }}>
           {groupId}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           ({items.length})
         </Typography>
       </Box>
@@ -615,9 +644,17 @@ export default function ProxyHosts() {
   return (
     <Container maxWidth={false}>
       <title>Proxy Hosts - NPMDeck</title>
-      <Box py={3}>
+      <Box sx={{
+        py: 3
+      }}>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3
+          }}>
           <PageHeader
             icon={React.createElement(NAVIGATION_CONFIG.proxyHosts.icon, { sx: { color: NAVIGATION_CONFIG.proxyHosts.color } })}
             title={NAVIGATION_CONFIG.proxyHosts.text}
@@ -666,7 +703,12 @@ export default function ProxyHosts() {
         
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
-          <Box mt={2} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <PermissionButton
               resource="proxy_hosts"
               permissionAction="create"
@@ -681,7 +723,6 @@ export default function ProxyHosts() {
           </Box>
         )}
       </Box>
-
       {canManageProxyHosts('proxy_hosts') && (
         <ProxyHostDrawer
           open={drawerOpen}
@@ -696,7 +737,6 @@ export default function ProxyHosts() {
           }}
         />
       )}
-
       <ProxyHostDetailsDialog
         open={detailsDialogOpen}
         onClose={() => {
@@ -708,7 +748,6 @@ export default function ProxyHosts() {
         host={viewingHost}
         onEdit={canManageProxyHosts('proxy_hosts') ? handleEdit : undefined}
       />
-
       <ConfirmDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
@@ -720,5 +759,5 @@ export default function ProxyHosts() {
         confirmColor="error"
       />
     </Container>
-  )
+  );
 }

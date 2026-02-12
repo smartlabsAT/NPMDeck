@@ -87,7 +87,6 @@ export default function FileDropzone({
       <Typography variant="subtitle2" gutterBottom>
         {label} {required && '*'}
       </Typography>
-      
       <Paper
         variant="outlined"
         sx={{
@@ -121,45 +120,65 @@ export default function FileDropzone({
         />
         
         {file ? (
-          <Box display="flex" alignItems="center" gap={2} width="100%">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              width: "100%"
+            }}>
             <CheckIcon color="success" sx={{ fontSize: 28 }} />
-            <Box flex={1}>
-              <Typography variant="body2" color="text.primary" noWrap>
+            <Box sx={{
+              flex: 1
+            }}>
+              <Typography variant="body2" noWrap sx={{
+                color: "text.primary"
+              }}>
                 {file.name}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {(file.size / 1024).toFixed(2)} KB
               </Typography>
             </Box>
           </Box>
         ) : (
-          <Box display="flex" alignItems="center" gap={2} width="100%">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              width: "100%"
+            }}>
             <Box sx={{ '& > svg': { fontSize: 28 } }}>
               {icon}
             </Box>
             <Box>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Click to select file
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 {accept.replace(/\./g, '').toUpperCase()} files
               </Typography>
             </Box>
           </Box>
         )}
       </Paper>
-
       {helperText && (
         <FormHelperText sx={{ mt: 1, color: 'text.secondary' }}>
           {helperText}
         </FormHelperText>
       )}
-
       {displayError && (
         <Alert severity="error" sx={{ mt: 1 }}>
           {displayError}
         </Alert>
       )}
     </Box>
-  )
+  );
 }

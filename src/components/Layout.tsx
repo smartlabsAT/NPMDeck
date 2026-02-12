@@ -238,7 +238,9 @@ const Layout = () => {
                       <ListItemIcon sx={{ minWidth: 40 }}>{child.icon}</ListItemIcon>
                       <ListItemText 
                         primary={child.text} 
-                        primaryTypographyProps={{ fontSize: '0.875rem' }}
+                        slotProps={{
+                          primary: { fontSize: '0.875rem' }
+                        }}
                       />
                     </ListItemButton>
                   ))}
@@ -253,7 +255,14 @@ const Layout = () => {
         <>
           <Divider sx={{ my: 1 }} />
           <Box sx={{ px: 2, py: 0.5 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: 1
+              }}>
               Administration
             </Typography>
           </Box>
@@ -321,7 +330,9 @@ const Layout = () => {
             <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
               {user?.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" noWrap sx={{
+              color: "text.secondary"
+            }}>
               {user?.email}
             </Typography>
           </Box>
@@ -377,7 +388,9 @@ const Layout = () => {
                 onClick={handleMenu}
                 color="inherit"
               >
-                <Box position="relative">
+                <Box sx={{
+                  position: "relative"
+                }}>
                   <Avatar sx={{ width: 32, height: 32 }}>
                     {user.name ? user.name[0].toUpperCase() : <AccountCircle />}
                   </Avatar>
@@ -544,7 +557,7 @@ const Layout = () => {
         </Box>
       </Box>
     </Box>
-  )
+  );
 }
 
 export default Layout

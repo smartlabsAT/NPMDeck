@@ -7,7 +7,13 @@ import LayoutWithSearch from './components/LayoutWithSearch'
 
 // Loading component
 const PageLoader = () => (
-  <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+  <Box
+    sx={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "200px"
+    }}>
     <CircularProgress />
   </Box>
 )

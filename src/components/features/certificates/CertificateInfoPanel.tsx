@@ -60,11 +60,11 @@ const CertificateInfoPanel = ({
   return (
     <Grid container spacing={3}>
       {/* Status Overview */}
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={4}>
-              <Box display="flex" alignItems="center" gap={1}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <SecurityIcon color="primary" />
                 <Box>
                   <Typography variant="caption" color="text.secondary" fontWeight="bold">Provider</Typography>
@@ -74,8 +74,8 @@ const CertificateInfoPanel = ({
                 </Box>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box display="flex" alignItems="center" gap={1}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <ScheduleIcon color={isExpired ? 'error' : isExpiringSoon ? 'warning' : 'success'} />
                 <Box>
                   <Typography variant="caption" color="text.secondary" fontWeight="bold">Validity</Typography>
@@ -85,8 +85,8 @@ const CertificateInfoPanel = ({
                 </Box>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box display="flex" alignItems="center" gap={1}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <CheckIcon color="success" />
                 <Box>
                   <Typography variant="caption" color="text.secondary" fontWeight="bold">Status</Typography>
@@ -101,18 +101,18 @@ const CertificateInfoPanel = ({
       </Grid>
 
       {/* Certificate Information */}
-      <Grid item xs={12}>
-        <Box display="flex" alignItems="center" gap={1} mb={2}>
+      <Grid size={12}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
           <FingerprintIcon color="primary" />
           <Typography variant="h6">Certificate Information</Typography>
         </Box>
         
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
               Certificate ID
             </Typography>
-            <Box display="flex" alignItems="center" gap={1}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Typography variant="body2" fontFamily="monospace">
                 #{certificate.id}
               </Typography>
@@ -126,11 +126,11 @@ const CertificateInfoPanel = ({
           </Grid>
 
           {certificate.meta?.certificate_id && (
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
                 Let&apos;s Encrypt Certificate ID
               </Typography>
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Typography variant="body2" fontFamily="monospace">
                   {certificate.meta.certificate_id}
                 </Typography>
@@ -144,7 +144,7 @@ const CertificateInfoPanel = ({
             </Grid>
           )}
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
               Created
             </Typography>
@@ -153,7 +153,7 @@ const CertificateInfoPanel = ({
             </Typography>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
               Last Modified
             </Typography>
@@ -162,7 +162,7 @@ const CertificateInfoPanel = ({
             </Typography>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
               Expires
             </Typography>
@@ -171,7 +171,7 @@ const CertificateInfoPanel = ({
             </Typography>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
               Owner
             </Typography>
@@ -187,18 +187,18 @@ const CertificateInfoPanel = ({
       {/* Let's Encrypt Configuration */}
       {certificate.provider === 'letsencrypt' && certificate.meta && (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider />
           </Grid>
           
-          <Grid item xs={12}>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
+          <Grid size={12}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
               <CloudIcon color="primary" />
               <Typography variant="h6">Let&apos;s Encrypt Configuration</Typography>
             </Box>
             
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
                   Email
                 </Typography>
@@ -207,11 +207,11 @@ const CertificateInfoPanel = ({
                 </Typography>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
                   Challenge Type
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   {certificate.meta.dns_challenge ? <DnsIcon fontSize="small" /> : null}
                   <Typography variant="body2">
                     {certificate.meta.dns_challenge ? 'DNS Challenge' : 'HTTP Challenge'}
@@ -221,7 +221,7 @@ const CertificateInfoPanel = ({
 
               {certificate.meta.dns_challenge && (
                 <>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
                       DNS Provider
                     </Typography>
@@ -230,7 +230,7 @@ const CertificateInfoPanel = ({
                     </Typography>
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
                       Propagation Seconds
                     </Typography>
@@ -240,7 +240,7 @@ const CertificateInfoPanel = ({
                   </Grid>
 
                   {certificate.meta.dns_provider_credentials && (
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
                         DNS Credentials Configured
                       </Typography>
@@ -255,7 +255,7 @@ const CertificateInfoPanel = ({
                 </>
               )}
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
                   Agreement Status
                 </Typography>

@@ -85,12 +85,16 @@ export default function ExportDialog({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1
+          }}>
           <FileDownloadIcon sx={{ color: '#467fcf' }} />
           Export {itemName}{isSingleItem ? '' : `s (${itemCount} items)`}
         </Box>
       </DialogTitle>
-      
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Export info */}
@@ -206,7 +210,6 @@ export default function ExportDialog({
           />
         </Box>
       </DialogContent>
-
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
@@ -218,5 +221,5 @@ export default function ExportDialog({
         </Button>
       </DialogActions>
     </Dialog>
-  )
+  );
 }

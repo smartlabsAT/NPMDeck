@@ -16,20 +16,25 @@ const ProxyHostAdvancedPanel = ({
     <>
       {host.advanced_config ? (
         <Paper variant="outlined" sx={{ p: 2 }}>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+          <Typography
+            variant="subtitle2"
+            gutterBottom
+            sx={{
+              color: "text.secondary",
+              fontWeight: "bold"
+            }}>
             Custom Nginx Configuration
           </Typography>
-          <Typography 
-            variant="body2" 
-            fontFamily="monospace" 
-            sx={{ 
+          <Typography
+            variant="body2"
+            sx={{
+              fontFamily: "monospace",
               whiteSpace: 'pre-wrap',
               backgroundColor: 'background.default',
               p: 2,
               borderRadius: 1,
               mt: 1
-            }}
-          >
+            }}>
             {host.advanced_config}
           </Typography>
         </Paper>
@@ -39,7 +44,7 @@ const ProxyHostAdvancedPanel = ({
         </Alert>
       )}
     </>
-  )
+  );
 }
 
 export default ProxyHostAdvancedPanel

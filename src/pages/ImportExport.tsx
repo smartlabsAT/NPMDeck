@@ -170,23 +170,41 @@ export default function ImportExport() {
   return (
     <Container maxWidth="lg">
       <title>Import &amp; Export - NPMDeck</title>
-      <Box py={3}>
+      <Box sx={{
+        py: 3
+      }}>
         <Typography variant="h4" gutterBottom>
           Import / Export
         </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
+        <Typography
+          variant="body1"
+          sx={{
+            color: "text.secondary",
+            marginBottom: "16px"
+          }}>
           Backup, restore, and migrate your Nginx Proxy Manager configurations
         </Typography>
 
         <Grid container spacing={3}>
           {/* Import Section */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  mb: 2
+                }}>
                 <RestoreIcon color="primary" />
                 <Typography variant="h5">Import Configuration</Typography>
               </Box>
-              <Typography variant="body2" color="text.secondary" paragraph>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  marginBottom: "16px"
+                }}>
                 Import configurations from a previously exported JSON file. You can import individual hosts, 
                 certificates, or complete configuration bundles.
               </Typography>
@@ -206,27 +224,46 @@ export default function ImportExport() {
           </Grid>
 
           {/* Export Section */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  mb: 2
+                }}>
                 <BackupIcon color="primary" />
                 <Typography variant="h5">Export Configuration</Typography>
               </Box>
-              <Typography variant="body2" color="text.secondary" paragraph>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  marginBottom: "16px"
+                }}>
                 Export your configurations for backup or migration purposes. Choose to export everything 
                 or select specific types of configurations.
               </Typography>
 
               <Grid container spacing={2} sx={{ mt: 1 }}>
                 {exportOptions.map((option) => (
-                  <Grid item xs={12} sm={6} md={4} key={option.type}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={option.type}>
                     <Card variant="outlined">
                       <CardContent>
-                        <Box display="flex" alignItems="center" gap={2} mb={1}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            mb: 1
+                          }}>
                           {option.icon}
                           <Typography variant="h6">{option.title}</Typography>
                         </Box>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" sx={{
+                          color: "text.secondary"
+                        }}>
                           {option.description}
                         </Typography>
                       </CardContent>
@@ -256,9 +293,15 @@ export default function ImportExport() {
           </Grid>
 
           {/* Templates Section */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  mb: 2
+                }}>
                 <FileIcon color="primary" />
                 <Typography variant="h5">Configuration Templates</Typography>
               </Box>
@@ -270,7 +313,6 @@ export default function ImportExport() {
           </Grid>
         </Grid>
       </Box>
-
       {/* Dialogs */}
       <ImportDialog
         open={importDialogOpen}
@@ -280,7 +322,6 @@ export default function ImportExport() {
           // Could refresh data or show success message here
         }}
       />
-
       {exportDialogOpen && (
         <ExportDialog
           open={exportDialogOpen}
@@ -291,5 +332,5 @@ export default function ImportExport() {
         />
       )}
     </Container>
-  )
+  );
 }

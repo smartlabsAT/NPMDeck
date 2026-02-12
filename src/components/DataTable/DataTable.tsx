@@ -120,10 +120,16 @@ export function DataTable<T extends object>({
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px"
+        }}>
         <CircularProgress />
       </Box>
-    )
+    );
   }
 
   if (error) {
@@ -148,10 +154,21 @@ export function DataTable<T extends object>({
         searchPlaceholder={searchPlaceholder}
         isMobile={useCards}
       />
-
       {groupConfig && showGroupToggle && !useCards && (
-        <Box display="flex" justifyContent="space-between" alignItems="center" px={2} py={1}>
-          <Box display="flex" alignItems="center" gap={2}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            px: 2,
+            py: 1
+          }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2
+            }}>
             <FormControlLabel
               control={
                 <Switch
@@ -182,7 +199,6 @@ export function DataTable<T extends object>({
           </Box>
         </Box>
       )}
-
       {showBulkActions && !useCards && (
         <DataTableBulkActions
           selectedCount={selectedCount}
@@ -191,7 +207,6 @@ export function DataTable<T extends object>({
           onClearSelection={handleClearSelection}
         />
       )}
-
       {/* Render card layout for mobile when responsive mode is enabled */}
       {useCards ? (
         <Box sx={{ 
@@ -238,7 +253,7 @@ export function DataTable<T extends object>({
         </Box>
       ) : (
         /* Original table layout */
-        <TableContainer component={Paper}>
+        (<TableContainer component={Paper}>
           <Table stickyHeader={stickyHeader} size={dense ? 'small' : 'medium'}>
             <TableHead>
               <TableRow>
@@ -269,9 +284,16 @@ export function DataTable<T extends object>({
                       direction={sortField === column.id ? sortDirection : 'asc'}
                       onClick={() => handleSort(column.id)}
                     >
-                      <Box display="flex" alignItems="center" gap={0.5}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5
+                        }}>
                         {column.icon}
-                        <Typography variant="subtitle2" fontWeight="bold">
+                        <Typography variant="subtitle2" sx={{
+                          fontWeight: "bold"
+                        }}>
                           {column.label}
                         </Typography>
                       </Box>
@@ -282,9 +304,16 @@ export function DataTable<T extends object>({
                       ) : null}
                     </TableSortLabel>
                   ) : (
-                    <Box display="flex" alignItems="center" gap={0.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5
+                      }}>
                       {column.icon}
-                      <Typography variant="subtitle2" fontWeight="bold">
+                      <Typography variant="subtitle2" sx={{
+                        fontWeight: "bold"
+                      }}>
                         {column.label}
                       </Typography>
                     </Box>
@@ -301,7 +330,9 @@ export function DataTable<T extends object>({
                   align="center"
                   sx={{ py: 4 }}
                 >
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     {searchQuery || hasActiveFilters
                       ? 'No results found. Try adjusting your search or filters.'
                       : emptyMessage}
@@ -310,7 +341,7 @@ export function DataTable<T extends object>({
               </TableRow>
             ) : groupingEnabled && groups.length > 0 ? (
               // Grouped view
-              groups.map((group) => (
+              (groups.map((group) => (
                 <React.Fragment key={group.id}>
                   {/* Group header row */}
                   <TableRow
@@ -322,7 +353,12 @@ export function DataTable<T extends object>({
                     onClick={() => handleToggleGroup(group.id)}
                   >
                     <TableCell colSpan={visibleColumns.length + (selectable ? 1 : 0)}>
-                      <Box display="flex" alignItems="center" gap={1}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1
+                        }}>
                         <IconButton size="small" sx={{ p: 0.5 }}>
                           {group.isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
                         </IconButton>
@@ -331,7 +367,9 @@ export function DataTable<T extends object>({
                         ) : (
                           <>
                             {group.label}
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{
+                              color: "text.secondary"
+                            }}>
                               ({group.items.length})
                             </Typography>
                           </>
@@ -383,10 +421,10 @@ export function DataTable<T extends object>({
                     )
                   })}
                 </React.Fragment>
-              ))
+              )))
             ) : (
               // Normal view
-              paginatedData.map((item) => {
+              (paginatedData.map((item) => {
                 const itemKey = keyExtractor(item)
                 const isSelected = selected.some(
                   selectedItem => keyExtractor(selectedItem) === itemKey
@@ -421,13 +459,12 @@ export function DataTable<T extends object>({
                     })}
                   </TableRow>
                 )
-              })
+              }))
             )}
           </TableBody>
           </Table>
-        </TableContainer>
+        </TableContainer>)
       )}
-
       {showPagination && (
         <TablePagination
           component="div"
@@ -440,5 +477,5 @@ export function DataTable<T extends object>({
         />
       )}
     </Box>
-  )
+  );
 }

@@ -57,7 +57,13 @@ const Forbidden = () => {
             Zugriff verweigert
           </Typography>
           
-          <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 3 }}>
+          <Typography
+            variant="h6"
+            align="center"
+            sx={{
+              color: "text.secondary",
+              mb: 3
+            }}>
             403 - Forbidden
           </Typography>
 
@@ -72,7 +78,13 @@ const Forbidden = () => {
             )}
           </Alert>
 
-          <Typography variant="body1" color="text.secondary" align="center" paragraph>
+          <Typography
+            variant="body1"
+            align="center"
+            sx={{
+              color: "text.secondary",
+              marginBottom: "16px"
+            }}>
             Wenn Sie glauben, dass dies ein Fehler ist, wenden Sie sich bitte an Ihren Administrator.
           </Typography>
 
@@ -93,7 +105,7 @@ const Forbidden = () => {
         </Paper>
       </Box>
     </Container>
-  )
+  );
 }
 
 export default Forbidden

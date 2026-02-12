@@ -319,7 +319,6 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, _load
           required
         />
       </FormSection>
-
       <FormSection title="Forward Configuration" required>
         <FormControl component="fieldset" sx={{ mb: 2 }}>
           <FormLabel component="legend">Scheme</FormLabel>
@@ -349,17 +348,18 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, _load
             value={data.forwardPort}
             onChange={(e) => setFieldValue('forwardPort', parseInt(e.target.value) || 0)}
             type="number"
-            InputProps={{
-              inputProps: { min: 1, max: 65535 }
-            }}
             error={!!errors.forwardPort}
             helperText={errors.forwardPort}
             required
             sx={{ width: 120 }}
+            slotProps={{
+              input: {
+                inputProps: { min: 1, max: 65535 }
+              }
+            }}
           />
         </Box>
       </FormSection>
-
       <FormSection title="Options">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <FormControlLabel
@@ -391,7 +391,6 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, _load
           />
         </Box>
       </FormSection>
-
       <FormSection title="Access Control">
         <FormControl fullWidth>
           <InputLabel>Access List</InputLabel>
@@ -417,7 +416,7 @@ const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, _load
         </FormControl>
       </FormSection>
     </Box>
-  )
+  );
 })
 
 DetailsTab.displayName = 'DetailsTab'

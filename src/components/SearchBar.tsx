@@ -250,17 +250,19 @@ const SearchBar = () => {
               },
             },
           }}
-          InputProps={{
-            ...params.InputProps,
-            startAdornment: (
-              <InputAdornment position="start">
-                {isLoading ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  <SearchIcon />
-                )}
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              ...params.InputProps,
+              startAdornment: (
+                <InputAdornment position="start">
+                  {isLoading ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    <SearchIcon />
+                  )}
+                </InputAdornment>
+              ),
+            }
           }}
         />
       )}
@@ -275,7 +277,12 @@ const SearchBar = () => {
           logger.debug('Rendering action with resourceType:', option.metadata.resourceType)
           // For actions, show the Add icon with the resource type icon
           icon = (
-            <Box display="flex" alignItems="center" gap={0.5}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5
+              }}>
               <Add sx={{ fontSize: 18 }} />
               {getResourceIcon(option.metadata.resourceType)}
             </Box>
@@ -292,7 +299,13 @@ const SearchBar = () => {
             </ListItemIcon>
             <ListItemText
               primary={
-                <Box component="span" display="flex" alignItems="center" gap={1}>
+                <Box
+                  component="span"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   {option.title}
                   {option.metadata?.ssl && (
                     <VpnKey sx={{ fontSize: 16, color: 'success.main' }} />
@@ -303,12 +316,20 @@ const SearchBar = () => {
               secondary={
                 <Box component="span">
                   {option.subtitle && (
-                    <Typography variant="caption" component="span" color="text.secondary">
+                    <Typography variant="caption" component="span" sx={{
+                      color: "text.secondary"
+                    }}>
                       {option.subtitle}
                     </Typography>
                   )}
                   {option.metadata?.owner && (
-                    <Typography variant="caption" component="span" color="text.secondary" sx={{ ml: 1 }}>
+                    <Typography
+                      variant="caption"
+                      component="span"
+                      sx={{
+                        color: "text.secondary",
+                        ml: 1
+                      }}>
                       • {option.metadata.owner}
                     </Typography>
                   )}
@@ -316,21 +337,23 @@ const SearchBar = () => {
               }
             />
           </ListItem>
+        );
+      }}
+      slots={{
+        paper: ({ children }) => (
+          <Paper 
+            elevation={8} 
+            sx={{ 
+              maxHeight: '60vh',
+              overflow: 'auto'
+            }}
+          >
+            {children}
+          </Paper>
         )
       }}
-      PaperComponent={({ children }) => (
-        <Paper 
-          elevation={8} 
-          sx={{ 
-            maxHeight: '60vh',
-            overflow: 'auto'
-          }}
-        >
-          {children}
-        </Paper>
-      )}
     />
-  )
+  );
 }
 
 export default SearchBar
