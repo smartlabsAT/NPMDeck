@@ -43,7 +43,12 @@ class ErrorBoundary extends Component<Props, State> {
               <Typography variant="h4" gutterBottom>
                 Something went wrong
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: "text.secondary",
+                  marginBottom: "16px"
+                }}>
                 An unexpected error has occurred. Please try refreshing the page.
               </Typography>
               
@@ -70,7 +75,13 @@ class ErrorBoundary extends Component<Props, State> {
                 </Box>
               )}
               
-              <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
+              <Stack
+                direction="row"
+                spacing={2}
+                sx={{
+                  justifyContent: "center",
+                  mt: 3
+                }}>
                 <Button
                   variant="contained"
                   startIcon={<RefreshIcon />}
@@ -88,7 +99,7 @@ class ErrorBoundary extends Component<Props, State> {
             </Box>
           </Paper>
         </Container>
-      )
+      );
     }
 
     return this.props.children

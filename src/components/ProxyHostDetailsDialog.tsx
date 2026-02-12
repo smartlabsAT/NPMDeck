@@ -218,7 +218,9 @@ const ProxyHostDetailsDialog = ({
             <SwapHorizIcon sx={{ color: '#5eba00' }} />
             <Typography variant="h6">Proxy Host</Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {host?.domain_names.join(', ') || 'Details'}
           </Typography>
         </Box>
@@ -253,7 +255,6 @@ const ProxyHostDetailsDialog = ({
           )}
         </Tabs>
       </Box>
-
       {/* Content */}
       <Box sx={{ overflow: 'auto' }}>
         {copiedText && (
@@ -304,7 +305,6 @@ const ProxyHostDetailsDialog = ({
           </TabPanel>
         )}
       </Box>
-      
       {/* Export Button for Admin */}
       {/* {isAdmin && (
         <Box sx={{ mt: 2 }}>
@@ -318,7 +318,6 @@ const ProxyHostDetailsDialog = ({
           </Button>
         </Box>
       )} */}
-      
       {/* Export Dialog */}
       {/* {host && (
         <ExportDialog
@@ -330,7 +329,7 @@ const ProxyHostDetailsDialog = ({
         />
       )} */}
     </AdaptiveContainer>
-  )
+  );
 }
 
 export default ProxyHostDetailsDialog

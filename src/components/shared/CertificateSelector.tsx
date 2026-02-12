@@ -183,22 +183,23 @@ export default function CertificateSelector({
             error={!!error}
             helperText={typeof error === 'string' ? error : helperText}
             required={required}
-            InputProps={{
-              ...params.InputProps,
-              startAdornment: (
-                <>
-                  <InputAdornment position="start">
-                    <LockIcon />
-                  </InputAdornment>
-                  {params.InputProps.startAdornment}
-                </>
-              ),
+            slotProps={{
+              input: {
+                ...params.InputProps,
+                startAdornment: (
+                  <>
+                    <InputAdornment position="start">
+                      <LockIcon />
+                    </InputAdornment>
+                    {params.InputProps.startAdornment}
+                  </>
+                ),
+              }
             }}
           />
         )}
         noOptionsText={loading ? "Loading certificates..." : "No certificates found"}
       />
-      
       {showDomainInfo && value && value.domain_names && value.domain_names.length > 0 && (
         <Alert severity="info" sx={{ mt: 1 }}>
           <Typography variant="caption">
@@ -206,7 +207,6 @@ export default function CertificateSelector({
           </Typography>
         </Alert>
       )}
-      
       {showAddButton && onAddClick && (
         <Box sx={{ mt: 2 }}>
           <Button
@@ -220,5 +220,5 @@ export default function CertificateSelector({
         </Box>
       )}
     </Box>
-  )
+  );
 }

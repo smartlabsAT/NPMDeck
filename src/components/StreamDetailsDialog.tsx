@@ -88,7 +88,9 @@ const StreamDetailsDialog = ({
               <StreamIcon sx={{ color: '#467fcf' }} />
               <Typography variant="h6">Stream</Typography>
             </Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Port {stream.incoming_port}
             </Typography>
           </Box>
@@ -139,16 +141,25 @@ const StreamDetailsDialog = ({
           </Alert>
 
           {/* Stream Configuration */}
-          <Box mb={3}>
+          <Box sx={{
+            mb: 3
+          }}>
             <Typography variant="subtitle2" gutterBottom color="primary">
               Stream Configuration
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Incoming Port
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   <Typography variant="body1">
                     {stream.incoming_port}
                   </Typography>
@@ -159,17 +170,26 @@ const StreamDetailsDialog = ({
                     <CopyIcon fontSize="small" />
                   </IconButton>
                   {copiedText === 'Port' && (
-                    <Typography variant="caption" color="success.main">
+                    <Typography variant="caption" sx={{
+                      color: "success.main"
+                    }}>
                       Copied!
                     </Typography>
                   )}
                 </Box>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Forwarding To
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   <Typography variant="body1">
                     {stream.forwarding_host}:{stream.forwarding_port}
                   </Typography>
@@ -191,7 +211,9 @@ const StreamDetailsDialog = ({
                     <OpenInNewIcon fontSize="small" />
                   </IconButton>
                   {copiedText === 'Destination' && (
-                    <Typography variant="caption" color="success.main">
+                    <Typography variant="caption" sx={{
+                      color: "success.main"
+                    }}>
                       Copied!
                     </Typography>
                   )}
@@ -203,11 +225,18 @@ const StreamDetailsDialog = ({
           <Divider sx={{ my: 2 }} />
 
           {/* Protocol Configuration */}
-          <Box mb={3}>
+          <Box sx={{
+            mb: 3
+          }}>
             <Typography variant="subtitle2" gutterBottom color="primary">
               Protocol Configuration
             </Typography>
-            <Box display="flex" gap={2} flexWrap="wrap">
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                flexWrap: "wrap"
+              }}>
               {stream.tcp_forwarding && (
                 <Chip
                   label="TCP Forwarding"
@@ -233,44 +262,74 @@ const StreamDetailsDialog = ({
           <Divider sx={{ my: 2 }} />
 
           {/* SSL Certificate */}
-          <Box mb={3}>
+          <Box sx={{
+            mb: 3
+          }}>
             <Typography variant="subtitle2" gutterBottom color="primary">
               SSL Certificate
             </Typography>
             {stream.certificate_id && stream.certificate ? (
               <Box>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 1
+                  }}>
                   <LockIcon color="success" fontSize="small" />
-                  <Typography variant="body2" fontWeight="medium">
+                  <Typography variant="body2" sx={{
+                    fontWeight: "medium"
+                  }}>
                     {stream.certificate.nice_name || stream.certificate.domain_names?.[0] || 'SSL Certificate'}
                   </Typography>
                 </Box>
                 {stream.certificate.domain_names && stream.certificate.domain_names.length > 0 && (
-                  <Box ml={3}>
-                    <Typography variant="caption" color="text.secondary">
+                  <Box sx={{
+                    ml: 3
+                  }}>
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Domains: {stream.certificate.domain_names.join(', ')}
                     </Typography>
                   </Box>
                 )}
                 {stream.certificate.expires_on && (
-                  <Box ml={3}>
-                    <Typography variant="caption" color="text.secondary">
+                  <Box sx={{
+                    ml: 3
+                  }}>
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Expires: {new Date(stream.certificate.expires_on).toLocaleDateString()}
                     </Typography>
                   </Box>
                 )}
               </Box>
             ) : stream.certificate_id ? (
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
+                }}>
                 <LockIcon color="success" fontSize="small" />
                 <Typography variant="body2">
                   SSL certificate configured (ID: {stream.certificate_id})
                 </Typography>
               </Box>
             ) : (
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
+                }}>
                 <LockOpenIcon color="action" fontSize="small" />
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   No SSL certificate
                 </Typography>
               </Box>
@@ -285,24 +344,33 @@ const StreamDetailsDialog = ({
               Information
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Created
                 </Typography>
                 <Typography variant="body2">
                   {formatDate(stream.created_on)}
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Modified
                 </Typography>
                 <Typography variant="body2">
                   {formatDate(stream.modified_on)}
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <Typography variant="caption" color="text.secondary" display="block">
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    display: "block"
+                  }}>
                   Owner
                 </Typography>
                 <OwnerDisplay 
@@ -313,7 +381,6 @@ const StreamDetailsDialog = ({
             </Grid>
           </Box>
       </AdaptiveContainer>
-      
       {/* Export Dialog */}
       {/* {stream && (
         <ExportDialog
@@ -325,7 +392,7 @@ const StreamDetailsDialog = ({
         />
       )} */}
     </>
-  )
+  );
 }
 
 export default StreamDetailsDialog

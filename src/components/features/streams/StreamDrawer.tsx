@@ -302,7 +302,6 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
       <Alert severity="info">
         Streams allow you to forward TCP and/or UDP traffic from one port to another host and port.
       </Alert>
-
       <FormSection title="Port Configuration" required>
         <TextField
           {...getFieldProps('incomingPort')}
@@ -312,10 +311,12 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
           fullWidth
           error={!!errors.incomingPort}
           helperText={errors.incomingPort || "The port that will receive incoming connections"}
-          InputProps={{
-            inputProps: { min: 1, max: 65535 }
-          }}
           sx={{ mb: 2 }}
+          slotProps={{
+            input: {
+              inputProps: { min: 1, max: 65535 }
+            }
+          }}
         />
 
         <Box sx={{ display: 'flex', gap: 2 }}>
@@ -332,17 +333,18 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
             {...getFieldProps('forwardingPort')}
             label="Forwarding Port"
             type="number"
-            InputProps={{
-              inputProps: { min: 1, max: 65535 }
-            }}
             required
             sx={{ width: 150 }}
             error={!!errors.forwardingPort}
             helperText={errors.forwardingPort || "The destination port"}
+            slotProps={{
+              input: {
+                inputProps: { min: 1, max: 65535 }
+              }
+            }}
           />
         </Box>
       </FormSection>
-
       <FormSection title="Forwarding Type" required>
         <FormHelperText sx={{ mb: 2, color: errors.tcpForwarding ? 'error.main' : 'text.secondary' }}>
           {errors.tcpForwarding || 'Select at least one protocol to forward'}
@@ -369,7 +371,7 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
         </Box>
       </FormSection>
     </Box>
-  )
+  );
 }
 
 // SSL Tab Component

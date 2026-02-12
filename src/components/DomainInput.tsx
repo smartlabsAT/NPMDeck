@@ -249,22 +249,29 @@ export default function DomainInput({
             required={required}
             error={error}
             onPaste={handlePaste}
-            InputProps={{
-              ...params.InputProps,
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LanguageIcon />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                ...params.InputProps,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LanguageIcon />
+                  </InputAdornment>
+                ),
+              }
             }}
           />
         )}
       />
-      
       {/* Display tags below the input - vertical list */}
       {value.length > 0 && (
         <>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mt: 1,
+              display: 'block'
+            }}>
             Domains will be sorted alphabetically by the system.
           </Typography>
           <Box 
@@ -330,5 +337,5 @@ export default function DomainInput({
         </>
       )}
     </>
-  )
+  );
 }

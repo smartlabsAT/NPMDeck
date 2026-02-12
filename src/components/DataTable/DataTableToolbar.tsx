@@ -60,13 +60,16 @@ export default function DataTableToolbar({
 
   return (
     <Paper sx={{ mb: 2 }}>
-      <Box p={2}>
-        <Box 
-          display="flex" 
-          gap={2} 
-          alignItems="stretch"
-          flexDirection={isMobile ? 'column' : 'row'}
-        >
+      <Box sx={{
+        p: 2
+      }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            alignItems: "stretch",
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
           {searchable && (
             <TextField
               variant="outlined"
@@ -78,23 +81,25 @@ export default function DataTableToolbar({
                 flex: isMobile ? 'unset' : 1,
                 width: isMobile ? '100%' : 'auto',
               }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-                endAdornment: searchQuery && (
-                  <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      onClick={() => onSearch('')}
-                      edge="end"
-                    >
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => onSearch('')}
+                        edge="end"
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
           )}
@@ -136,7 +141,12 @@ export default function DataTableToolbar({
                 >
                   {filter.options?.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
-                      <Box display="flex" alignItems="center" gap={1}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1
+                        }}>
                         {option.icon}
                         {option.label}
                       </Box>
@@ -144,10 +154,10 @@ export default function DataTableToolbar({
                   ))}
                 </Select>
               </FormControl>
-            )
+            );
           })}
         </Box>
       </Box>
     </Paper>
-  )
+  );
 }

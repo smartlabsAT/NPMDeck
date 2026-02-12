@@ -26,7 +26,9 @@ const Footer = () => {
             gap: { xs: 1, sm: 2 },
             textAlign: 'center' }}
         >
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             🚀 Material Dashboard for{' '}
             <Link
               href="https://nginxproxymanager.com"
@@ -41,17 +43,23 @@ const Footer = () => {
           </Typography>
           
           <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               •
             </Typography>
           </Box>
           
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Made with ❤️ using Material-UI
           </Typography>
           
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               •
             </Typography>
           </Box>
@@ -81,7 +89,7 @@ const Footer = () => {
         </Box>
       </Container>
     </Box>
-  )
+  );
 }
 
 export default Footer

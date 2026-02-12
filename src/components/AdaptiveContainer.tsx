@@ -51,10 +51,12 @@ const AdaptiveContainer = ({
         anchor={drawerPosition}
         open={open}
         onClose={onClose}
-        PaperProps={{
-          sx: {
-            width: drawerWidth,
-            maxWidth: '90vw',
+        slotProps={{
+          paper: {
+            sx: {
+              width: drawerWidth,
+              maxWidth: '90vw',
+            }
           }
         }}
       >
@@ -77,11 +79,9 @@ const AdaptiveContainer = ({
             <CloseIcon />
           </IconButton>
         </Box>
-        
         <Box sx={{ flexGrow: 1, overflow: 'auto', p: 3 }}>
           {children}
         </Box>
-        
         {actions && (
           <Box
             sx={{
@@ -97,7 +97,7 @@ const AdaptiveContainer = ({
           </Box>
         )}
       </Drawer>
-    )
+    );
   }
   
   // Dialog layout
@@ -108,16 +108,18 @@ const AdaptiveContainer = ({
       maxWidth={maxWidth}
       fullWidth={fullWidth}
       fullScreen={isMobile}
-      PaperProps={{
-        sx: {
-          // Fixed height for non-fullscreen dialogs to prevent jumping
-          ...(!isMobile && {
-            height: '90vh',
-            maxHeight: '90vh',
-            minHeight: '90vh',
-            display: 'flex',
-            flexDirection: 'column'
-          })
+      slotProps={{
+        paper: {
+          sx: {
+            // Fixed height for non-fullscreen dialogs to prevent jumping
+            ...(!isMobile && {
+              height: '90vh',
+              maxHeight: '90vh',
+              minHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column'
+            })
+          }
         }
       }}
     >
@@ -134,7 +136,6 @@ const AdaptiveContainer = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      
       <DialogContent dividers sx={{
         // Make content scrollable for fixed height dialogs
         ...(!isMobile && {
@@ -145,14 +146,13 @@ const AdaptiveContainer = ({
       }}>
         {children}
       </DialogContent>
-      
       {actions && (
         <DialogActions sx={{ p: 2 }}>
           {actions}
         </DialogActions>
       )}
     </Dialog>
-  )
+  );
 }
 
 export default AdaptiveContainer

@@ -249,7 +249,12 @@ const AuditLog = () => {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (_, entry) => (
-        <Box display="flex" alignItems="center" gap={1.5}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5
+          }}>
           <Avatar
             src={entry.user.avatar || '/images/default-avatar.jpg'}
             sx={{ 
@@ -264,14 +269,15 @@ const AuditLog = () => {
           <Box>
             <Typography
               variant="body2"
-              fontWeight="medium"
               sx={{
+                fontWeight: "medium",
                 textDecoration: entry.user.is_deleted ? 'line-through' : 'none'
-              }}
-            >
+              }}>
               {entry.user.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {entry.user.email}
             </Typography>
           </Box>
@@ -287,7 +293,12 @@ const AuditLog = () => {
       priority: 'P2' as ColumnPriority, // Important - hidden on mobile
       showInCard: true,
       render: (_, entry) => (
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1
+          }}>
           {getObjectIcon(entry.object_type)}
           <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
             {entry.object_type.replace('-', ' ')}
@@ -323,7 +334,12 @@ const AuditLog = () => {
       showInCard: true,
       mobileLabel: '',
       render: (_, entry) => (
-        <Box display="flex" flexWrap="wrap" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center"
+          }}>
           {getObjectDisplayName(entry)}
         </Box>
       ),
@@ -341,7 +357,9 @@ const AuditLog = () => {
           <Typography variant="body2">
             {format(new Date(date), 'MMM d, yyyy')}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {format(new Date(date), 'h:mm a')}
           </Typography>
         </Box>
@@ -414,8 +432,12 @@ const AuditLog = () => {
   return (
     <Container maxWidth={false}>
       <title>Audit Log - NPMDeck</title>
-      <Box py={3}>
-        <Box mb={3}>
+      <Box sx={{
+        py: 3
+      }}>
+        <Box sx={{
+          mb: 3
+        }}>
           <PageHeader
             icon={React.createElement(NAVIGATION_CONFIG.auditLog.icon, { sx: { color: NAVIGATION_CONFIG.auditLog.color } })}
             title={NAVIGATION_CONFIG.auditLog.text}
@@ -442,7 +464,6 @@ const AuditLog = () => {
           compactBreakpoint={1250}
         />
       </Box>
-
       <Dialog
         open={metaDialogOpen}
         onClose={handleCloseMetaDialog}
@@ -450,7 +471,12 @@ const AuditLog = () => {
         fullWidth
       >
         <DialogTitle>
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1
+            }}>
             <AuditIcon sx={{ color: '#495c68' }} />
             Audit Log Details
           </Box>
@@ -458,32 +484,56 @@ const AuditLog = () => {
         <DialogContent dividers>
           {selectedEntry && (
             <Box>
-              <Box mb={3}>
-                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              <Box sx={{
+                mb: 3
+              }}>
+                <Typography variant="subtitle2" gutterBottom sx={{
+                  color: "text.secondary"
+                }}>
                   Action Information
                 </Typography>
                 <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Box display="grid" gridTemplateColumns="200px 1fr" gap={1}>
-                    <Typography variant="body2" color="text.secondary">User:</Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "200px 1fr",
+                      gap: 1
+                    }}>
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>User:</Typography>
                     <Typography variant="body2">
                       {selectedEntry.user.name} ({selectedEntry.user.email})
                     </Typography>
                     
-                    <Typography variant="body2" color="text.secondary">Action:</Typography>
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>Action:</Typography>
                     <ActionChip action={selectedEntry.action as any} />
                     
-                    <Typography variant="body2" color="text.secondary">Object Type:</Typography>
-                    <Box display="flex" alignItems="center" gap={1}>
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>Object Type:</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1
+                      }}>
                       {getObjectIcon(selectedEntry.object_type)}
                       <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
                         {selectedEntry.object_type.replace('-', ' ')}
                       </Typography>
                     </Box>
                     
-                    <Typography variant="body2" color="text.secondary">Object ID:</Typography>
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>Object ID:</Typography>
                     <Typography variant="body2">{selectedEntry.object_id}</Typography>
                     
-                    <Typography variant="body2" color="text.secondary">Date:</Typography>
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>Date:</Typography>
                     <Typography variant="body2">
                       {format(new Date(selectedEntry.created_on), 'PPpp')}
                     </Typography>
@@ -492,7 +542,9 @@ const AuditLog = () => {
               </Box>
               
               <Box>
-                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                <Typography variant="subtitle2" gutterBottom sx={{
+                  color: "text.secondary"
+                }}>
                   Metadata
                 </Typography>
                 <Paper variant="outlined" sx={{ p: 0, backgroundColor: 'action.hover', overflow: 'hidden' }}>
@@ -519,7 +571,7 @@ const AuditLog = () => {
         </DialogActions>
       </Dialog>
     </Container>
-  )
+  );
 }
 
 export default AuditLog

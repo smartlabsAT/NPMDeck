@@ -296,12 +296,14 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
               placeholder="example.com or example.com/path"
               margin="normal"
               required
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <RedirectIcon />
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <RedirectIcon />
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
 
@@ -331,7 +333,14 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
               }
               label="Preserve Path"
             />
-            <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                ml: 2,
+                mb: 2,
+                display: 'block'
+              }}>
               Append the request path to the forward domain
             </Typography>
 
@@ -344,7 +353,14 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
               }
               label="Block Common Exploits"
             />
-            <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                ml: 2,
+                mb: 2,
+                display: 'block'
+              }}>
               Prevent common exploits like SQL injection attempts
             </Typography>
 
@@ -396,7 +412,14 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
                 }
                 label="Force SSL"
               />
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  ml: 2,
+                  mb: 2,
+                  display: 'block'
+                }}>
                 Redirect all HTTP traffic to HTTPS
               </Typography>
 
@@ -420,7 +443,14 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
                 }
                 label="HSTS Enabled"
               />
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  ml: 2,
+                  mb: 2,
+                  display: 'block'
+                }}>
                 HTTP Strict Transport Security
               </Typography>
 
@@ -464,7 +494,14 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
                 label="Use DNS Challenge"
                 sx={{ mt: 2 }}
               />
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 2, mb: 2, display: 'block' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  ml: 2,
+                  mb: 2,
+                  display: 'block'
+                }}>
                 Required for wildcard certificates
               </Typography>
 
@@ -550,7 +587,6 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
           />
         </TabPanel>
       </BaseDrawer>
-
       <CertificateDrawer
         open={certificateDrawerOpen}
         onClose={() => setCertificateDrawerOpen(false)}
@@ -561,5 +597,5 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         }}
       />
     </>
-  )
+  );
 }

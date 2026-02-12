@@ -424,7 +424,9 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
                 label={
                   <Box>
                     <Typography variant="body2">Satisfy Any</Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Allow access if ANY condition is met (IP rule OR authentication)
                     </Typography>
                   </Box>
@@ -443,7 +445,9 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
                 label={
                   <Box>
                     <Typography variant="body2">Pass Auth</Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Pass authentication headers to the proxied server
                     </Typography>
                   </Box>
@@ -453,7 +457,6 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
           </Box>
         </FormSection>
       </TabPanel>
-
       {/* Authorization Tab */}
       <TabPanel value={activeTab} index={1} keepMounted animation="none">
         <FormSection
@@ -474,7 +477,6 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
           />
         </FormSection>
       </TabPanel>
-
       {/* Access Tab */}
       <TabPanel value={activeTab} index={2} keepMounted animation="none">
         <FormSection
@@ -483,7 +485,9 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
           icon={<SecurityIcon />}
           headerContent={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>
                 IP Address Whitelist/Blacklist via Nginx HTTP Access
               </Typography>
               <a 
@@ -520,5 +524,5 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
         </FormSection>
       </TabPanel>
     </BaseDrawer>
-  )
+  );
 }

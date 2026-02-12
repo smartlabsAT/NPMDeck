@@ -80,7 +80,6 @@ function DefaultStringItemComponent({
       {draggable && (
         <DragIcon sx={{ color: 'text.secondary', cursor: 'grab' }} />
       )}
-
       <TextField
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -90,23 +89,24 @@ function DefaultStringItemComponent({
         error={error}
         helperText={helperText}
         disabled={readonly}
-        InputProps={{
-          endAdornment: readonly ? undefined : (
-            <InputAdornment position="end">
-              <Tooltip title="Clear">
-                <IconButton
-                  size="small"
-                  onClick={() => onChange('')}
-                  edge="end"
-                >
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            endAdornment: readonly ? undefined : (
+              <InputAdornment position="end">
+                <Tooltip title="Clear">
+                  <IconButton
+                    size="small"
+                    onClick={() => onChange('')}
+                    edge="end"
+                  >
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </InputAdornment>
+            ),
+          }
         }}
       />
-
       <Box sx={{ display: 'flex', gap: 0.5 }}>
         {onMoveUp && (
           <Tooltip title="Move up">
@@ -143,7 +143,7 @@ function DefaultStringItemComponent({
         )}
       </Box>
     </Paper>
-  )
+  );
 }
 
 export default DefaultStringItemComponent

@@ -79,14 +79,21 @@ const UserPasswordDialog = ({ open, onClose, user, onSave }: UserPasswordDialogP
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1
+          }}>
           <LockIcon sx={{ color: '#868e96' }} />
           Change Password
         </Box>
       </DialogTitle>
       <DialogContent>
         <Box sx={{ pt: 1 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
+          <Typography variant="body2" gutterBottom sx={{
+            color: "text.secondary"
+          }}>
             Changing password for: <strong>{user.name}</strong>
           </Typography>
 
@@ -151,7 +158,7 @@ const UserPasswordDialog = ({ open, onClose, user, onSave }: UserPasswordDialogP
         </Button>
       </DialogActions>
     </Dialog>
-  )
+  );
 }
 
 export default UserPasswordDialog

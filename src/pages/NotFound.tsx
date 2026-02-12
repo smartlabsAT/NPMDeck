@@ -7,9 +7,15 @@ const NotFound = () => {
   return (
     <>
       <title>Page Not Found - NPMDeck</title>
-      <Box textAlign="center" mt={8}>
+      <Box
+        sx={{
+          textAlign: "center",
+          mt: 8
+        }}>
         <Typography variant="h1" color="error">404</Typography>
-      <Typography variant="h5" mt={2}>Page Not Found</Typography>
+      <Typography variant="h5" sx={{
+        mt: 2
+      }}>Page Not Found</Typography>
       <Button 
         variant="contained" 
         onClick={() => navigate('/')}
@@ -19,7 +25,7 @@ const NotFound = () => {
       </Button>
       </Box>
     </>
-  )
+  );
 }
 
 export default NotFound

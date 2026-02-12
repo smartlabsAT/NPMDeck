@@ -176,20 +176,20 @@ export function MobileCard<T extends Record<string, any>>({
                       flexWrap: 'wrap',
                     }}>
                       {showLabel && (
-                        <Typography 
-                          variant="caption" 
-                          color="text.secondary" 
-                          sx={{ 
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "text.secondary",
                             minWidth: 80,
                             fontSize: '0.75rem',
-                            flexShrink: 0,
-                          }}
-                        >
+                            flexShrink: 0
+                          }}>
                           {col.mobileLabel || col.label}:
                         </Typography>
                       )}
-                      <Typography 
+                      <Typography
                         variant="body2"
+                        component="div"
                         sx={{
                           fontSize: '0.875rem',
                           wordBreak: 'break-word',
@@ -200,7 +200,7 @@ export function MobileCard<T extends Record<string, any>>({
                         {typeof value === 'string' || typeof value === 'number' ? value : <>{value}</>}
                       </Typography>
                     </Box>
-                  )
+                  );
                 })}
               </Stack>
             )}
@@ -260,21 +260,26 @@ export function MobileCard<T extends Record<string, any>>({
                 
                 return (
                   <Box key={col.id} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 100 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        minWidth: 100
+                      }}>
                       {col.mobileLabel || col.label}:
                     </Typography>
                     <Typography variant="body2" sx={{ flex: 1 }}>
                       {typeof value === 'string' || typeof value === 'number' ? value : <>{value}</>}
                     </Typography>
                   </Box>
-                )
+                );
               })}
             </Stack>
           </Collapse>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default MobileCard
