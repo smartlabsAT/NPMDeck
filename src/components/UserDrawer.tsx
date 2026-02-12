@@ -410,7 +410,13 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
             label="Disabled"
             sx={{ mt: 2, mb: 1 }}
           />
-          <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              display: "block",
+              mb: 2
+            }}>
             Disabled users cannot login
           </Typography>
 
@@ -427,7 +433,13 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
                 label="Administrator"
                 sx={{ mb: 1 }}
               />
-              <Typography variant="caption" color="text.secondary" display="block" mb={3}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  display: "block",
+                  mb: 3
+                }}>
                 Administrators have full access to all features
               </Typography>
             </>
@@ -461,11 +473,12 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
         )}
 
       </TabPanel>
-
       {user && (
         <TabPanel value={activeTab} index={1} keepMounted animation="none">
           <FormSection title="Change Password">
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant="body2" gutterBottom sx={{
+              color: "text.secondary"
+            }}>
               Changing password for: <strong>{user.name}</strong>
             </Typography>
 
@@ -516,7 +529,6 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
           </FormSection>
         </TabPanel>
       )}
-
       {user && (
         <TabPanel value={activeTab} index={2} keepMounted animation="none">
           {isAdminUser && (
@@ -535,7 +547,12 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
                   label="Permission Template"
                 >
                   <MenuItem value="custom">
-                    <Box display="flex" alignItems="center" gap={1}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1
+                      }}>
                       <EditIcon fontSize="small" />
                       <span>Custom Configuration</span>
                     </Box>
@@ -544,7 +561,9 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
                     <MenuItem key={preset.name} value={preset.name}>
                       <Box>
                         <Typography variant="body2">{preset.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" sx={{
+                          color: "text.secondary"
+                        }}>
                           {preset.description}
                         </Typography>
                       </Box>
@@ -564,15 +583,23 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
               fullWidth
             >
               <ToggleButton value="all">
-                <Box textAlign="center">
+                <Box sx={{
+                  textAlign: "center"
+                }}>
                   <PublicIcon sx={{ mb: 0.5 }} />
-                  <Typography variant="caption" display="block">All Items</Typography>
+                  <Typography variant="caption" sx={{
+                    display: "block"
+                  }}>All Items</Typography>
                 </Box>
               </ToggleButton>
               <ToggleButton value="user">
-                <Box textAlign="center">
+                <Box sx={{
+                  textAlign: "center"
+                }}>
                   <UserOnlyIcon sx={{ mb: 0.5 }} />
-                  <Typography variant="caption" display="block">Own Items Only</Typography>
+                  <Typography variant="caption" sx={{
+                    display: "block"
+                  }}>Own Items Only</Typography>
                 </Box>
               </ToggleButton>
             </ToggleButtonGroup>
@@ -588,11 +615,23 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
                 { key: 'access_lists', label: 'Access Lists', icon: <SecurityIcon sx={{ color: '#2bcbba' }} /> },
                 { key: 'certificates', label: 'SSL Certificates', icon: <CertificateIcon sx={{ color: '#467fcf' }} /> },
               ].map(({ key, label, icon }) => (
-                <Grid item xs={12} key={key}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Box display="flex" alignItems="center" gap={1.5}>
+                <Grid size={12} key={key}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between"
+                    }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5
+                      }}>
                       {icon}
-                      <Typography variant="body2" fontWeight="medium">
+                      <Typography variant="body2" sx={{
+                        fontWeight: "medium"
+                      }}>
                         {label}
                       </Typography>
                     </Box>
@@ -607,19 +646,34 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
                       size="small"
                     >
                       <ToggleButton value="hidden" sx={{ px: 2 }}>
-                        <Box display="flex" alignItems="center" gap={0.5}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5
+                          }}>
                           {getPermissionIcon('hidden')}
                           <Typography variant="caption">Hidden</Typography>
                         </Box>
                       </ToggleButton>
                       <ToggleButton value="view" sx={{ px: 2 }}>
-                        <Box display="flex" alignItems="center" gap={0.5}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5
+                          }}>
                           {getPermissionIcon('view')}
                           <Typography variant="caption">View</Typography>
                         </Box>
                       </ToggleButton>
                       <ToggleButton value="manage" sx={{ px: 2 }}>
-                        <Box display="flex" alignItems="center" gap={0.5}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5
+                          }}>
                           {getPermissionIcon('manage')}
                           <Typography variant="caption">Manage</Typography>
                         </Box>
@@ -643,7 +697,7 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
         </TabPanel>
       )}
     </BaseDrawer>
-  )
+  );
 }
 
 export default UserDrawer

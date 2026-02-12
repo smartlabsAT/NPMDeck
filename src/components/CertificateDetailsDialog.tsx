@@ -122,7 +122,9 @@ const CertificateDetailsDialog = ({
             <VpnKey sx={{ color: '#5eba00' }} />
             <Typography variant="h6">SSL Certificate</Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {certificate?.nice_name || certificate?.domain_names.join(', ') || 'Details'}
           </Typography>
         </Box>
@@ -143,7 +145,6 @@ const CertificateDetailsDialog = ({
           <Tab label="Hosts" icon={<HostsIcon />} iconPosition="start" />
         </Tabs>
       </Box>
-
       <Box sx={{ overflow: 'auto' }}>
         {copiedText && (
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -167,7 +168,6 @@ const CertificateDetailsDialog = ({
           />
         </TabPanel>
       </Box>
-      
       {/* Export Dialog */}
       {/* {certificate && (
         <ExportDialog
@@ -179,7 +179,7 @@ const CertificateDetailsDialog = ({
         />
       )} */}
     </AdaptiveContainer>
-  )
+  );
 }
 
 export default CertificateDetailsDialog

@@ -305,9 +305,10 @@ export default function FormSection({
             {description && (
               <Typography
                 variant="body2"
-                color="text.secondary"
-                sx={{ mt: 0.25 }}
-              >
+                sx={{
+                  color: "text.secondary",
+                  mt: 0.25
+                }}>
                 {description}
               </Typography>
             )}
@@ -348,10 +349,8 @@ export default function FormSection({
             </IconButton>
           )}
         </Box>
-
         {/* Divider for minimal variant */}
         <Divider sx={{ my: 0.5 }} />
-
         {/* Content */}
         {collapsible ? (
           <Collapse 
@@ -375,7 +374,7 @@ export default function FormSection({
           </Box>
         )}
       </Box>
-    )
+    );
   }
 
   // Compact and Default variants - use Paper
@@ -464,16 +463,15 @@ export default function FormSection({
           {description && (
             <Typography
               variant="body2"
-              color="text.secondary"
-              sx={{ 
+              sx={{
+                color: "text.secondary",
                 mt: 0.5,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 display: '-webkit-box',
                 WebkitLineClamp: collapsible && !expanded ? 1 : 3,
-                WebkitBoxOrient: 'vertical',
-              }}
-            >
+                WebkitBoxOrient: 'vertical'
+              }}>
               {description}
             </Typography>
           )}
@@ -515,7 +513,6 @@ export default function FormSection({
           </IconButton>
         )}
       </Box>
-
       {/* Content */}
       {collapsible ? (
         <Collapse 
@@ -543,7 +540,7 @@ export default function FormSection({
         </>
       )}
     </Paper>
-  )
+  );
 }
 
 /**

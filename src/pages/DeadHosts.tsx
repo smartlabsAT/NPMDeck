@@ -255,9 +255,16 @@ export default function DeadHosts() {
       showInCard: true,
       mobileLabel: '', // Empty string to hide label - "404 Not Found" is self-explanatory
       render: () => (
-        <Box display="flex" alignItems="center" gap={0.5}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5
+          }}>
           <BlockIcon fontSize="small" color="action" />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             404 Not Found
           </Typography>
         </Box>
@@ -292,7 +299,12 @@ export default function DeadHosts() {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (value, item) => (
-        <Box display="flex" gap={0.5} justifyContent="flex-end">
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.5,
+            justifyContent: "flex-end"
+          }}>
           <PermissionIconButton
             resource="dead_hosts"
             permissionAction="edit"
@@ -434,9 +446,17 @@ export default function DeadHosts() {
   return (
     <Container maxWidth={false}>
       <title>404 Hosts - NPMDeck</title>
-      <Box py={3}>
+      <Box sx={{
+        py: 3
+      }}>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3
+          }}>
           <PageHeader
             icon={React.createElement(NAVIGATION_CONFIG.deadHosts.icon, { sx: { color: NAVIGATION_CONFIG.deadHosts.color } })}
             title={NAVIGATION_CONFIG.deadHosts.text}
@@ -483,7 +503,12 @@ export default function DeadHosts() {
         
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
-          <Box mt={2} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <PermissionButton
               resource="dead_hosts"
               permissionAction="create"
@@ -498,7 +523,6 @@ export default function DeadHosts() {
           </Box>
         )}
       </Box>
-
       {canManageDeadHosts('dead_hosts') && (
         <DeadHostDrawer
           open={drawerOpen}
@@ -513,7 +537,6 @@ export default function DeadHosts() {
           }}
         />
       )}
-
       <DeadHostDetailsDialog
         open={detailsDialogOpen}
         onClose={() => {
@@ -525,7 +548,6 @@ export default function DeadHosts() {
         host={viewingHost}
         onEdit={canManageDeadHosts('dead_hosts') ? handleEdit : undefined}
       />
-
       <ConfirmDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
@@ -537,5 +559,5 @@ export default function DeadHosts() {
         confirmColor="error"
       />
     </Container>
-  )
+  );
 }

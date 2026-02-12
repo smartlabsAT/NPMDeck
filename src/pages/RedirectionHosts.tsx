@@ -276,7 +276,13 @@ export default function RedirectionHosts() {
       render: (value, item) => (
         <Box>
           {item.domain_names.map((domain, index) => (
-            <Box key={index} display="flex" alignItems="center" gap={0.5}>
+            <Box
+              key={index}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5
+              }}>
               <Typography variant="body2">
                 {domain}
               </Typography>
@@ -313,9 +319,16 @@ export default function RedirectionHosts() {
         const linkedProxy = getLinkedProxyHost(item.forward_domain_name)
         return (
           <Box>
-            <Box display="flex" alignItems="center" gap={0.5}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5
+              }}>
               <RedirectIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {item.forward_scheme}://{item.forward_domain_name}
               </Typography>
               <IconButton
@@ -335,18 +348,19 @@ export default function RedirectionHosts() {
               </IconButton>
             </Box>
             {linkedProxy && (
-              <Box 
-                display="flex" 
-                alignItems="center" 
-                gap={0.5} 
-                ml={3}
-                sx={{ 
+              <Box
+                onClick={(e) => handleViewProxyHost(linkedProxy, e)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  ml: 3,
                   cursor: 'pointer',
                   '&:hover': { opacity: 0.8 }
-                }}
-                onClick={(e) => handleViewProxyHost(linkedProxy, e)}
-              >
-                <Typography variant="caption" color="text.secondary">↳</Typography>
+                }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>↳</Typography>
                 <ProxyIcon fontSize="small" sx={{ fontSize: '0.875rem' }} color="action" />
                 <Typography variant="caption" color="primary">
                   Proxy Host
@@ -354,7 +368,7 @@ export default function RedirectionHosts() {
               </Box>
             )}
           </Box>
-        )
+        );
       }
     },
     {
@@ -403,7 +417,12 @@ export default function RedirectionHosts() {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (value, item) => (
-        <Box display="flex" gap={0.5} justifyContent="flex-end">
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.5,
+            justifyContent: "flex-end"
+          }}>
           <PermissionIconButton
             resource="redirection_hosts"
             permissionAction="edit"
@@ -569,12 +588,21 @@ export default function RedirectionHosts() {
     groupLabel: (_groupId, _items) => `domain`,
     defaultEnabled: false,
     groupHeaderRender: (_groupId, _items, _isExpanded) => (
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1
+        }}>
         <LanguageIcon fontSize="small" color="primary" />
-        <Typography variant="subtitle2" fontWeight="bold">
+        <Typography variant="subtitle2" sx={{
+          fontWeight: "bold"
+        }}>
           {_groupId}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           ({_items.length})
         </Typography>
       </Box>
@@ -584,9 +612,17 @@ export default function RedirectionHosts() {
   return (
     <Container maxWidth={false}>
       <title>Redirection Hosts - NPMDeck</title>
-      <Box py={3}>
+      <Box sx={{
+        py: 3
+      }}>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3
+          }}>
           <PageHeader
             icon={React.createElement(NAVIGATION_CONFIG.redirectionHosts.icon, { sx: { color: NAVIGATION_CONFIG.redirectionHosts.color } })}
             title={NAVIGATION_CONFIG.redirectionHosts.text}
@@ -635,7 +671,12 @@ export default function RedirectionHosts() {
         
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
-          <Box mt={2} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <PermissionButton
               resource="redirection_hosts"
               permissionAction="create"
@@ -650,7 +691,6 @@ export default function RedirectionHosts() {
           </Box>
         )}
       </Box>
-
       {canManageRedirectionHosts('redirection_hosts') && (
         <RedirectionHostDrawer
           open={drawerOpen}
@@ -665,7 +705,6 @@ export default function RedirectionHosts() {
           }}
         />
       )}
-
       <RedirectionHostDetailsDialog
         open={detailsDialogOpen}
         onClose={() => {
@@ -677,7 +716,6 @@ export default function RedirectionHosts() {
         host={viewingHost}
         onEdit={canManageRedirectionHosts('redirection_hosts') ? handleEdit : () => {}}
       />
-
       <ConfirmDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
@@ -689,5 +727,5 @@ export default function RedirectionHosts() {
         confirmColor="error"
       />
     </Container>
-  )
+  );
 }

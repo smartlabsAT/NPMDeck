@@ -479,7 +479,9 @@ const Settings = () => {
               {option.label}
             </Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {option.description}
           </Typography>
         </CardContent>
@@ -577,24 +579,30 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px"
+        }}>
         <CircularProgress />
       </Box>
-    )
+    );
   }
 
   return (
     <Box>
       <title>Settings - NPMDeck</title>
-      <Box mb={3}>
+      <Box sx={{
+        mb: 3
+      }}>
         <PageHeader
           icon={React.createElement(NAVIGATION_CONFIG.settings.icon, { sx: { color: NAVIGATION_CONFIG.settings.color } })}
           title={NAVIGATION_CONFIG.settings.text}
           description="Configure system-wide settings for Nginx Proxy Manager"
         />
       </Box>
-
-
       <Paper>
         <Tabs
           value={activeTab}
@@ -606,10 +614,10 @@ const Settings = () => {
           }}
           variant={isMobile ? "scrollable" : "standard"}
           scrollButtons={isMobile ? "auto" : false}
-          allowScrollButtonsMobile={isMobile}
-          sx={{ 
-            borderBottom: 1, 
+          sx={{
+            borderBottom: 1,
             borderColor: 'divider',
+            '& .MuiTabScrollButton-root': { display: 'flex' },
             // Adjust padding on mobile
             ...(isMobile && {
               '& .MuiTab-root': {
@@ -635,7 +643,12 @@ const Settings = () => {
         {/* Default Site Tab */}
         <TabPanel value={activeTab} index={0} padding={isMobile ? 2 : 3} animation="none">
           <FormSection title="Choose Default Page" sx={{ mb: 4 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                mb: 3
+              }}>
               Select what visitors see when they access your server directly or via an unmatched domain
             </Typography>
             
@@ -654,7 +667,13 @@ const Settings = () => {
                 flexWrap: isMobile ? 'nowrap' : 'wrap',
                 alignItems: isMobile ? 'stretch' : 'flex-start'
               }}>
-                <Typography variant="body2" color="text.secondary" sx={{ width: '100%', mb: 1 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    width: '100%',
+                    mb: 1
+                  }}>
                   Quick Templates:
                 </Typography>
                 <Box sx={{
@@ -768,7 +787,13 @@ const Settings = () => {
                 />
               </Paper>
               
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  mt: 1,
+                  display: 'block'
+                }}>
                 Create your own custom HTML page that will be displayed as the default
               </Typography>
             </FormSection>
@@ -800,7 +825,12 @@ const Settings = () => {
         {/* UI Preferences Tab */}
         <TabPanel value={activeTab} index={1} padding={isMobile ? 2 : 3} animation="none">
           <FormSection title="Container Display Preferences" sx={{ mb: 4 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                mb: 3
+              }}>
               Choose whether to use drawers or dialogs for different operations
             </Typography>
 
@@ -831,7 +861,9 @@ const Settings = () => {
                           ) : (
                             <CodeIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                           )}
-                          <Typography variant="subtitle1" fontWeight="medium">
+                          <Typography variant="subtitle1" sx={{
+                            fontWeight: "medium"
+                          }}>
                             {ENTITY_DISPLAY_NAMES[entityKey]}
                           </Typography>
                         </Box>
@@ -840,7 +872,9 @@ const Settings = () => {
                         <Box sx={{ mb: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                             <ViewIcon fontSize="small" sx={{ color: '#467fcf' }} />
-                            <Typography variant="body2" fontWeight="medium">
+                            <Typography variant="body2" sx={{
+                              fontWeight: "medium"
+                            }}>
                               View Details
                             </Typography>
                           </Box>
@@ -865,7 +899,9 @@ const Settings = () => {
                         <Box sx={{ mb: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                             <EditIcon fontSize="small" sx={{ color: '#f59f00' }} />
-                            <Typography variant="body2" fontWeight="medium">
+                            <Typography variant="body2" sx={{
+                              fontWeight: "medium"
+                            }}>
                               Edit
                             </Typography>
                           </Box>
@@ -896,7 +932,9 @@ const Settings = () => {
                         <Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                             <AddIcon fontSize="small" sx={{ color: '#5eba00' }} />
-                            <Typography variant="body2" fontWeight="medium">
+                            <Typography variant="body2" sx={{
+                              fontWeight: "medium"
+                            }}>
                               Create New
                             </Typography>
                           </Box>
@@ -924,30 +962,48 @@ const Settings = () => {
                         </Box>
                       </CardContent>
                     </Card>
-                  )
+                  );
                 })}
               </Stack>
             ) : (
               /* Desktop: Table layout */
-              <TableContainer component={Paper} variant="outlined">
+              (<TableContainer component={Paper} variant="outlined">
                 <Table>
                   <TableHead>
                     <TableRow>
                       <TableCell>Resource</TableCell>
                       <TableCell align="center">
-                        <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 0.5
+                          }}>
                           <ViewIcon fontSize="small" sx={{ color: '#467fcf' }} />
                           View Details
                         </Box>
                       </TableCell>
                       <TableCell align="center">
-                        <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 0.5
+                          }}>
                           <EditIcon fontSize="small" sx={{ color: '#f59f00' }} />
                           Edit
                         </Box>
                       </TableCell>
                       <TableCell align="center">
-                        <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 0.5
+                          }}>
                           <AddIcon fontSize="small" sx={{ color: '#5eba00' }} />
                           Create New
                         </Box>
@@ -1034,7 +1090,7 @@ const Settings = () => {
                     })}
                   </TableBody>
                 </Table>
-              </TableContainer>
+              </TableContainer>)
             )}
           </FormSection>
 
@@ -1120,19 +1176,29 @@ const Settings = () => {
                     mt: 1,
                     px: 1
                   }}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Compact
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Default
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Wide
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Extra
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Max
                     </Typography>
                   </Box>
@@ -1164,18 +1230,19 @@ const Settings = () => {
             >
               Reset to Defaults
             </Button>
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              textAlign={isMobile ? 'center' : 'right'}
-            >
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                textAlign: isMobile ? 'center' : 'right'
+              }}>
               Changes are saved automatically
             </Typography>
           </Box>
         </TabPanel>
       </Paper>
     </Box>
-  )
+  );
 }
 
 export default Settings

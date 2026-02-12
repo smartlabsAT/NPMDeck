@@ -63,11 +63,16 @@ const ProxyHostInfoPanel = ({
   return (
     <Grid container spacing={3}>
       {/* Status Overview */}
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: 'background.default' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={4}>
-              <Box display="flex" alignItems="center" gap={1}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
+                }}>
                 {host.enabled ? (
                   host.meta.nginx_online !== false ? (
                     <CheckIcon color="success" />
@@ -78,46 +83,77 @@ const ProxyHostInfoPanel = ({
                   <BlockIcon color="disabled" />
                 )}
                 <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight="bold">Status</Typography>
-                  <Typography variant="body2" fontWeight="medium">
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: "bold"
+                    }}>Status</Typography>
+                  <Typography variant="body2" sx={{
+                    fontWeight: "medium"
+                  }}>
                     {!host.enabled ? 'Disabled' : host.meta.nginx_online === false ? 'Error' : 'Online'}
                   </Typography>
                 </Box>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box display="flex" alignItems="center" gap={1}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
+                }}>
                 {host.certificate_id ? <HttpsIcon color="primary" /> : <HttpIcon color="action" />}
                 <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight="bold">SSL</Typography>
-                  <Typography variant="body2" fontWeight="medium">
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: "bold"
+                    }}>SSL</Typography>
+                  <Typography variant="body2" sx={{
+                    fontWeight: "medium"
+                  }}>
                     {host.certificate_id ? (host.ssl_forced ? 'Forced' : 'Enabled') : 'Disabled'}
                   </Typography>
                 </Box>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box display="flex" alignItems="center" gap={1}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
+                }}>
                 <SecurityIcon color="action" />
                 <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight="bold">Access</Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: "bold"
+                    }}>Access</Typography>
                   {host.access_list ? (
-                    <Typography 
-                      variant="body2" 
-                      fontWeight="medium"
-                      sx={{ 
+                    <Typography
+                      variant="body2"
+                      onClick={onNavigateToAccess}
+                      sx={{
+                        fontWeight: "medium",
                         cursor: 'pointer',
                         color: 'primary.main',
+
                         '&:hover': {
                           textDecoration: 'underline'
                         }
-                      }}
-                      onClick={onNavigateToAccess}
-                    >
+                      }}>
                       {host.access_list.name}
                     </Typography>
                   ) : (
-                    <Typography variant="body2" fontWeight="medium">
+                    <Typography variant="body2" sx={{
+                      fontWeight: "medium"
+                    }}>
                       Public
                     </Typography>
                   )}
@@ -127,21 +163,39 @@ const ProxyHostInfoPanel = ({
           </Grid>
         </Paper>
       </Grid>
-
       {/* Basic Information */}
-      <Grid item xs={12}>
-        <Box display="flex" alignItems="center" gap={1} mb={2}>
+      <Grid size={12}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            mb: 2
+          }}>
           <SwapHorizIcon color="primary" />
           <Typography variant="h6">Basic Information</Typography>
         </Box>
-        
+
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography
+              variant="subtitle2"
+              gutterBottom
+              sx={{
+                color: "text.secondary",
+                fontWeight: "bold"
+              }}>
               Host ID
             </Typography>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="body2" fontFamily="monospace">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1
+              }}>
+              <Typography variant="body2" sx={{
+                fontFamily: "monospace"
+              }}>
                 #{host.id}
               </Typography>
               <IconButton 
@@ -153,17 +207,31 @@ const ProxyHostInfoPanel = ({
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography
+              variant="subtitle2"
+              gutterBottom
+              sx={{
+                color: "text.secondary",
+                fontWeight: "bold"
+              }}>
               Forward Destination
             </Typography>
-            <Typography variant="body2" fontFamily="monospace">
+            <Typography variant="body2" sx={{
+              fontFamily: "monospace"
+            }}>
               {host.forward_scheme}://{host.forward_host}:{host.forward_port}
             </Typography>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography
+              variant="subtitle2"
+              gutterBottom
+              sx={{
+                color: "text.secondary",
+                fontWeight: "bold"
+              }}>
               Created
             </Typography>
             <Typography variant="body2">
@@ -171,8 +239,14 @@ const ProxyHostInfoPanel = ({
             </Typography>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography
+              variant="subtitle2"
+              gutterBottom
+              sx={{
+                color: "text.secondary",
+                fontWeight: "bold"
+              }}>
               Last Modified
             </Typography>
             <Typography variant="body2">
@@ -181,11 +255,22 @@ const ProxyHostInfoPanel = ({
           </Grid>
 
           {host.owner_user_id && (
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography
+                variant="subtitle2"
+                gutterBottom
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: "bold"
+                }}>
                 Owner
               </Typography>
-              <Box display="flex" alignItems="center" gap={0.5}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5
+                }}>
                 <PersonIcon fontSize="small" color="action" />
                 <Typography variant="body2">
                   User #{host.owner_user_id}
@@ -195,17 +280,20 @@ const ProxyHostInfoPanel = ({
           )}
         </Grid>
       </Grid>
-
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Divider />
       </Grid>
-
       {/* Domain Names */}
-      <Grid item xs={12}>
+      <Grid size={12}>
         <ListItemButton onClick={() => onToggleSection('domains')} sx={{ pl: 0, pr: 1 }}>
           <ListItemText 
             primary={
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
+                }}>
                 <LanguageIcon color="primary" />
                 <Typography variant="h6">
                   Domain Names ({host.domain_names.length})
@@ -237,23 +325,38 @@ const ProxyHostInfoPanel = ({
           </List>
         </Collapse>
       </Grid>
-
       {/* Configuration */}
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Divider />
       </Grid>
-
-      <Grid item xs={12}>
-        <Box display="flex" alignItems="center" gap={1} mb={2}>
+      <Grid size={12}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            mb: 2
+          }}>
           <SettingsIcon color="primary" />
           <Typography variant="h6">Configuration</Typography>
         </Box>
-        
+
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <Box display="flex" alignItems="center" gap={1} mb={1}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 1
+              }}>
               <SpeedIcon fontSize="small" />
-              <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: "bold"
+                }}>
                 Cache Assets
               </Typography>
             </Box>
@@ -265,10 +368,21 @@ const ProxyHostInfoPanel = ({
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <Box display="flex" alignItems="center" gap={1} mb={1}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 1
+              }}>
               <BlockIcon fontSize="small" />
-              <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: "bold"
+                }}>
                 Block Common Exploits
               </Typography>
             </Box>
@@ -280,10 +394,21 @@ const ProxyHostInfoPanel = ({
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <Box display="flex" alignItems="center" gap={1} mb={1}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 1
+              }}>
               <WebSocketIcon fontSize="small" />
-              <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: "bold"
+                }}>
                 WebSocket Support
               </Typography>
             </Box>
@@ -296,10 +421,21 @@ const ProxyHostInfoPanel = ({
           </Grid>
 
           {host.http2_support !== undefined && (
-            <Grid item xs={12} sm={6}>
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 1
+                }}>
                 <SpeedIcon fontSize="small" />
-                <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: "bold"
+                  }}>
                   HTTP/2 Support
                 </Typography>
               </Box>
@@ -313,10 +449,21 @@ const ProxyHostInfoPanel = ({
           )}
 
           {host.hsts_enabled !== undefined && (
-            <Grid item xs={12} sm={6}>
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 1
+                }}>
                 <SecurityIcon fontSize="small" />
-                <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: "bold"
+                  }}>
                   HSTS
                 </Typography>
               </Box>
@@ -330,20 +477,26 @@ const ProxyHostInfoPanel = ({
           )}
         </Grid>
       </Grid>
-
       {/* Nginx Error */}
       {host.meta.nginx_online === false && host.meta.nginx_err && (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider />
           </Grid>
-          
-          <Grid item xs={12}>
+
+          <Grid size={12}>
             <Alert severity="error">
-              <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+              <Typography variant="subtitle2" gutterBottom sx={{
+                fontWeight: "bold"
+              }}>
                 Nginx Configuration Error
               </Typography>
-              <Typography variant="body2" fontFamily="monospace" sx={{ whiteSpace: 'pre-wrap' }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontFamily: "monospace",
+                  whiteSpace: 'pre-wrap'
+                }}>
                 {host.meta.nginx_err}
               </Typography>
             </Alert>
@@ -351,7 +504,7 @@ const ProxyHostInfoPanel = ({
         </>
       )}
     </Grid>
-  )
+  );
 }
 
 export default ProxyHostInfoPanel

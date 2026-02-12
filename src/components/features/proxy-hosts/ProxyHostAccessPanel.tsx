@@ -41,52 +41,78 @@ const ProxyHostAccessPanel = ({
 
   if (loadingAccessList) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          py: 4
+        }}>
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>Loading access list details...</Typography>
       </Box>
-    )
+    );
   }
 
   const accessList = fullAccessList || host.access_list
 
   return (
     <Box>
-      <Box display="flex" alignItems="center" gap={1} mb={3}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mb: 3
+        }}>
         <SecurityIcon color="primary" />
         <Typography variant="h6">{accessList.name}</Typography>
       </Box>
-
       {/* Access List Information */}
       <Grid container spacing={3}>
         {/* Basic Information */}
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+            <Typography variant="subtitle2" gutterBottom sx={{
+              fontWeight: "bold"
+            }}>
               Access List Information
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="caption" color="text.secondary">ID</Typography>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>ID</Typography>
                 <Typography variant="body2">#{accessList.id}</Typography>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="caption" color="text.secondary">Created</Typography>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>Created</Typography>
                 <Typography variant="body2">
                   {new Date(accessList.created_on).toLocaleString()}
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="caption" color="text.secondary">Modified</Typography>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>Modified</Typography>
                 <Typography variant="body2">
                   {new Date(accessList.modified_on).toLocaleString()}
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="caption" color="text.secondary">Owner</Typography>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>Owner</Typography>
                 <Typography variant="body2">
                   {accessList?.owner ? (
-                    <Box display="flex" alignItems="center" gap={0.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5
+                      }}>
                       <PersonIcon fontSize="small" />
                       {accessList?.owner?.name || accessList?.owner?.email || `User #${accessList?.owner_user_id}`}
                     </Box>
@@ -100,15 +126,30 @@ const ProxyHostAccessPanel = ({
         </Grid>
 
         {/* Configuration */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+            <Typography variant="subtitle2" gutterBottom sx={{
+              fontWeight: "bold"
+            }}>
               Configuration
             </Typography>
-            <Box display="flex" flexDirection="column" gap={2}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2
+              }}>
               <Box>
-                <Typography variant="caption" color="text.secondary">Satisfy Mode</Typography>
-                <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>Satisfy Mode</Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mt: 0.5
+                  }}>
                   <Chip 
                     label={accessList.satisfy_any ? 'Any' : 'All'} 
                     size="small" 
@@ -122,8 +163,16 @@ const ProxyHostAccessPanel = ({
                 </Box>
               </Box>
               <Box>
-                <Typography variant="caption" color="text.secondary">Pass Authentication to Host</Typography>
-                <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>Pass Authentication to Host</Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mt: 0.5
+                  }}>
                   {accessList.pass_auth ? (
                     <CheckIcon color="success" fontSize="small" />
                   ) : (
@@ -140,14 +189,26 @@ const ProxyHostAccessPanel = ({
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+            <Typography variant="subtitle2" gutterBottom sx={{
+              fontWeight: "bold"
+            }}>
               Summary
             </Typography>
-            <Box display="flex" flexDirection="column" gap={1}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 1
+              }}>
               {accessList?.items && (accessList?.items?.length ?? 0) > 0 && (
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   <PersonIcon fontSize="small" color="action" />
                   <Typography variant="body2">
                     {accessList?.items?.length} authorized user{accessList?.items?.length !== 1 ? 's' : ''}
@@ -155,7 +216,12 @@ const ProxyHostAccessPanel = ({
                 </Box>
               )}
               {accessList?.clients && (accessList?.clients?.length ?? 0) > 0 && (
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   <NetworkCheckIcon fontSize="small" color="action" />
                   <Typography variant="body2">
                     {accessList?.clients?.length} IP rule{accessList?.clients?.length !== 1 ? 's' : ''}
@@ -164,7 +230,9 @@ const ProxyHostAccessPanel = ({
               )}
               {(!accessList?.items || accessList?.items?.length === 0) && 
                (!accessList?.clients || accessList?.clients?.length === 0) && (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
                   No rules configured
                 </Typography>
               )}
@@ -174,11 +242,19 @@ const ProxyHostAccessPanel = ({
 
         {/* Authorization Users */}
         {host.access_list.items && host.access_list.items.length > 0 && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <PersonIcon color="action" />
-                <Typography variant="subtitle2" fontWeight="bold">
+                <Typography variant="subtitle2" sx={{
+                  fontWeight: "bold"
+                }}>
                   Authorization - HTTP Basic Auth ({host.access_list.items.length} users)
                 </Typography>
               </Box>
@@ -190,25 +266,43 @@ const ProxyHostAccessPanel = ({
                     </ListItemIcon>
                     <ListItemText 
                       primary={
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="body1" fontWeight="medium">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1
+                          }}>
+                          <Typography variant="body1" sx={{
+                            fontWeight: "medium"
+                          }}>
                             {item.username}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" sx={{
+                            color: "text.secondary"
+                          }}>
                             (ID: #{item.id})
                           </Typography>
                         </Box>
                       }
                       secondary={
                         <Box>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" sx={{
+                            color: "text.secondary"
+                          }}>
                             Protected with password • Password: ••••••••
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" sx={{
+                            color: "text.secondary"
+                          }}>
                             Created: {new Date(item.created_on).toLocaleString()}
                           </Typography>
                           {item.modified_on !== item.created_on && (
-                            <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "text.secondary",
+                                ml: 2
+                              }}>
                               Modified: {new Date(item.modified_on).toLocaleString()}
                             </Typography>
                           )}
@@ -224,11 +318,19 @@ const ProxyHostAccessPanel = ({
 
         {/* Access Rules */}
         {host.access_list.clients && host.access_list.clients.length > 0 && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <NetworkCheckIcon color="action" />
-                <Typography variant="subtitle2" fontWeight="bold">
+                <Typography variant="subtitle2" sx={{
+                  fontWeight: "bold"
+                }}>
                   Access Control - IP Based Rules ({host.access_list.clients.length} rules)
                 </Typography>
               </Box>
@@ -244,8 +346,15 @@ const ProxyHostAccessPanel = ({
                     </ListItemIcon>
                     <ListItemText 
                       primary={
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="body1" fontFamily="monospace">
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1
+                          }}>
+                          <Typography variant="body1" sx={{
+                            fontFamily: "monospace"
+                          }}>
                             {client.address}
                           </Typography>
                           <Chip 
@@ -254,21 +363,32 @@ const ProxyHostAccessPanel = ({
                             color={client.directive === 'allow' ? 'success' : 'error'}
                             variant="outlined"
                           />
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" sx={{
+                            color: "text.secondary"
+                          }}>
                             (ID: #{client.id})
                           </Typography>
                         </Box>
                       }
                       secondary={
                         <Box>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" sx={{
+                            color: "text.secondary"
+                          }}>
                             {client.directive === 'allow' ? 'Access allowed from this address' : 'Access denied from this address'}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" sx={{
+                            color: "text.secondary"
+                          }}>
                             Created: {new Date(client.created_on).toLocaleString()}
                           </Typography>
                           {client.modified_on !== client.created_on && (
-                            <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "text.secondary",
+                                ml: 2
+                              }}>
                               Modified: {new Date(client.modified_on).toLocaleString()}
                             </Typography>
                           )}
@@ -284,9 +404,11 @@ const ProxyHostAccessPanel = ({
 
         {/* Meta Information */}
         {accessList.meta && Object.keys(accessList.meta).length > 0 && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+              <Typography variant="subtitle2" gutterBottom sx={{
+                fontWeight: "bold"
+              }}>
                 Additional Metadata
               </Typography>
               <Box sx={{ mt: 1 }}>
@@ -306,8 +428,12 @@ const ProxyHostAccessPanel = ({
         )}
 
         {/* Link to full Access List */}
-        <Grid item xs={12}>
-          <Box display="flex" justifyContent="center">
+        <Grid size={12}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <Button
               variant="outlined"
               startIcon={<LinkIcon />}
@@ -319,7 +445,7 @@ const ProxyHostAccessPanel = ({
         </Grid>
       </Grid>
     </Box>
-  )
+  );
 }
 
 export default ProxyHostAccessPanel

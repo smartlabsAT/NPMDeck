@@ -294,32 +294,34 @@ export default function BaseDialog({
       maxWidth={maxWidth}
       fullWidth={fullWidth}
       fullScreen={shouldFullScreen}
-      TransitionComponent={TransitionComponent}
-      PaperProps={{
-        sx: {
-          borderRadius: shouldFullScreen ? 0 : 2,
-          boxShadow: theme.shadows[8],
-          ...(severity && {
-            borderTop: `4px solid`,
-            borderTopColor: severityColors.border,
-          }),
-          // Fixed height for non-fullscreen dialogs to prevent jumping
-          ...(!shouldFullScreen && {
-            height: '90vh',
-            maxHeight: '90vh',
-            minHeight: '90vh'
-          })
-        }
-      }}
       slotProps={{
         backdrop: {
           sx: {
             backgroundColor: 'rgba(0, 0, 0, 0.4)',
             backdropFilter: 'blur(2px)',
           }
+        },
+
+        paper: {
+          sx: {
+            borderRadius: shouldFullScreen ? 0 : 2,
+            boxShadow: theme.shadows[8],
+            ...(severity && {
+              borderTop: `4px solid`,
+              borderTopColor: severityColors.border,
+            }),
+            // Fixed height for non-fullscreen dialogs to prevent jumping
+            ...(!shouldFullScreen && {
+              height: '90vh',
+              maxHeight: '90vh',
+              minHeight: '90vh'
+            })
+          }
         }
       }}
-    >
+      slots={{
+        transition: TransitionComponent
+      }}>
       {/* Header */}
       <DialogTitle
         sx={{
@@ -351,11 +353,12 @@ export default function BaseDialog({
               {title}
             </Typography>
             {subtitle && (
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
-                sx={{ mt: 0.5 }}
-              >
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  mt: 0.5
+                }}>
                 {subtitle}
               </Typography>
             )}
@@ -373,7 +376,6 @@ export default function BaseDialog({
           </IconButton>
         )}
       </DialogTitle>
-
       {/* Content */}
       <DialogContent sx={{ 
         p: 3, 
@@ -406,7 +408,12 @@ export default function BaseDialog({
           >
             <CircularProgress size={40} />
             {loadingMessage && (
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  textAlign: 'center'
+                }}>
                 {loadingMessage}
               </Typography>
             )}
@@ -461,7 +468,6 @@ export default function BaseDialog({
           </Box>
         )}
       </DialogContent>
-
       {/* Actions */}
       {(showActions || actions || onConfirm) && (
         <DialogActions sx={{ p: 3, pt: 1, gap: 1 }}>
@@ -494,7 +500,7 @@ export default function BaseDialog({
         </DialogActions>
       )}
     </Dialog>
-  )
+  );
 }
 
 /**

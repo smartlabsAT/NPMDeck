@@ -71,7 +71,9 @@ const AccessListDetailsDialog = ({
               <Security sx={{ color: '#2bcbba' }} />
               <Typography variant="h6">Access List</Typography>
             </Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {accessList.name}
             </Typography>
           </Box>
@@ -103,16 +105,25 @@ const AccessListDetailsDialog = ({
         }
       >
           {/* Configuration Overview */}
-          <Box mb={3}>
+          <Box sx={{
+            mb: 3
+          }}>
             <Typography variant="subtitle2" gutterBottom color="primary">
               Configuration
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Satisfy Mode
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   <Chip
                     label={accessList.satisfy_any ? 'Any' : 'All'}
                     color={accessList.satisfy_any ? 'primary' : 'secondary'}
@@ -125,11 +136,18 @@ const AccessListDetailsDialog = ({
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Pass Authentication
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1
+                  }}>
                   {accessList.pass_auth ? (
                     <CheckIcon color="success" fontSize="small" />
                   ) : (
@@ -146,9 +164,16 @@ const AccessListDetailsDialog = ({
           <Divider sx={{ my: 2 }} />
 
           {/* Authorization Users */}
-          <Box mb={3}>
+          <Box sx={{
+            mb: 3
+          }}>
             <Typography variant="subtitle2" gutterBottom color="primary">
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
+                }}>
                 <AuthIcon fontSize="small" />
                 Authorization Users
               </Box>
@@ -171,7 +196,9 @@ const AccessListDetailsDialog = ({
                       <CopyIcon fontSize="small" />
                     </IconButton>
                     {copiedText === `User ${index + 1}` && (
-                      <Typography variant="caption" color="success.main">
+                      <Typography variant="caption" sx={{
+                        color: "success.main"
+                      }}>
                         Copied!
                       </Typography>
                     )}
@@ -179,7 +206,9 @@ const AccessListDetailsDialog = ({
                 ))}
               </List>
             ) : (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 No authorization users configured
               </Typography>
             )}
@@ -188,9 +217,16 @@ const AccessListDetailsDialog = ({
           <Divider sx={{ my: 2 }} />
 
           {/* Access Rules */}
-          <Box mb={3}>
+          <Box sx={{
+            mb: 3
+          }}>
             <Typography variant="subtitle2" gutterBottom color="primary">
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
+                }}>
                 <NetworkIcon fontSize="small" />
                 Access Rules
               </Box>
@@ -220,7 +256,9 @@ const AccessListDetailsDialog = ({
                 ))}
               </List>
             ) : (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 No access rules configured
               </Typography>
             )}
@@ -241,16 +279,20 @@ const AccessListDetailsDialog = ({
               Information
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Created
                 </Typography>
                 <Typography variant="body2">
                   {formatDate(accessList.created_on)}
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary">
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>
                   Modified
                 </Typography>
                 <Typography variant="body2">
@@ -258,11 +300,18 @@ const AccessListDetailsDialog = ({
                 </Typography>
               </Grid>
               {accessList.owner && (
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary">
+                <Grid size={12}>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     Owner
                   </Typography>
-                  <Box display="flex" alignItems="center" gap={1}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1
+                    }}>
                     <PersonIcon fontSize="small" />
                     <Typography variant="body2">
                       {accessList.owner.name || accessList.owner.email}
@@ -273,7 +322,6 @@ const AccessListDetailsDialog = ({
             </Grid>
           </Box>
       </AdaptiveContainer>
-      
       {/* Export Dialog */}
       {/* {accessList && (
         <ExportDialog
@@ -285,7 +333,7 @@ const AccessListDetailsDialog = ({
         />
       )} */}
     </>
-  )
+  );
 }
 
 export default AccessListDetailsDialog

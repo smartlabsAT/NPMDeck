@@ -178,7 +178,12 @@ export default function AccessLists() {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (value, _item) => (
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1
+          }}>
           <LockIcon fontSize="small" color="action" />
           <Typography variant="body2">{value}</Typography>
         </Box>
@@ -194,7 +199,9 @@ export default function AccessLists() {
       priority: 'P2' as ColumnPriority, // Important - hidden on mobile
       showInCard: true,
       render: (value, item) => getUsersChip(item) || (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No users
         </Typography>
       )
@@ -210,7 +217,9 @@ export default function AccessLists() {
       showInCard: true,
       mobileLabel: '', // Empty string to hide label - rule chips are self-explanatory
       render: (value, item) => getRulesChip(item) || (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           No rules
         </Typography>
       )
@@ -225,7 +234,11 @@ export default function AccessLists() {
       priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
       showInCard: false,
       render: (value, item) => (
-        <Box display="flex" gap={0.5}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.5
+          }}>
           {item.satisfy_any && (
             <Chip label="Satisfy Any" size="small" color="primary" />
           )}
@@ -245,7 +258,9 @@ export default function AccessLists() {
       priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
       showInCard: false,
       render: (value, item) => (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {new Date(item.created_on).toLocaleDateString()}
         </Typography>
       )
@@ -260,7 +275,12 @@ export default function AccessLists() {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (value, item) => (
-        <Box display="flex" justifyContent="flex-end" gap={1}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 1
+          }}>
           <Tooltip title="View Details">
             <IconButton
               size="small"
@@ -352,9 +372,17 @@ export default function AccessLists() {
   return (
     <Container maxWidth={false}>
       <title>Access Lists - NPMDeck</title>
-      <Box py={3}>
+      <Box sx={{
+        py: 3
+      }}>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3
+          }}>
           <PageHeader
             icon={React.createElement(NAVIGATION_CONFIG.accessLists.icon, { sx: { color: NAVIGATION_CONFIG.accessLists.color } })}
             title={NAVIGATION_CONFIG.accessLists.text}
@@ -406,7 +434,12 @@ export default function AccessLists() {
         
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
-          <Box mt={2} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <PermissionButton
               resource="access_lists"
               permissionAction="create"
@@ -421,7 +454,6 @@ export default function AccessLists() {
           </Box>
         )}
       </Box>
-
       {/* Drawer for create/edit */}
       {canManageAccessLists('access_lists') && (
         <AccessListDrawer
@@ -434,7 +466,6 @@ export default function AccessLists() {
           }}
         />
       )}
-
       {/* Details dialog */}
       <AccessListDetailsDialog
         open={detailsOpen}
@@ -442,7 +473,6 @@ export default function AccessLists() {
         accessList={selectedAccessList}
         onEdit={canManageAccessLists('access_lists') ? handleEditAccessList : undefined}
       />
-
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
@@ -457,7 +487,6 @@ export default function AccessLists() {
         confirmText="Delete"
         confirmColor="error"
       />
-
       {/* Export dialog */}
       <ExportDialog
         open={exportDialogOpen}
@@ -467,5 +496,5 @@ export default function AccessLists() {
         itemName="Access Lists"
       />
     </Container>
-  )
+  );
 }

@@ -217,7 +217,9 @@ export default function Streams() {
       showInCard: true,
       mobileLabel: 'Port',
       render: (value, item) => (
-        <Typography variant="body2" fontWeight="bold">
+        <Typography variant="body2" sx={{
+          fontWeight: "bold"
+        }}>
           {item.incoming_port}
         </Typography>
       )
@@ -232,7 +234,12 @@ export default function Streams() {
       showInCard: true,
       mobileLabel: '',
       render: (value, item) => (
-        <Box display="flex" alignItems="center" gap={0.5}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5
+          }}>
           <Typography variant="body2">
             {item.forwarding_host}:{item.forwarding_port}
           </Typography>
@@ -264,7 +271,11 @@ export default function Streams() {
       showInCard: true,
       mobileLabel: '', // Empty string to hide label - TCP/UDP chips are self-explanatory
       render: (value, item) => (
-        <Box display="flex" gap={0.5}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.5
+          }}>
           {getProtocolChips(item)}
         </Box>
       )
@@ -284,7 +295,9 @@ export default function Streams() {
             <CheckIcon color="success" fontSize="small" />
           </Tooltip>
         ) : (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             -
           </Typography>
         )
@@ -300,7 +313,12 @@ export default function Streams() {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (value, item) => (
-        <Box display="flex" gap={0.5} justifyContent="flex-end">
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.5,
+            justifyContent: "flex-end"
+          }}>
           <Tooltip title="View Details">
             <IconButton
               size="small"
@@ -480,9 +498,17 @@ export default function Streams() {
   return (
     <Container maxWidth={false}>
       <title>Streams - NPMDeck</title>
-      <Box py={3}>
+      <Box sx={{
+        py: 3
+      }}>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3
+          }}>
           <PageHeader
             icon={React.createElement(NAVIGATION_CONFIG.streams.icon, { sx: { color: NAVIGATION_CONFIG.streams.color } })}
             title={NAVIGATION_CONFIG.streams.text}
@@ -529,7 +555,12 @@ export default function Streams() {
         
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
-          <Box mt={2} display="flex" justifyContent="center">
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <PermissionButton
               resource="streams"
               permissionAction="create"
@@ -544,7 +575,6 @@ export default function Streams() {
           </Box>
         )}
       </Box>
-
       {/* Drawer for create/edit */}
       {canManageStreams('streams') && (
         <StreamDrawer
@@ -557,7 +587,6 @@ export default function Streams() {
           }}
         />
       )}
-
       {/* Details dialog */}
       <StreamDetailsDialog
         open={detailsOpen}
@@ -565,7 +594,6 @@ export default function Streams() {
         stream={selectedStream}
         onEdit={canManageStreams('streams') ? handleEditStream : undefined}
       />
-
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
@@ -581,5 +609,5 @@ export default function Streams() {
         confirmColor="error"
       />
     </Container>
-  )
+  );
 }

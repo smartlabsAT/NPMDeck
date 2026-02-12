@@ -4,7 +4,7 @@ import {
   Box,
   Chip,
   List,
-  ListItem,
+  ListItemButton,
   ListItemText,
   IconButton,
   Alert,
@@ -34,13 +34,23 @@ const ProxyHostConnectionsPanel = ({
 }: ProxyHostConnectionsPanelProps) => {
   return (
     <Box>
-      <Box display="flex" alignItems="center" gap={1} mb={3}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mb: 3
+        }}>
         <RedirectIcon color="primary" />
         <Typography variant="h6">Linked Redirections</Typography>
       </Box>
-      
       {loadingConnections ? (
-        <Box display="flex" justifyContent="center" py={4}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            py: 4
+          }}>
           <CircularProgress />
         </Box>
       ) : linkedRedirections.length === 0 ? (
@@ -53,8 +63,7 @@ const ProxyHostConnectionsPanel = ({
             {linkedRedirections.map((redirect, index) => (
               <React.Fragment key={redirect.id}>
                 {index > 0 && <Divider />}
-                <ListItem
-                  button
+                <ListItemButton
                   onClick={() => onNavigateToRedirection(redirect.id)}
                 >
                   <ListItemIcon>
@@ -62,7 +71,12 @@ const ProxyHostConnectionsPanel = ({
                   </ListItemIcon>
                   <ListItemText
                     primary={
-                      <Box display="flex" alignItems="center" gap={1}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1
+                        }}>
                         <Typography variant="body1">
                           {redirect.domain_names.join(', ')}
                         </Typography>
@@ -75,10 +89,14 @@ const ProxyHostConnectionsPanel = ({
                     }
                     secondary={
                       <Box>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" sx={{
+                          color: "text.secondary"
+                        }}>
                           → {redirect.forward_scheme}://{redirect.forward_domain_name}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" sx={{
+                          color: "text.secondary"
+                        }}>
                           HTTP {redirect.forward_http_code} • 
                           {redirect.preserve_path ? ' Preserves path' : ' Does not preserve path'}
                           {redirect.ssl_forced && ' • SSL Forced'}
@@ -95,14 +113,14 @@ const ProxyHostConnectionsPanel = ({
                   >
                     <EditIcon />
                   </IconButton>
-                </ListItem>
+                </ListItemButton>
               </React.Fragment>
             ))}
           </List>
         </Paper>
       )}
     </Box>
-  )
+  );
 }
 
 export default ProxyHostConnectionsPanel

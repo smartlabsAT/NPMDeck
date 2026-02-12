@@ -108,14 +108,21 @@ const UserPermissionsDialog = ({ open, onClose, user, onSave }: UserPermissionsD
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1
+          }}>
           <SecurityIcon sx={{ color: '#868e96' }} />
           Edit Permissions
         </Box>
       </DialogTitle>
       <DialogContent>
         <Box sx={{ pt: 1 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
+          <Typography variant="body2" gutterBottom sx={{
+            color: "text.secondary"
+          }}>
             Setting permissions for: <strong>{user.name}</strong>
           </Typography>
 
@@ -194,7 +201,7 @@ const UserPermissionsDialog = ({ open, onClose, user, onSave }: UserPermissionsD
         </Button>
       </DialogActions>
     </Dialog>
-  )
+  );
 }
 
 export default UserPermissionsDialog

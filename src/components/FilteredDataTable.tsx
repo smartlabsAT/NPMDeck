@@ -47,10 +47,16 @@ function FilteredDataTable<T extends { id?: number; owner_user_id?: number }>({
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: 200
+        }}>
         <CircularProgress />
       </Box>
-    )
+    );
   }
 
   if (error) {
@@ -69,7 +75,6 @@ function FilteredDataTable<T extends { id?: number; owner_user_id?: number }>({
           (nur eigene Einträge werden angezeigt)
         </Alert>
       )}
-
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -85,7 +90,12 @@ function FilteredDataTable<T extends { id?: number; owner_user_id?: number }>({
             {visibleData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} align="center">
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      py: 3
+                    }}>
                     {emptyMessage}
                   </Typography>
                 </TableCell>
@@ -125,7 +135,7 @@ function FilteredDataTable<T extends { id?: number; owner_user_id?: number }>({
         </Table>
       </TableContainer>
     </>
-  )
+  );
 }
 
 export default FilteredDataTable

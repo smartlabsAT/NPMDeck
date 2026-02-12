@@ -96,22 +96,33 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
               {value}
             </Typography>
             
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                fontSize: '0.875rem'
+              }}>
               {title}
             </Typography>
             
             {(active !== undefined || inactive !== undefined) && (
               <Box sx={{ display: 'flex', gap: 0.5, mt: 1.5 }}>
                 {active !== undefined && (
-                  <Typography variant="caption" color="success.main">
+                  <Typography variant="caption" sx={{
+                    color: "success.main"
+                  }}>
                     {active} active
                   </Typography>
                 )}
                 {active !== undefined && inactive !== undefined && (
-                  <Typography variant="caption" color="text.secondary">•</Typography>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>•</Typography>
                 )}
                 {inactive !== undefined && (
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>
                     {inactive} inactive
                   </Typography>
                 )}
@@ -121,7 +132,7 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 const getDaysUntilExpiry = (expiresOn: string | null) => {
@@ -241,10 +252,12 @@ const Dashboard = () => {
       <title>Dashboard - NPMDeck</title>
       <Grid container spacing={2}>
         {/* Quick Actions - Now at the top */}
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Paper sx={{ p: 2 }}>
-            <Grid container alignItems="center">
-              <Grid item xs={12} sm={6}>
+            <Grid container sx={{
+              alignItems: "center"
+            }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 500 }}>
                     {getGreeting()}, {user?.name || user?.email}!
@@ -256,7 +269,9 @@ const Dashboard = () => {
                       color="primary"
                       variant="outlined"
                     />
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>
                       <ScheduleIcon sx={{ fontSize: 14, verticalAlign: 'text-bottom', mr: 0.5 }} />
                       {new Date().toLocaleDateString('en-US', { 
                         weekday: 'short', 
@@ -267,7 +282,7 @@ const Dashboard = () => {
                   </Box>
                 </Box>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', sm: 'flex-end' }, mt: { xs: 2, sm: 0 } }}>
                   {quickActions.map((action, index) => (
                     <PermissionButton
@@ -311,7 +326,7 @@ const Dashboard = () => {
 
         {/* Stats Cards */}
         {statsCards.filter(card => card.show).map((card, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
             <StatCard 
               {...card} 
               loading={stats.loading}
@@ -321,7 +336,7 @@ const Dashboard = () => {
 
         {/* Expiring Certificates */}
         {canView('certificates') && stats.expiringCertificates.length > 0 && (
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
@@ -390,7 +405,7 @@ const Dashboard = () => {
 
 
         {/* System Status */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
@@ -398,19 +413,21 @@ const Dashboard = () => {
               </Typography>
               
               <Grid container spacing={2}>
-                <Grid item xs={4}>
+                <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
                     <CheckIcon sx={{ fontSize: 32, color: 'success.main', mb: 0.5 }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       Nginx Status
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       Operational
                     </Typography>
                   </Box>
                 </Grid>
                 
-                <Grid item xs={4}>
+                <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
                     <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
                       {stats.certificates.valid}
@@ -426,7 +443,7 @@ const Dashboard = () => {
                   </Box>
                 </Grid>
                 
-                <Grid item xs={4}>
+                <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
                     <Typography variant="h4" sx={{ fontWeight: 600, color: 'success.main' }}>
                       {stats.proxyHosts.active + stats.redirectionHosts.active + stats.deadHosts.active + stats.streams.active}
@@ -434,7 +451,9 @@ const Dashboard = () => {
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       Active Services
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       All types
                     </Typography>
                   </Box>
@@ -445,7 +464,7 @@ const Dashboard = () => {
         </Grid>
       </Grid>
     </Box>
-  )
+  );
 }
 
 export default Dashboard

@@ -99,7 +99,9 @@ export default function RedirectionHostDetailsDialog({
             <RedirectIcon sx={{ color: '#f1c40f' }} />
             <Typography variant="h6">Redirection Host</Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {host?.domain_names.join(', ') || 'Details'}
           </Typography>
         </Box>
@@ -133,7 +135,13 @@ export default function RedirectionHostDetailsDialog({
       <Box sx={{ overflow: 'auto', p: 2 }}>
         {/* Overview Content */}
           <Box sx={{ mb: 3 }}>
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                mb: 2
+              }}>
               <Chip
                 icon={host.enabled ? <CheckCircleIcon /> : <CancelIcon />}
                 label={getStatusText(host.enabled, host.meta.nginx_online)}
@@ -148,9 +156,15 @@ export default function RedirectionHostDetailsDialog({
           </Box>
 
           <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <LanguageIcon color="primary" />
                 <Typography variant="h6">Source Domains</Typography>
               </Box>
@@ -164,9 +178,15 @@ export default function RedirectionHostDetailsDialog({
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <RedirectIcon color="primary" />
                 <Typography variant="h6">Destination</Typography>
               </Box>
@@ -193,9 +213,15 @@ export default function RedirectionHostDetailsDialog({
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <LockIcon color="primary" />
                 <Typography variant="h6">SSL Configuration</Typography>
               </Box>
@@ -255,9 +281,15 @@ export default function RedirectionHostDetailsDialog({
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <SecurityIcon color="primary" />
                 <Typography variant="h6">Security</Typography>
               </Box>
@@ -276,9 +308,15 @@ export default function RedirectionHostDetailsDialog({
           </Grid>
 
           {host.advanced_config && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Paper variant="outlined" sx={{ p: 2 }}>
-                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 2
+                  }}>
                   <CodeIcon color="primary" />
                   <Typography variant="h6">Advanced Configuration</Typography>
                 </Box>
@@ -301,25 +339,35 @@ export default function RedirectionHostDetailsDialog({
             </Grid>
           )}
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 2
+                }}>
                 <InfoIcon color="primary" />
                 <Typography variant="h6">
                   Metadata
                 </Typography>
               </Box>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     Created
                   </Typography>
                   <Typography variant="body1">
                     {new Date(host.created_on).toLocaleString()}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     Modified
                   </Typography>
                   <Typography variant="body1">
@@ -327,8 +375,10 @@ export default function RedirectionHostDetailsDialog({
                   </Typography>
                 </Grid>
                 {host.owner && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="body2" color="text.secondary">
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>
                       Owner
                     </Typography>
                     <Typography variant="body1">
@@ -336,8 +386,10 @@ export default function RedirectionHostDetailsDialog({
                     </Typography>
                   </Grid>
                 )}
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>
                     ID
                   </Typography>
                   <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
@@ -349,7 +401,6 @@ export default function RedirectionHostDetailsDialog({
           </Grid>
         </Grid>
       </Box>
-      
       {/* Export Dialog */}
       {/* {host && (
         <ExportDialog
@@ -361,5 +412,5 @@ export default function RedirectionHostDetailsDialog({
         />
       )} */}
     </AdaptiveContainer>
-  )
+  );
 }

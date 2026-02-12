@@ -38,14 +38,19 @@ const CertificateHostsPanel = ({
 
   return (
     <Box>
-      <Box display="flex" alignItems="center" gap={1} mb={3}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mb: 3
+        }}>
         <LanguageIcon color="primary" />
         <Typography variant="h6">Host Usage Summary</Typography>
       </Box>
-      
       <Grid container spacing={3}>
         {certificate.proxy_hosts && certificate.proxy_hosts.length > 0 && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6" gutterBottom>
               Proxy Hosts ({certificate.proxy_hosts?.length || 0})
             </Typography>
@@ -74,7 +79,7 @@ const CertificateHostsPanel = ({
         )}
         
         {certificate.redirection_hosts && certificate.redirection_hosts.length > 0 && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6" gutterBottom>
               Redirection Hosts ({certificate.redirection_hosts?.length || 0})
             </Typography>
@@ -103,7 +108,7 @@ const CertificateHostsPanel = ({
         )}
         
         {certificate.dead_hosts && certificate.dead_hosts.length > 0 && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6" gutterBottom>
               404 Hosts ({certificate.dead_hosts?.length || 0})
             </Typography>
@@ -129,7 +134,7 @@ const CertificateHostsPanel = ({
         )}
       </Grid>
     </Box>
-  )
+  );
 }
 
 export default CertificateHostsPanel

@@ -197,12 +197,16 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1
+          }}>
           <FileUploadIcon sx={{ color: '#467fcf' }} />
           Import Configuration
         </Box>
       </DialogTitle>
-      
       <DialogContent>
         <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
           {steps.map((label) => (
@@ -239,7 +243,9 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
               <Typography variant="h6" gutterBottom>
                 {isDragActive ? 'Drop the file here' : 'Drag & drop a JSON file here'}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 or click to select a file
               </Typography>
             </Paper>
@@ -378,7 +384,6 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
           </Box>
         )}
       </DialogContent>
-
       <DialogActions>
         <Button onClick={handleClose}>
           {activeStep === 2 && !importing ? 'Close' : 'Cancel'}
@@ -398,5 +403,5 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
         )}
       </DialogActions>
     </Dialog>
-  )
+  );
 }

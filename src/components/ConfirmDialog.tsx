@@ -47,7 +47,12 @@ export default function ConfirmDialog({
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         {titleIcon ? (
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1
+            }}>
             {titleIcon}
             {title}
           </Box>
@@ -71,5 +76,5 @@ export default function ConfirmDialog({
         </Button>
       </DialogActions>
     </Dialog>
-  )
+  );
 }

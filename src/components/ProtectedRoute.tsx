@@ -17,10 +17,16 @@ const ProtectedRoute = ({ children, requiredRole, requiredResource, requiredLeve
   // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh"
+        }}>
         <CircularProgress />
       </Box>
-    )
+    );
   }
 
   // Redirect to login if not authenticated
