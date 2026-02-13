@@ -508,24 +508,6 @@ export default function BaseDialog({
  */
 
 /**
- * ConfirmDialog - Pre-configured confirmation dialog
- */
-export interface ConfirmDialogProps extends Omit<BaseDialogProps, 'children' | 'showActions'> {
-  message: string
-}
-
-export function ConfirmDialog(props: ConfirmDialogProps) {
-  return (
-    <BaseDialog
-      {...props}
-      severity={props.severity || 'warning'}
-      showActions
-      confirmColor={props.confirmColor || 'primary'}
-    />
-  )
-}
-
-/**
  * ErrorDialog - Pre-configured error dialog
  */
 export interface ErrorDialogProps extends Omit<BaseDialogProps, 'severity' | 'confirmColor'> {

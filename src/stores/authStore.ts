@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { authApi, LoginCredentials } from '../api/auth'
 import { User } from '../api/users'
 import { Resource, PermissionLevel } from '../types/permissions'
-import { AxiosErrorResponse } from '../types/common'
+import { getErrorMessage } from '../types/common'
 import logger from '../utils/logger'
 import { 
   hasPermission, 
@@ -152,19 +152,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Return the login data for checking default admin
       return { token: tokenResponse.token, user }
     } catch (error) {
-      let errorMessage = 'Login failed'
-      
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as AxiosErrorResponse
-        if (axiosError.response?.data?.error?.message) {
-          errorMessage = axiosError.response.data.error.message
-        } else if (axiosError.response?.data?.message) {
-          errorMessage = axiosError.response.data.message
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message
-      }
-      
+      const errorMessage = getErrorMessage(error) || 'Login failed'
+
       set({
         isLoading: false,
         error: errorMessage

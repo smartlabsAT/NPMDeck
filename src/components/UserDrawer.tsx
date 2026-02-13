@@ -33,7 +33,7 @@ import {
 } from '@mui/icons-material'
 import { usersApi, User, CreateUserPayload, UpdateUserPayload } from '../api/users'
 import { useAuthStore } from '../stores/authStore'
-import BaseDrawer, { Tab } from './base/BaseDrawer'
+import BaseDrawer, { DrawerTab } from './base/BaseDrawer'
 import { useDrawerForm } from '../hooks/useDrawerForm'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
@@ -332,7 +332,7 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
     }
   }, [open, user, form.resetForm])
 
-  const tabs: Tab[] = [
+  const tabs: DrawerTab[] = [
     {
       id: 'details',
       label: 'Details',

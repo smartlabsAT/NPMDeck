@@ -15,30 +15,15 @@ export interface AccessListWithRelations extends Omit<AccessList, 'owner'> {
   owner?: Owner
 }
 
-// Common API error response
-export interface ApiError {
+/**
+ * Shape of the NPM API error response body.
+ */
+export interface ApiErrorBody {
   error?: {
     message: string
     code?: string
   }
   message?: string
-}
-
-// Axios error response structure
-export interface AxiosErrorResponse {
-  response?: {
-    data?: {
-      error?: {
-        message: string
-        code?: string
-      }
-      message?: string
-    }
-    status?: number
-    statusText?: string
-  }
-  message?: string
-  code?: string
 }
 
 // Import/Export data types
@@ -59,18 +44,6 @@ export interface CertificateStatus {
   icon: React.ComponentType
 }
 
-// Logger interface
-export interface Logger {
-  log: (...args: unknown[]) => void
-  info: (...args: unknown[]) => void
-  warn: (...args: unknown[]) => void
-  error: (...args: unknown[]) => void
-  debug: (...args: unknown[]) => void
-  group: (...args: unknown[]) => void
-  groupEnd: () => void
-  table: (data: Record<string, unknown> | unknown[]) => void
-}
-
 // Generic API response types
 export interface ApiResponse<T = unknown> {
   data?: T
@@ -78,30 +51,15 @@ export interface ApiResponse<T = unknown> {
   success?: boolean
 }
 
-// Error handling types
-export interface ApiErrorData {
-  message: string
-  code?: string
-}
-
-export interface ErrorWithResponse {
-  response?: {
-    data?: {
-      error?: ApiErrorData
-      message?: string
-    }
-    status?: number
-    statusText?: string
-  }
-  message?: string
-  code?: string
-}
-
 // Helper function to safely extract error message
 export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error
-  
-  const err = error as ErrorWithResponse
+
+  const err = error as {
+    response?: { data?: ApiErrorBody }
+    message?: string
+  }
+
   return (
     err?.response?.data?.error?.message ||
     err?.response?.data?.message ||

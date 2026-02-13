@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { TIMING } from '../constants/timing';
-import { 
-  Alert, 
-  AlertColor, 
-  Slide, 
-  SlideProps, 
-  Box, 
+import {
+  Alert,
+  AlertColor,
+  Slide,
+  SlideProps,
+  Box,
   Typography,
   useTheme,
   alpha
@@ -29,20 +29,12 @@ import {
   Settings as SettingsIcon,
   History as AuditLogIcon,
 } from '@mui/icons-material';
+import type { ToastEntityType } from '../types/entityTypes';
 
 /**
  * Entity types for toast messages
  */
-export type EntityType = 
-  | 'proxy-host'
-  | 'redirection-host'
-  | 'dead-host'
-  | 'stream'
-  | 'certificate'
-  | 'access-list'
-  | 'user'
-  | 'settings'
-  | 'audit-log';
+export type EntityType = ToastEntityType;
 
 /**
  * Action types
