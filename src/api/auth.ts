@@ -37,7 +37,7 @@ export const authApi = {
   },
 
   // Logout (client-side only)
-  logout: () => {
+  logout: (): void => {
     localStorage.removeItem(STORAGE_KEYS.TOKEN)
     localStorage.removeItem(STORAGE_KEYS.USER)
   }

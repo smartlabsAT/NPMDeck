@@ -7,7 +7,7 @@ import api from '../api/config'
 
 type RetryableAxiosConfig = InternalAxiosRequestConfig & { _retry?: boolean }
 
-export const useAuthInterceptors = () => {
+export const useAuthInterceptors = (): void => {
   const { showToast, showError, showInfo } = useToast()
   const authStore = useAuthStore()
 

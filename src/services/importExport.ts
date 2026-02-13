@@ -90,7 +90,7 @@ export class ImportExportService {
   }
 
   // Download export as file
-  static downloadExport(exportData: ExportData, filename?: string) {
+  static downloadExport(exportData: ExportData, filename?: string): void {
     const jsonString = JSON.stringify(exportData, null, 2)
     const blob = new Blob([jsonString], { type: 'application/json' })
     const url = URL.createObjectURL(blob)

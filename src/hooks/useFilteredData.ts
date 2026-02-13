@@ -25,11 +25,18 @@ export function useFilteredData<T extends HasOwnerId>(
   }, [data, user, shouldFilterByUser])
 }
 
+export interface FilteredInfo {
+  isFiltered: boolean
+  hiddenCount: number
+  totalCount: number
+  visibleCount: number
+}
+
 // Hook for displaying filtered count info
 export function useFilteredInfo<T extends HasOwnerId>(
   data: T[],
   filteredData: T[]
-) {
+): FilteredInfo {
   const { shouldFilterByUser } = useAuthStore()
 
   return useMemo(() => {

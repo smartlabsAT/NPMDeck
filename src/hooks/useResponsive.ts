@@ -1,11 +1,38 @@
 import { useTheme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
+export interface UseResponsiveReturn {
+  // Basic responsive states
+  isMobile: boolean
+  isTablet: boolean
+  isDesktop: boolean
+
+  // Table-specific states
+  isMobileTable: boolean
+  isCompactTable: boolean
+  isFullTable: boolean
+  isExtraSmall: boolean
+
+  // Utility functions
+  getCurrentBreakpoint: () => 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  isBelow: (breakpoint: 'sm' | 'md' | 'lg' | 'xl') => boolean
+  isAbove: (breakpoint: 'xs' | 'sm' | 'md' | 'lg') => boolean
+
+  // Raw breakpoint values for custom logic
+  breakpoints: {
+    xs: number
+    sm: number
+    md: number
+    lg: number
+    xl: number
+  }
+}
+
 /**
  * Generic responsive hook for consistent breakpoint handling
  * Uses Material-UI breakpoints for responsive behavior
  */
-export function useResponsive() {
+export function useResponsive(): UseResponsiveReturn {
   const theme = useTheme()
   
   // Standard breakpoints
