@@ -37,7 +37,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
-import { Filter, BulkAction } from '../components/DataTable/types'
+import { Filter, FilterValue, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
 
@@ -403,7 +403,7 @@ export default function Streams() {
   ]
 
   // Custom filter function for DataTable
-  const filterFunction = (item: Stream, activeFilters: Record<string, any>) => {
+  const filterFunction = (item: Stream, activeFilters: Record<string, FilterValue>) => {
     // Protocol filter
     if (activeFilters.protocols && activeFilters.protocols !== 'all') {
       if (activeFilters.protocols === 'tcp') {

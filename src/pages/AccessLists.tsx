@@ -185,7 +185,7 @@ export default function AccessLists() {
             gap: 1
           }}>
           <LockIcon fontSize="small" color="action" />
-          <Typography variant="body2">{value}</Typography>
+          <Typography variant="body2">{value as React.ReactNode}</Typography>
         </Box>
       )
     },

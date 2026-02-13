@@ -41,7 +41,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
-import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { Filter, FilterValue, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { extractBaseDomain } from '../utils/domainUtils'
 import { getHttpStatusLabel } from '../utils/httpUtils'
@@ -474,7 +474,7 @@ export default function RedirectionHosts() {
   ]
 
   // Custom filter function for DataTable
-  const filterFunction = (item: RedirectionHost, activeFilters: Record<string, any>) => {
+  const filterFunction = (item: RedirectionHost, activeFilters: Record<string, FilterValue>) => {
     // HTTP Code filter
     if (activeFilters.http_code && activeFilters.http_code !== 'all') {
       if (item.forward_http_code.toString() !== activeFilters.http_code) return false

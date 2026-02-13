@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { UseDataTableOptions, UseDataTableReturn, TableColumn, DataGroup, GroupConfig } from '../components/DataTable/types'
+import { UseDataTableOptions, UseDataTableReturn, TableColumn, DataGroup, GroupConfig, FilterValue } from '../components/DataTable/types'
 import { STORAGE_KEYS } from '../constants/storage'
 
 export function useDataTable<T extends object>(
@@ -17,7 +17,7 @@ export function useDataTable<T extends object>(
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(options?.defaultRowsPerPage || 10)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filters, setFilters] = useState<Record<string, any>>(options?.defaultFilters || {})
+  const [filters, setFilters] = useState<Record<string, FilterValue>>(options?.defaultFilters || {})
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
   const [groupingEnabled, setGroupingEnabled] = useState(groupConfig?.defaultEnabled ?? false)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
@@ -40,18 +40,24 @@ export function useDataTable<T extends object>(
         if (matchesColumn) return true
         
         // Special search for Access Lists - search in nested items
-        if ('items' in item && Array.isArray((item as any).items)) {
-          const matchesUser = (item as any).items.some((user: any) => 
-            user.username?.toLowerCase().includes(query)
-          )
-          if (matchesUser) return true
+        if ('items' in item) {
+          const items = (item as { items?: Array<{ username?: string }> }).items
+          if (Array.isArray(items)) {
+            const matchesUser = items.some((user) =>
+              user.username?.toLowerCase().includes(query)
+            )
+            if (matchesUser) return true
+          }
         }
-        
-        if ('clients' in item && Array.isArray((item as any).clients)) {
-          const matchesClient = (item as any).clients.some((client: any) => 
-            client.address?.includes(searchQuery) // IP addresses are case-sensitive
-          )
-          if (matchesClient) return true
+
+        if ('clients' in item) {
+          const clients = (item as { clients?: Array<{ address?: string }> }).clients
+          if (Array.isArray(clients)) {
+            const matchesClient = clients.some((client) =>
+              client.address?.includes(searchQuery) // IP addresses are case-sensitive
+            )
+            if (matchesClient) return true
+          }
         }
         
         return false
@@ -69,8 +75,8 @@ export function useDataTable<T extends object>(
         
         result = result.filter((item) => {
         // Special handling for certain filters
-        if (filterId === 'roles') {
-          const roles = (item as any).roles as string[]
+        if (filterId === 'roles' && 'roles' in item) {
+          const roles = (item as { roles: string[] }).roles
           if (filterValue === 'admin') {
             return roles.includes('admin')
           }
@@ -80,15 +86,15 @@ export function useDataTable<T extends object>(
           }
           return true
         }
-        
-        if (filterId === 'is_disabled') {
-          const isDisabled = (item as any).is_disabled
-          return String(isDisabled) === filterValue
+
+        if (filterId === 'is_disabled' && 'is_disabled' in item) {
+          const isDisabled = (item as { is_disabled: boolean }).is_disabled
+          return String(isDisabled) === String(filterValue)
         }
         
         // Access Lists specific filters
-        if (filterId === 'hasUsers') {
-          const users = (item as any).items as any[] | undefined
+        if (filterId === 'hasUsers' && 'items' in item) {
+          const users = (item as { items?: unknown[] }).items
           const userCount = users?.length || 0
           if (filterValue === 'with-users') {
             return userCount > 0
@@ -99,8 +105,8 @@ export function useDataTable<T extends object>(
           return true
         }
         
-        if (filterId === 'hasRules') {
-          const clients = (item as any).clients as any[] | undefined
+        if (filterId === 'hasRules' && 'clients' in item) {
+          const clients = (item as { clients?: unknown[] }).clients
           const ruleCount = clients?.length || 0
           if (filterValue === 'with-rules') {
             return ruleCount > 0
@@ -112,8 +118,8 @@ export function useDataTable<T extends object>(
         }
         
         // Certificate specific filters
-        if (filterId === 'provider') {
-          const provider = (item as any).provider
+        if (filterId === 'provider' && 'provider' in item) {
+          const provider = (item as { provider: string }).provider
           if (filterValue === 'letsencrypt') {
             return provider === 'letsencrypt'
           }
@@ -131,7 +137,7 @@ export function useDataTable<T extends object>(
         
         // Handle different filter types
         if (Array.isArray(filterValue)) {
-          return filterValue.includes(value)
+          return filterValue.includes(value as string)
         }
         
         return value === filterValue
@@ -250,7 +256,7 @@ export function useDataTable<T extends object>(
     setPage(0)
   }, [])
 
-  const handleFilter = useCallback((filterId: string, value: any) => {
+  const handleFilter = useCallback((filterId: string, value: FilterValue) => {
     setFilters(prev => ({
       ...prev,
       [filterId]: value

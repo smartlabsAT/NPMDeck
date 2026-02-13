@@ -40,7 +40,7 @@ import PermissionIconButton from '../components/PermissionIconButton'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
-import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { Filter, FilterValue, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { extractBaseDomain } from '../utils/domainUtils'
 import { getStatusIcon } from '../utils/statusUtils'
@@ -232,7 +232,7 @@ export default function ProxyHosts() {
       align: 'center',
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
-      render: (value: any, item: ProxyHost) => getStatusIcon(item)
+      render: (_value: unknown, item: ProxyHost) => getStatusIcon(item)
     },
     {
       id: 'domain_names',
@@ -243,7 +243,7 @@ export default function ProxyHosts() {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       mobileLabel: 'Domains',
-      render: (value: any, item: ProxyHost) => {
+      render: (_value: unknown, item: ProxyHost) => {
         const linkedRedirections = getLinkedRedirections(item)
         return (
           <Box>
@@ -329,7 +329,7 @@ export default function ProxyHosts() {
       priority: 'P2' as ColumnPriority, // Important - hidden on mobile
       showInCard: true,
       mobileLabel: '', // Empty string to hide label - the URL is self-explanatory
-      render: (value: any, item: ProxyHost) => (
+      render: (_value: unknown, item: ProxyHost) => (
         <Box
           sx={{
             display: "flex",
@@ -368,7 +368,7 @@ export default function ProxyHosts() {
       align: 'center',
       priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
       showInCard: true,
-      render: (value: any, item: ProxyHost) => {
+      render: (_value: unknown, item: ProxyHost) => {
         if (!item.certificate_id) {
           return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
         }
@@ -386,7 +386,7 @@ export default function ProxyHosts() {
       sortable: true,
       priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
       showInCard: false,
-      render: (value: any, item: ProxyHost) => {
+      render: (_value: unknown, item: ProxyHost) => {
         if (item.access_list) {
           return (
             <Chip 
@@ -424,7 +424,7 @@ export default function ProxyHosts() {
       align: 'right',
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
-      render: (value: any, item: ProxyHost) => (
+      render: (_value: unknown, item: ProxyHost) => (
         <Box
           sx={{
             display: "flex",
@@ -513,7 +513,7 @@ export default function ProxyHosts() {
   ]
 
   // Custom filter function for DataTable
-  const filterFunction = (item: ProxyHost, activeFilters: Record<string, any>) => {
+  const filterFunction = (item: ProxyHost, activeFilters: Record<string, FilterValue>) => {
     // SSL filter
     if (activeFilters.ssl && activeFilters.ssl !== 'all') {
       if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false
