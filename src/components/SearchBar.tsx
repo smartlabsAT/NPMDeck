@@ -31,6 +31,8 @@ import {
   Error as ErrorIcon,
 } from '@mui/icons-material'
 import { useGlobalSearch } from '../contexts/GlobalSearchContext'
+import { NAVIGATION_COLORS } from '../constants/navigation'
+import { TIMING } from '../constants/timing'
 import { SearchResult, ResourceType } from '../types/search'
 
 const getResourceIcon = (type: ResourceType, isAction: boolean = false) => {
@@ -40,19 +42,19 @@ const getResourceIcon = (type: ResourceType, isAction: boolean = false) => {
   
   switch (type) {
     case 'proxy_hosts':
-      return <SwapHoriz sx={{ color: '#5eba00' }} />
+      return <SwapHoriz sx={{ color: NAVIGATION_COLORS.success }} />
     case 'redirection_hosts':
-      return <TrendingFlat sx={{ color: '#f1c40f' }} />
+      return <TrendingFlat sx={{ color: NAVIGATION_COLORS.warning }} />
     case 'dead_hosts':
-      return <Block sx={{ color: '#cd201f' }} />
+      return <Block sx={{ color: NAVIGATION_COLORS.danger }} />
     case 'streams':
-      return <Stream sx={{ color: '#467fcf' }} />
+      return <Stream sx={{ color: NAVIGATION_COLORS.info }} />
     case 'access_lists':
-      return <Security sx={{ color: '#2bcbba' }} />
+      return <Security sx={{ color: NAVIGATION_COLORS.primary }} />
     case 'certificates':
-      return <VpnKey sx={{ color: '#467fcf' }} />
+      return <VpnKey sx={{ color: NAVIGATION_COLORS.info }} />
     case 'users':
-      return <Group sx={{ color: '#868e96' }} />
+      return <Group sx={{ color: NAVIGATION_COLORS.secondary }} />
     default:
       return <Add sx={{ color: 'primary.main' }} />
   }
@@ -174,8 +176,8 @@ const SearchBar = () => {
       // Reset prevent reopen flag after navigation
       setTimeout(() => {
         setPreventReopen(false)
-      }, 500)
-    }, 100) // 100ms delay to ensure dropdown animation completes
+      }, TIMING.PREVENT_REOPEN)
+    }, TIMING.NAVIGATION_DELAY) // Delay to ensure dropdown animation completes
   }
 
   // Keyboard shortcut

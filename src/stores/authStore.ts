@@ -15,6 +15,7 @@ import {
   canAccessResource
 } from '../utils/permissions'
 import { TOKEN_REFRESH_INTERVAL_MS, CONFIGURED_WARNING_MINUTES } from '../constants/auth'
+import { STORAGE_KEYS } from '../constants/storage'
 
 interface TokenInfo {
   token: string
@@ -64,7 +65,7 @@ interface AuthState {
 // Helper to load token stack from localStorage
 const loadTokenStack = (): TokenInfo[] => {
   try {
-    const stack = localStorage.getItem('npm_token_stack')
+    const stack = localStorage.getItem(STORAGE_KEYS.TOKEN_STACK)
     return stack ? JSON.parse(stack) : []
   } catch {
     return []
@@ -73,7 +74,7 @@ const loadTokenStack = (): TokenInfo[] => {
 
 // Helper to save token stack to localStorage
 const saveTokenStack = (stack: TokenInfo[]) => {
-  localStorage.setItem('npm_token_stack', JSON.stringify(stack))
+  localStorage.setItem(STORAGE_KEYS.TOKEN_STACK, JSON.stringify(stack))
 }
 
 // Helper to validate JWT format
@@ -109,9 +110,9 @@ const getTokenExpiry = (token: string): Date | null => {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: localStorage.getItem('npm_token'),
-  tokenExpiresAt: localStorage.getItem('npm_token') ? getTokenExpiry(localStorage.getItem('npm_token')!) : null,
-  isAuthenticated: !!localStorage.getItem('npm_token'),
+  token: localStorage.getItem(STORAGE_KEYS.TOKEN),
+  tokenExpiresAt: localStorage.getItem(STORAGE_KEYS.TOKEN) ? getTokenExpiry(localStorage.getItem(STORAGE_KEYS.TOKEN)!) : null,
+  isAuthenticated: !!localStorage.getItem(STORAGE_KEYS.TOKEN),
   isLoading: false,
   error: null,
   tokenStack: loadTokenStack(),
@@ -125,11 +126,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       // Get token
       const tokenResponse = await authApi.login(credentials)
-      localStorage.setItem('npm_token', tokenResponse.token)
-      
+      localStorage.setItem(STORAGE_KEYS.TOKEN, tokenResponse.token)
+
       // Get user info
       const user = await authApi.getMe()
-      localStorage.setItem('npm_user', JSON.stringify(user))
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user))
       
       const tokenExpiresAt = getTokenExpiry(tokenResponse.token)
       
@@ -185,7 +186,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     authApi.logout()
     
     // Clear token stack
-    localStorage.removeItem('npm_token_stack')
+    localStorage.removeItem(STORAGE_KEYS.TOKEN_STACK)
     
     set({
       user: null,
@@ -206,15 +207,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     
     try {
       // Try to get user from localStorage first
-      const storedUser = localStorage.getItem('npm_user')
+      const storedUser = localStorage.getItem(STORAGE_KEYS.USER)
       if (storedUser) {
         set({ user: JSON.parse(storedUser), isLoading: false })
       }
       
       // Then fetch fresh user data
       const user = await authApi.getMe()
-      localStorage.setItem('npm_user', JSON.stringify(user))
-      
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user))
+
       // Get token expiry
       const tokenExpiresAt = token ? getTokenExpiry(token) : null
       
@@ -251,7 +252,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearError: () => set({ error: null }),
   
   setUser: (user: User) => {
-    localStorage.setItem('npm_user', JSON.stringify(user))
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user))
     set({ user })
   },
 
@@ -265,8 +266,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     state.clearExpiryWarning()
     
     // Set new active token
-    localStorage.setItem('npm_token', tokenInfo.token)
-    localStorage.setItem('npm_user', JSON.stringify(tokenInfo.user))
+    localStorage.setItem(STORAGE_KEYS.TOKEN, tokenInfo.token)
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(tokenInfo.user))
     
     const tokenExpiresAt = getTokenExpiry(tokenInfo.token)
     
@@ -359,7 +360,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     
     try {
       const response = await authApi.refreshToken()
-      localStorage.setItem('npm_token', response.token)
+      localStorage.setItem(STORAGE_KEYS.TOKEN, response.token)
       
       const tokenExpiresAt = getTokenExpiry(response.token)
       

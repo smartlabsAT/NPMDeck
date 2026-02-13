@@ -38,7 +38,8 @@ import { useDrawerForm } from '../hooks/useDrawerForm'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
 import { useToast } from '../contexts/ToastContext'
-import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { NAVIGATION_CONFIG, NAVIGATION_COLORS } from '../constants/navigation'
+import { VALIDATION } from '../constants/validation'
 
 interface UserDrawerProps {
   open: boolean
@@ -189,8 +190,8 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
         if (data.new_password !== data.confirm_password) {
           errors.confirm_password = 'Passwords do not match'
         }
-        if (data.new_password && data.new_password.length < 8) {
-          errors.new_password = 'Password must be at least 8 characters'
+        if (data.new_password && data.new_password.length < VALIDATION.MIN_PASSWORD_LENGTH) {
+          errors.new_password = `Password must be at least ${VALIDATION.MIN_PASSWORD_LENGTH} characters`
         }
         if (isChangingOwnPassword && !data.current_password) {
           errors.current_password = 'Current password is required'
@@ -456,7 +457,7 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
               margin="normal"
               required
               error={!!form.errors.new_password}
-              helperText={form.errors.new_password || "Minimum 8 characters"}
+              helperText={form.errors.new_password || `Minimum ${VALIDATION.MIN_PASSWORD_LENGTH} characters`}
             />
 
             <TextField
@@ -503,7 +504,7 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
               margin="normal"
               required
               error={!!form.errors.new_password}
-              helperText={form.errors.new_password || "Minimum 8 characters"}
+              helperText={form.errors.new_password || `Minimum ${VALIDATION.MIN_PASSWORD_LENGTH} characters`}
             />
 
             <TextField
@@ -608,12 +609,12 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
           <FormSection title="Feature Permissions">
             <Grid container spacing={2}>
               {[
-                { key: 'proxy_hosts', label: 'Proxy Hosts', icon: <ProxyIcon sx={{ color: '#5eba00' }} /> },
-                { key: 'redirection_hosts', label: 'Redirection Hosts', icon: <RedirectIcon sx={{ color: '#f1c40f' }} /> },
-                { key: 'dead_hosts', label: '404 Hosts', icon: <BlockIcon sx={{ color: '#cd201f' }} /> },
-                { key: 'streams', label: 'Streams', icon: <StreamIcon sx={{ color: '#467fcf' }} /> },
-                { key: 'access_lists', label: 'Access Lists', icon: <SecurityIcon sx={{ color: '#2bcbba' }} /> },
-                { key: 'certificates', label: 'SSL Certificates', icon: <CertificateIcon sx={{ color: '#467fcf' }} /> },
+                { key: 'proxy_hosts', label: 'Proxy Hosts', icon: <ProxyIcon sx={{ color: NAVIGATION_COLORS.success }} /> },
+                { key: 'redirection_hosts', label: 'Redirection Hosts', icon: <RedirectIcon sx={{ color: NAVIGATION_COLORS.warning }} /> },
+                { key: 'dead_hosts', label: '404 Hosts', icon: <BlockIcon sx={{ color: NAVIGATION_COLORS.danger }} /> },
+                { key: 'streams', label: 'Streams', icon: <StreamIcon sx={{ color: NAVIGATION_COLORS.info }} /> },
+                { key: 'access_lists', label: 'Access Lists', icon: <SecurityIcon sx={{ color: NAVIGATION_COLORS.primary }} /> },
+                { key: 'certificates', label: 'SSL Certificates', icon: <CertificateIcon sx={{ color: NAVIGATION_COLORS.info }} /> },
               ].map(({ key, label, icon }) => (
                 <Grid size={12} key={key}>
                   <Box

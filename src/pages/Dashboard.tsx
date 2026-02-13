@@ -39,6 +39,7 @@ import { usePermissions } from '../hooks/usePermissions'
 import PermissionButton from '../components/PermissionButton'
 import { Resource } from '../types/permissions'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface StatCardProps {
   title: string
@@ -156,7 +157,7 @@ const Dashboard = () => {
       active: stats.proxyHosts.active,
       inactive: stats.proxyHosts.inactive,
       icon: <ProxyIcon />,
-      color: '#5eba00',
+      color: NAVIGATION_COLORS.success,
       path: '/hosts/proxy',
       show: canView('proxy_hosts')
     },
@@ -166,7 +167,7 @@ const Dashboard = () => {
       active: stats.redirectionHosts.active,
       inactive: stats.redirectionHosts.inactive,
       icon: <RedirectIcon />,
-      color: '#f1c40f',
+      color: NAVIGATION_COLORS.warning,
       path: '/hosts/redirection',
       show: canView('redirection_hosts')
     },
@@ -176,7 +177,7 @@ const Dashboard = () => {
       active: stats.deadHosts.active,
       inactive: stats.deadHosts.inactive,
       icon: <DeadIcon />,
-      color: '#cd201f',
+      color: NAVIGATION_COLORS.danger,
       path: '/hosts/404',
       show: canView('dead_hosts')
     },
@@ -186,7 +187,7 @@ const Dashboard = () => {
       active: stats.streams.active,
       inactive: stats.streams.inactive,
       icon: <StreamIcon />,
-      color: '#467fcf',
+      color: NAVIGATION_COLORS.info,
       path: '/hosts/streams',
       show: canView('streams')
     },
@@ -194,7 +195,7 @@ const Dashboard = () => {
       title: 'SSL Certificates',
       value: stats.certificates.total,
       icon: <CertificateIcon />,
-      color: '#467fcf',
+      color: NAVIGATION_COLORS.info,
       path: '/security/certificates',
       show: canView('certificates')
     },
@@ -202,7 +203,7 @@ const Dashboard = () => {
       title: 'Access Lists',
       value: stats.accessLists.total,
       icon: <AccessListIcon />,
-      color: '#2bcbba',
+      color: NAVIGATION_COLORS.primary,
       path: '/security/access-lists',
       show: canView('access_lists')
     }
@@ -213,28 +214,28 @@ const Dashboard = () => {
       label: 'New Proxy Host',
       icon: <ProxyIcon />,
       path: '/hosts/proxy/new',
-      color: '#5eba00',
+      color: NAVIGATION_COLORS.success,
       resource: 'proxy_hosts'
     },
     {
       label: 'New Certificate',
       icon: <CertificateIcon />,
       path: '/security/certificates/new',
-      color: '#467fcf',
+      color: NAVIGATION_COLORS.info,
       resource: 'certificates'
     },
     {
       label: 'New Redirection',
       icon: <RedirectIcon />,
       path: '/hosts/redirection/new',
-      color: '#f1c40f',
+      color: NAVIGATION_COLORS.warning,
       resource: 'redirection_hosts'
     },
     {
       label: 'New Access List',
       icon: <AccessListIcon />,
       path: '/security/access-lists/new',
-      color: '#2bcbba',
+      color: NAVIGATION_COLORS.primary,
       resource: 'access_lists'
     }
   ]

@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useToast } from '../contexts/ToastContext'
 import { Alert, Button, Slide, LinearProgress } from '@mui/material'
 import { useAuthInterceptors } from '../hooks/useAuthInterceptors'
+import { TIMING } from '../constants/timing'
 
 export const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
   const { loadUser, isAuthenticated, refreshToken, isRefreshing } = useAuthStore()
@@ -24,7 +25,7 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     showToast({
       message: 'Session refreshed successfully',
       severity: 'success',
-      duration: 3000
+      duration: TIMING.TOAST_SUCCESS
     })
   }, [refreshToken, showInfo, showToast])
 

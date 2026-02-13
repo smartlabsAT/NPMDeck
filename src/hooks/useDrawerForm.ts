@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getErrorMessage } from '../types/common';
+import { TIMING } from '../constants/timing';
 
 /**
  * Validation function type
@@ -374,15 +375,15 @@ export const useDrawerForm = <T extends Record<string, any>>({
         await autoSave.onAutoSave(formState.data);
         setFormState((prev) => ({ ...prev, autoSaveStatus: 'saved' }));
         
-        // Reset status after 2 seconds
+        // Reset status after auto-save completes
         setTimeout(() => {
           setFormState((prev) => ({ ...prev, autoSaveStatus: 'idle' }));
-        }, 2000);
+        }, TIMING.AUTOSAVE_RESET);
       } catch (error) {
         setFormState((prev) => ({ ...prev, autoSaveStatus: 'error' }));
         console.error('Auto-save failed:', error);
       }
-    }, autoSave.delay || 2000);
+    }, autoSave.delay || TIMING.AUTOSAVE_RESET);
     
     return () => {
       if (autoSaveTimeoutRef.current) {

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { TIMING } from '../constants/timing'
 import { usePermissions } from '../hooks/usePermissions'
 import { proxyHostsApi } from '../api/proxyHosts'
 import { redirectionHostsApi } from '../api/redirectionHosts'
@@ -10,7 +11,7 @@ import { certificatesApi } from '../api/certificates'
 import { usersApi } from '../api/users'
 import { SearchState, SearchResult, SearchAction, ResourceType } from '../types/search'
 
-const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const CACHE_TTL = TIMING.SEARCH_CACHE_TTL
 
 interface GlobalSearchContextType {
   searchState: SearchState

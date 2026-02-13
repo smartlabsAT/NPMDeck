@@ -22,6 +22,7 @@ import TabPanel from './shared/TabPanel'
 import CertificateInfoPanel from './features/certificates/CertificateInfoPanel'
 import CertificateHostsPanel from './features/certificates/CertificateHostsPanel'
 import CertificateActions from './features/certificates/CertificateActions'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface CertificateDetailsDialogProps {
   open: boolean
@@ -94,7 +95,7 @@ const CertificateDetailsDialog = ({
       title={
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <VpnKey sx={{ color: '#5eba00' }} />
+            <VpnKey sx={{ color: NAVIGATION_COLORS.success }} />
             <Typography variant="h6">SSL Certificate</Typography>
           </Box>
           <Typography variant="body2" sx={{

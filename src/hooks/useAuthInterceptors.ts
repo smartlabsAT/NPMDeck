@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { AxiosError } from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import { useAuthStore } from '../stores/authStore'
+import { TIMING } from '../constants/timing'
 import api from '../api/config'
 
 export const useAuthInterceptors = () => {
@@ -31,7 +32,7 @@ export const useAuthInterceptors = () => {
           showToast({
             message: 'Session expired. Please login again.',
             severity: 'error',
-            duration: 5000
+            duration: TIMING.SESSION_REFRESH
           })
         }
 

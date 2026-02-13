@@ -13,8 +13,10 @@ import {
 } from '@mui/material'
 import { Lock as LockIcon } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 import { getErrorMessage } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
+import { VALIDATION } from '../constants/validation'
 
 interface UserPasswordDialogProps {
   open: boolean
@@ -51,8 +53,8 @@ const UserPasswordDialog = ({ open, onClose, user, onSave }: UserPasswordDialogP
     }
 
     // Validate password length
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters')
+    if (newPassword.length < VALIDATION.MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${VALIDATION.MIN_PASSWORD_LENGTH} characters`)
       return
     }
 
@@ -85,7 +87,7 @@ const UserPasswordDialog = ({ open, onClose, user, onSave }: UserPasswordDialogP
             alignItems: "center",
             gap: 1
           }}>
-          <LockIcon sx={{ color: '#868e96' }} />
+          <LockIcon sx={{ color: NAVIGATION_COLORS.secondary }} />
           Change Password
         </Box>
       </DialogTitle>
@@ -125,7 +127,7 @@ const UserPasswordDialog = ({ open, onClose, user, onSave }: UserPasswordDialogP
             margin="normal"
             required
             autoFocus={!isChangingOwnPassword}
-            helperText="Minimum 6 characters"
+            helperText={`Minimum ${VALIDATION.MIN_PASSWORD_LENGTH} characters`}
           />
 
           <TextField

@@ -50,7 +50,7 @@ import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/R
 import { Filter } from '../components/DataTable/types'
 import { useToast } from '../contexts/ToastContext'
 import ActionChip from '../components/shared/ActionChip'
-import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { NAVIGATION_CONFIG, NAVIGATION_COLORS } from '../constants/navigation'
 
 const AuditLog = () => {
   const navigate = useNavigate()
@@ -97,20 +97,20 @@ const AuditLog = () => {
   const getObjectIcon = (objectType: string) => {
     switch (objectType) {
       case 'proxy-host':
-        return <ProxyIcon fontSize="small" sx={{ color: '#5eba00' }} />
+        return <ProxyIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.success }} />
       case 'redirection-host':
-        return <RedirectionIcon fontSize="small" sx={{ color: '#f1c40f' }} />
+        return <RedirectionIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.warning }} />
       case 'stream':
       case 'stream-host':
-        return <StreamIcon fontSize="small" sx={{ color: '#467fcf' }} />
+        return <StreamIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.info }} />
       case 'dead-host':
-        return <DeadHostIcon fontSize="small" sx={{ color: '#cd201f' }} />
+        return <DeadHostIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.danger }} />
       case 'access-list':
-        return <AccessListIcon fontSize="small" sx={{ color: '#2bcbba' }} />
+        return <AccessListIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.primary }} />
       case 'user':
         return <PersonIcon fontSize="small" />
       case 'certificate':
-        return <CertificateIcon fontSize="small" sx={{ color: '#467fcf' }} />
+        return <CertificateIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.info }} />
       default:
         return null
     }
@@ -119,22 +119,22 @@ const AuditLog = () => {
   const _getObjectTypeColor = (objectType: string): string => {
     switch (objectType) {
       case 'proxy-host':
-        return '#5eba00'
+        return NAVIGATION_COLORS.success
       case 'redirection-host':
-        return '#f1c40f'
+        return NAVIGATION_COLORS.warning
       case 'stream':
       case 'stream-host':
-        return '#467fcf'
+        return NAVIGATION_COLORS.info
       case 'dead-host':
-        return '#cd201f'
+        return NAVIGATION_COLORS.danger
       case 'access-list':
-        return '#2bcbba'
+        return NAVIGATION_COLORS.primary
       case 'user':
-        return '#868e96'
+        return NAVIGATION_COLORS.secondary
       case 'certificate':
-        return '#467fcf'
+        return NAVIGATION_COLORS.info
       default:
-        return '#868e96'
+        return NAVIGATION_COLORS.secondary
     }
   }
 
@@ -477,7 +477,7 @@ const AuditLog = () => {
               alignItems: "center",
               gap: 1
             }}>
-            <AuditIcon sx={{ color: '#495c68' }} />
+            <AuditIcon sx={{ color: NAVIGATION_COLORS.dark }} />
             Audit Log Details
           </Box>
         </DialogTitle>

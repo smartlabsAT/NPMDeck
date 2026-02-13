@@ -34,9 +34,8 @@ import Footer from './Footer'
 import ThemeToggle from './ThemeToggle'
 import SearchBar from './SearchBar'
 import Logo from './Logo'
-import { NAVIGATION_CONFIG } from '../constants/navigation'
-
-const drawerWidth = 240
+import { NAVIGATION_CONFIG, NAVIGATION_COLORS } from '../constants/navigation'
+import { LAYOUT } from '../constants/layout'
 
 interface MenuItem {
   text: string
@@ -182,8 +181,8 @@ const Layout = () => {
     <div>
       <Box 
         sx={{ 
-          height: 64,
-          background: 'linear-gradient(45deg, #2bcbba 30%, #4dd4c5 90%)',
+          height: LAYOUT.TOOLBAR_HEIGHT,
+          background: `linear-gradient(45deg, ${NAVIGATION_COLORS.primary} 30%, #4dd4c5 90%)`,
           color: 'white',
           display: 'flex',
           alignItems: 'center',
@@ -204,7 +203,7 @@ const Layout = () => {
                   mr: 1,
                   '&.Mui-selected': {
                     backgroundColor: 'rgba(43, 203, 186, 0.08)',
-                    borderRight: '3px solid #2bcbba',
+                    borderRight: `3px solid ${NAVIGATION_COLORS.primary}`,
                     '&:hover': {
                       backgroundColor: 'rgba(43, 203, 186, 0.12)',
                     }
@@ -226,7 +225,7 @@ const Layout = () => {
                         pl: 4,
                         '&.Mui-selected': {
                           backgroundColor: 'rgba(43, 203, 186, 0.08)',
-                          borderRight: '3px solid #2bcbba',
+                          borderRight: `3px solid ${NAVIGATION_COLORS.primary}`,
                           '&:hover': {
                             backgroundColor: 'rgba(43, 203, 186, 0.12)',
                           }
@@ -348,8 +347,8 @@ const Layout = () => {
       <AppBar
         position="fixed"
         sx={{
-          width: { lg: `calc(100% - ${drawerWidth}px)` },
-          ml: { lg: `${drawerWidth}px` },
+          width: { lg: `calc(100% - ${LAYOUT.DRAWER_WIDTH}px)` },
+          ml: { lg: `${LAYOUT.DRAWER_WIDTH}px` },
           transition: theme => theme.transitions.create(['width', 'margin'], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
@@ -476,8 +475,8 @@ const Layout = () => {
         <LinearProgress 
           sx={{ 
             position: 'fixed', 
-            top: 64, 
-            left: { lg: drawerWidth }, 
+            top: LAYOUT.TOOLBAR_HEIGHT,
+            left: { lg: LAYOUT.DRAWER_WIDTH }, 
             right: 0, 
             zIndex: 1201 
           }} 
@@ -486,7 +485,7 @@ const Layout = () => {
       
       <Box
         component="nav"
-        sx={{ width: { lg: drawerWidth }, flexShrink: { lg: 0 } }}
+        sx={{ width: { lg: LAYOUT.DRAWER_WIDTH }, flexShrink: { lg: 0 } }}
         aria-label="mailbox folders"
       >
         <Drawer
@@ -500,7 +499,7 @@ const Layout = () => {
             display: { xs: 'block', lg: 'none' },
             '& .MuiDrawer-paper': { 
               boxSizing: 'border-box', 
-              width: drawerWidth,
+              width: LAYOUT.DRAWER_WIDTH,
               transition: theme => theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
@@ -516,7 +515,7 @@ const Layout = () => {
             display: { xs: 'none', lg: 'block' },
             '& .MuiDrawer-paper': { 
               boxSizing: 'border-box', 
-              width: drawerWidth,
+              width: LAYOUT.DRAWER_WIDTH,
               borderRight: 'none',
               boxShadow: '2px 0 4px rgba(0,0,0,0.08)',
               display: 'flex',
@@ -537,7 +536,7 @@ const Layout = () => {
           component="main"
           sx={{
             flexGrow: 1,
-            width: { lg: `calc(100% - ${drawerWidth}px)` },
+            width: { lg: `calc(100% - ${LAYOUT.DRAWER_WIDTH}px)` },
             transition: theme => theme.transitions.create(['width', 'margin'], {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.leavingScreen,
@@ -545,7 +544,7 @@ const Layout = () => {
             mt: 8,
             display: 'flex',
             flexDirection: 'column',
-            minHeight: 'calc(100vh - 64px)'
+            minHeight: `calc(100vh - ${LAYOUT.TOOLBAR_HEIGHT}px)`
           }}
         >
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>

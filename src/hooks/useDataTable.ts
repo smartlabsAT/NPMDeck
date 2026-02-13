@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import { UseDataTableOptions, UseDataTableReturn, TableColumn, DataGroup, GroupConfig } from '../components/DataTable/types'
+import { STORAGE_KEYS } from '../constants/storage'
 
 export function useDataTable<T extends object>(
   data: T[],
@@ -326,7 +327,7 @@ export function useDataTable<T extends object>(
       const newValue = !prev
       // Save to localStorage if we have a groupConfig
       if (groupConfig) {
-        localStorage.setItem('npm.certificates.groupByDomain', newValue.toString())
+        localStorage.setItem(STORAGE_KEYS.CERT_GROUP_BY_DOMAIN, newValue.toString())
       }
       return newValue
     })
