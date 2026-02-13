@@ -4,16 +4,15 @@
  * CertificateDetailsDialog, StreamDetailsDialog, AccessListDetailsDialog
  */
 import { useState, useCallback, useRef, useEffect } from 'react'
-
-const DEFAULT_RESET_DELAY = 2000
+import { TIMING } from '../constants/timing'
 
 /**
  * Hook that provides clipboard copy functionality with a temporary feedback state.
  *
- * @param resetDelay - Time in ms before copiedText resets to empty (default: 2000)
+ * @param resetDelay - Time in ms before copiedText resets to empty (default: TIMING.CLIPBOARD_RESET)
  * @returns Object with copiedText state and copyToClipboard function
  */
-export function useCopyToClipboard(resetDelay = DEFAULT_RESET_DELAY) {
+export function useCopyToClipboard(resetDelay = TIMING.CLIPBOARD_RESET) {
   const [copiedText, setCopiedText] = useState<string>('')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 

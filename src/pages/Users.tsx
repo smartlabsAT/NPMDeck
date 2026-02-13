@@ -37,6 +37,7 @@ import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { STORAGE_KEYS } from '../constants/storage'
 
 const Users = () => {
   const { id } = useParams<{ id?: string }>()
@@ -210,8 +211,8 @@ const Users = () => {
       
       const response = await usersApi.loginAs(user.id)
       // Store the new token and reload
-      localStorage.setItem('npm_token', response.token)
-      localStorage.setItem('npm_user', JSON.stringify(response.user))
+      localStorage.setItem(STORAGE_KEYS.TOKEN, response.token)
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user))
       window.location.href = '/'
     } catch (err: unknown) {
       setError(getErrorMessage(err))

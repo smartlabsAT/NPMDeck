@@ -14,6 +14,7 @@ import {
 import { useAuthStore } from '../stores/authStore'
 import api from '../api/config'
 import { getErrorMessage } from '../types/common'
+import { TIMING } from '../constants/timing'
 
 interface UserProfileModalProps {
   open: boolean
@@ -75,7 +76,7 @@ export default function UserProfileModal({ open, onClose, user }: UserProfileMod
       setSuccess(true)
       setTimeout(() => {
         onClose()
-      }, 1500)
+      }, TIMING.MODAL_CLOSE_DELAY)
     } catch (err: unknown) {
       setError(getErrorMessage(err))
     } finally {

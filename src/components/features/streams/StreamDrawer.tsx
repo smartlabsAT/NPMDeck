@@ -21,6 +21,7 @@ import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import { TIMING } from '../../../constants/timing'
 
 interface StreamDrawerProps {
   open: boolean
@@ -176,7 +177,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     },
     autoSave: {
       enabled: true,
-      delay: 3000,
+      delay: TIMING.AUTOSAVE_DELAY,
       onAutoSave: async (_formData) => {
         if (isEditMode && isDirty) {
 

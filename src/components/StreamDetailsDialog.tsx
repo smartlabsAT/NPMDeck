@@ -23,6 +23,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 import OwnerDisplay from './shared/OwnerDisplay'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface StreamDetailsDialogProps {
   open: boolean
@@ -52,7 +53,7 @@ const StreamDetailsDialog = ({
         title={
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <StreamIcon sx={{ color: '#467fcf' }} />
+              <StreamIcon sx={{ color: NAVIGATION_COLORS.info }} />
               <Typography variant="h6">Stream</Typography>
             </Box>
             <Typography variant="body2" sx={{

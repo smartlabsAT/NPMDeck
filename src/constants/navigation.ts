@@ -137,6 +137,8 @@ export const NAVIGATION_COLORS = {
   info: '#467fcf',
   secondary: '#868e96',
   muted: '#6c757d',
+  edit: '#f59f00',
+  dark: '#495c68',
 } as const
 
 export function getNavigationItemByPath(path: string) {

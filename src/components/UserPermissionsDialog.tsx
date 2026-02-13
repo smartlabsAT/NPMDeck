@@ -17,6 +17,7 @@ import {
   Divider,
 } from '@mui/material'
 import { Security as SecurityIcon } from '@mui/icons-material'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 import { usersApi, User } from '../api/users'
 import { getErrorMessage } from '../types/common'
 
@@ -114,7 +115,7 @@ const UserPermissionsDialog = ({ open, onClose, user, onSave }: UserPermissionsD
             alignItems: "center",
             gap: 1
           }}>
-          <SecurityIcon sx={{ color: '#868e96' }} />
+          <SecurityIcon sx={{ color: NAVIGATION_COLORS.secondary }} />
           Edit Permissions
         </Box>
       </DialogTitle>

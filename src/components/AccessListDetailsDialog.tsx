@@ -27,6 +27,7 @@ import { formatDate } from '../utils/dateUtils'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface AccessListDetailsDialogProps {
   open: boolean
@@ -59,7 +60,7 @@ const AccessListDetailsDialog = ({
         title={
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <Security sx={{ color: '#2bcbba' }} />
+              <Security sx={{ color: NAVIGATION_COLORS.primary }} />
               <Typography variant="h6">Access List</Typography>
             </Box>
             <Typography variant="body2" sx={{

@@ -30,6 +30,7 @@ import FileDropzone from './components/FileDropzone'
 import DNSProviderSelector from './components/DNSProviderSelector'
 import { useToast } from '../../../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import { TIMING } from '../../../constants/timing'
 
 interface CertificateDrawerProps {
   open: boolean
@@ -317,7 +318,7 @@ export default function CertificateDrawer({
     },
     autoSave: {
       enabled: true,
-      delay: 3000,
+      delay: TIMING.AUTOSAVE_DELAY,
       onAutoSave: async (data) => {
         if (isEditMode && isDirty && data.provider === 'letsencrypt') {
           // Auto-save Let's Encrypt configuration

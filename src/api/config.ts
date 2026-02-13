@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 import { getAuthStoreApi } from '../contexts/AuthContext'
 import logger from '../utils/logger'
+import { STORAGE_KEYS } from '../constants/storage'
 
 // Get API URL from environment or use default
 // In development, Vite will proxy /api requests to the backend
@@ -37,7 +38,7 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('npm_token')
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -71,7 +72,7 @@ api.interceptors.response.use(
 
     // Don't try to refresh on login endpoint or if no token exists
     const isLoginRequest = originalRequest.url?.includes('/tokens') && originalRequest.method === 'post'
-    const hasToken = !!localStorage.getItem('npm_token')
+    const hasToken = !!localStorage.getItem(STORAGE_KEYS.TOKEN)
     
     if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest && hasToken) {
       // If already refreshing, queue this request
@@ -93,7 +94,7 @@ api.interceptors.response.use(
         api.get('/tokens')
           .then(({ data }) => {
             const newToken = data.token
-            localStorage.setItem('npm_token', newToken)
+            localStorage.setItem(STORAGE_KEYS.TOKEN, newToken)
             
             // Update auth store with new token
             try {
@@ -114,8 +115,8 @@ api.interceptors.response.use(
           })
           .catch((err) => {
             processQueue(err, null)
-            localStorage.removeItem('npm_token')
-            localStorage.removeItem('npm_user')
+            localStorage.removeItem(STORAGE_KEYS.TOKEN)
+            localStorage.removeItem(STORAGE_KEYS.USER)
             
             // Redirect to login immediately
             if (!window.location.pathname.includes('/login')) {

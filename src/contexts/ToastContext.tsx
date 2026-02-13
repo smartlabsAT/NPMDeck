@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { TIMING } from '../constants/timing';
 import { 
   Alert, 
   AlertColor, 
@@ -356,7 +357,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const toast: ToastMessage = {
       ...config,
       id: `${Date.now()}-${Math.random()}`,
-      duration: config.duration || 6000,
+      duration: config.duration || TIMING.TOAST_DEFAULT,
     };
 
     setToasts((prev) => [...prev, toast]);
@@ -412,7 +413,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       entityName,
       entityId,
       action: action as ActionType,
-      duration: 8000, // Longer duration for errors
+      duration: TIMING.TOAST_ERROR, // Longer duration for errors
     });
   }, [showToast]);
 

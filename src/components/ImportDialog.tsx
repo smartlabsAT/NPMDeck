@@ -45,6 +45,7 @@ import { accessListsApi } from '../api/accessLists'
 import { getErrorMessage } from '../types/common'
 import { ProxyHost } from '../api/proxyHosts'
 import { RedirectionHost } from '../api/redirectionHosts'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface ImportDialogProps {
   open: boolean
@@ -203,7 +204,7 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
             alignItems: "center",
             gap: 1
           }}>
-          <FileUploadIcon sx={{ color: '#467fcf' }} />
+          <FileUploadIcon sx={{ color: NAVIGATION_COLORS.info }} />
           Import Configuration
         </Box>
       </DialogTitle>

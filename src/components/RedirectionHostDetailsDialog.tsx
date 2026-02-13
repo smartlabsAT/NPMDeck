@@ -30,6 +30,7 @@ import { getStatusColor, getStatusText } from '../utils/statusUtils'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface RedirectionHostDetailsDialogProps {
   open: boolean
@@ -66,7 +67,7 @@ export default function RedirectionHostDetailsDialog({
       title={
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <RedirectIcon sx={{ color: '#f1c40f' }} />
+            <RedirectIcon sx={{ color: NAVIGATION_COLORS.warning }} />
             <Typography variant="h6">Redirection Host</Typography>
           </Box>
           <Typography variant="body2" sx={{

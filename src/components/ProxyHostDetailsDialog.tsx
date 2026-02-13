@@ -30,6 +30,7 @@ import ProxyHostAdvancedPanel from './features/proxy-hosts/ProxyHostAdvancedPane
 import ProxyHostConnectionsPanel from './features/proxy-hosts/ProxyHostConnectionsPanel'
 import ProxyHostAccessPanel from './features/proxy-hosts/ProxyHostAccessPanel'
 import ProxyHostActions from './features/proxy-hosts/ProxyHostActions'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface ProxyHostDetailsDialogProps {
   open: boolean
@@ -190,7 +191,7 @@ const ProxyHostDetailsDialog = ({
       title={
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <SwapHorizIcon sx={{ color: '#5eba00' }} />
+            <SwapHorizIcon sx={{ color: NAVIGATION_COLORS.success }} />
             <Typography variant="h6">Proxy Host</Typography>
           </Box>
           <Typography variant="body2" sx={{

@@ -22,6 +22,7 @@ import {
   FileDownload as FileDownloadIcon,
 } from '@mui/icons-material'
 import { ImportExportService, ExportType } from '../services/importExport'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface ExportDialogProps {
   open: boolean
@@ -91,7 +92,7 @@ export default function ExportDialog({
             alignItems: "center",
             gap: 1
           }}>
-          <FileDownloadIcon sx={{ color: '#467fcf' }} />
+          <FileDownloadIcon sx={{ color: NAVIGATION_COLORS.info }} />
           Export {itemName}{isSingleItem ? '' : `s (${itemCount} items)`}
         </Box>
       </DialogTitle>

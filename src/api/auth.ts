@@ -1,5 +1,6 @@
 import api from './config'
 import { User } from './users'
+import { STORAGE_KEYS } from '../constants/storage'
 
 export interface LoginCredentials {
   identity: string
@@ -37,7 +38,7 @@ export const authApi = {
 
   // Logout (client-side only)
   logout: () => {
-    localStorage.removeItem('npm_token')
-    localStorage.removeItem('npm_user')
+    localStorage.removeItem(STORAGE_KEYS.TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.USER)
   }
 }

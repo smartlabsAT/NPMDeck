@@ -36,6 +36,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 import TabPanel from './shared/TabPanel'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface DeadHostDetailsDialogProps {
   open: boolean
@@ -91,7 +92,7 @@ const DeadHostDetailsDialog = ({
       title={
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <BlockIcon sx={{ color: '#cd201f' }} />
+            <BlockIcon sx={{ color: NAVIGATION_COLORS.danger }} />
             <Typography variant="h6">404 Host</Typography>
           </Box>
           <Typography variant="body2" sx={{

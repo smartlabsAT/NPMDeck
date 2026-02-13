@@ -45,6 +45,7 @@ import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { extractBaseDomain } from '../utils/domainUtils'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
+import { STORAGE_KEYS } from '../constants/storage'
 
 const Certificates = () => {
   const { id, provider } = useParams<{ id?: string; provider?: string }>()
@@ -359,7 +360,7 @@ const Certificates = () => {
       return extractBaseDomain(certName, { parseCompoundNames: true })
     },
     groupLabel: (_groupId) => 'Domain',
-    defaultEnabled: localStorage.getItem('npm.certificates.groupByDomain') === 'true',
+    defaultEnabled: localStorage.getItem(STORAGE_KEYS.CERT_GROUP_BY_DOMAIN) === 'true',
     defaultExpanded: true,
     groupHeaderRender: (groupId, _items, _isExpanded) => (
       <Box

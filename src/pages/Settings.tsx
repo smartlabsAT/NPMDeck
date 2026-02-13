@@ -58,7 +58,7 @@ import 'prismjs/components/prism-markup'
 import { settingsApi, Setting } from '../api/settings'
 import PageHeader from '../components/PageHeader'
 import TabPanel from '../components/shared/TabPanel'
-import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { NAVIGATION_CONFIG, NAVIGATION_COLORS } from '../constants/navigation'
 import FormSection from '../components/shared/FormSection'
 import { useUISettingsStore } from '../stores/uiSettingsStore'
 import { usePermissions } from '../hooks/usePermissions'
@@ -393,13 +393,13 @@ const DEFAULT_SITE_OPTIONS: DefaultSiteOption[] = [
 
 // Resource icons mapping with navigation colors
 const RESOURCE_ICONS: Record<string, React.ReactNode> = {
-  proxy_hosts: <ProxyIcon sx={{ color: '#5eba00' }} />,
-  redirection_hosts: <RedirectIcon sx={{ color: '#f1c40f' }} />,
-  dead_hosts: <DeadIcon sx={{ color: '#cd201f' }} />,
-  streams: <StreamIcon sx={{ color: '#467fcf' }} />,
-  access_lists: <AccessListIcon sx={{ color: '#2bcbba' }} />,
-  certificates: <CertificateIcon sx={{ color: '#467fcf' }} />,
-  users: <UserIcon sx={{ color: '#868e96' }} />,
+  proxy_hosts: <ProxyIcon sx={{ color: NAVIGATION_COLORS.success }} />,
+  redirection_hosts: <RedirectIcon sx={{ color: NAVIGATION_COLORS.warning }} />,
+  dead_hosts: <DeadIcon sx={{ color: NAVIGATION_COLORS.danger }} />,
+  streams: <StreamIcon sx={{ color: NAVIGATION_COLORS.info }} />,
+  access_lists: <AccessListIcon sx={{ color: NAVIGATION_COLORS.primary }} />,
+  certificates: <CertificateIcon sx={{ color: NAVIGATION_COLORS.info }} />,
+  users: <UserIcon sx={{ color: NAVIGATION_COLORS.secondary }} />,
 }
 
 const Settings = () => {
@@ -871,7 +871,7 @@ const Settings = () => {
                         {/* View Details Setting */}
                         <Box sx={{ mb: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                            <ViewIcon fontSize="small" sx={{ color: '#467fcf' }} />
+                            <ViewIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.info }} />
                             <Typography variant="body2" sx={{
                               fontWeight: "medium"
                             }}>
@@ -898,7 +898,7 @@ const Settings = () => {
                         {/* Edit Setting */}
                         <Box sx={{ mb: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                            <EditIcon fontSize="small" sx={{ color: '#f59f00' }} />
+                            <EditIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.edit }} />
                             <Typography variant="body2" sx={{
                               fontWeight: "medium"
                             }}>
@@ -931,7 +931,7 @@ const Settings = () => {
                         {/* Create New Setting */}
                         <Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                            <AddIcon fontSize="small" sx={{ color: '#5eba00' }} />
+                            <AddIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.success }} />
                             <Typography variant="body2" sx={{
                               fontWeight: "medium"
                             }}>
@@ -980,7 +980,7 @@ const Settings = () => {
                             justifyContent: "center",
                             gap: 0.5
                           }}>
-                          <ViewIcon fontSize="small" sx={{ color: '#467fcf' }} />
+                          <ViewIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.info }} />
                           View Details
                         </Box>
                       </TableCell>
@@ -992,7 +992,7 @@ const Settings = () => {
                             justifyContent: "center",
                             gap: 0.5
                           }}>
-                          <EditIcon fontSize="small" sx={{ color: '#f59f00' }} />
+                          <EditIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.edit }} />
                           Edit
                         </Box>
                       </TableCell>
@@ -1004,7 +1004,7 @@ const Settings = () => {
                             justifyContent: "center",
                             gap: 0.5
                           }}>
-                          <AddIcon fontSize="small" sx={{ color: '#5eba00' }} />
+                          <AddIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.success }} />
                           Create New
                         </Box>
                       </TableCell>
