@@ -14,14 +14,14 @@ import {
   Search as SearchIcon,
   Clear as ClearIcon,
 } from '@mui/icons-material'
-import { Filter } from './types'
+import { Filter, FilterValue } from './types'
 
 interface DataTableToolbarProps {
   searchQuery: string
   onSearch: (query: string) => void
   filters: Filter[]
-  activeFilters: Record<string, any>
-  onFilter: (filterId: string, value: any) => void
+  activeFilters: Record<string, FilterValue>
+  onFilter: (filterId: string, value: FilterValue) => void
   _onClearFilters: () => void
   _hasActiveFilters: boolean
   searchable: boolean
@@ -105,7 +105,7 @@ export default function DataTableToolbar({
           )}
 
           {filters.map((filter) => {
-            const currentValue = activeFilters[filter.id] ?? filter.defaultValue ?? ''
+            const currentValue = String(activeFilters[filter.id] ?? filter.defaultValue ?? '')
             const hasValue = currentValue !== ''
             
             return (

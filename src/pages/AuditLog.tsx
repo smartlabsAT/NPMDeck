@@ -315,7 +315,7 @@ const AuditLog = () => {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (_, entry) => (
-        <ActionChip action={entry.action as any} />
+        <ActionChip action={entry.action} />
       ),
     },
     {
@@ -355,12 +355,12 @@ const AuditLog = () => {
       render: (date) => (
         <Box>
           <Typography variant="body2">
-            {format(new Date(date), 'MMM d, yyyy')}
+            {format(new Date(date as string), 'MMM d, yyyy')}
           </Typography>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            {format(new Date(date), 'h:mm a')}
+            {format(new Date(date as string), 'h:mm a')}
           </Typography>
         </Box>
       ),
@@ -509,7 +509,7 @@ const AuditLog = () => {
                     <Typography variant="body2" sx={{
                       color: "text.secondary"
                     }}>Action:</Typography>
-                    <ActionChip action={selectedEntry.action as any} />
+                    <ActionChip action={selectedEntry.action} />
                     
                     <Typography variant="body2" sx={{
                       color: "text.secondary"

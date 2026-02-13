@@ -304,14 +304,17 @@ const Users = () => {
       sortable: true,
       priority: 'P1' as ColumnPriority, // Essential - always visible (important for permissions)
       showInCard: true,
-      render: (roles) => (
-        <Chip
-          size="small"
-          label={getRoleDisplay(roles)}
-          color={roles.includes('admin') ? 'primary' : 'default'}
-          icon={roles.includes('admin') ? <AdminIcon /> : <UserIcon />}
-        />
-      ),
+      render: (value) => {
+        const roles = value as string[]
+        return (
+          <Chip
+            size="small"
+            label={getRoleDisplay(roles)}
+            color={roles.includes('admin') ? 'primary' : 'default'}
+            icon={roles.includes('admin') ? <AdminIcon /> : <UserIcon />}
+          />
+        )
+      },
     },
     {
       id: 'status',
@@ -338,7 +341,7 @@ const Users = () => {
       sortable: true,
       priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
       showInCard: false,
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: (date) => new Date(date as string).toLocaleDateString(),
     },
     // TODO: Enable when last_login is available in API
     // {

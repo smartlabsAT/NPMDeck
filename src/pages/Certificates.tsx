@@ -285,7 +285,7 @@ const Certificates = () => {
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          {value} hosts
+          {value as React.ReactNode} hosts
         </Typography>
       )
     },

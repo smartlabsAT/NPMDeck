@@ -38,7 +38,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
-import { Filter, BulkAction } from '../components/DataTable/types'
+import { Filter, FilterValue, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
 
@@ -366,7 +366,7 @@ export default function DeadHosts() {
   ]
 
   // Custom filter function for DataTable
-  const filterFunction = (item: DeadHost, activeFilters: Record<string, any>) => {
+  const filterFunction = (item: DeadHost, activeFilters: Record<string, FilterValue>) => {
     // SSL filter
     if (activeFilters.ssl && activeFilters.ssl !== 'all') {
       if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false

@@ -108,7 +108,7 @@ export function DataTable<T extends object>({
   const visibleColumns = React.useMemo(() => {
     if (!responsive) return columns
     // Check if columns have priority properties
-    const hasResponsiveColumns = columns.some((col: any) => col.priority)
+    const hasResponsiveColumns = columns.some((col) => 'priority' in col && col.priority)
     if (!hasResponsiveColumns) return columns
     return getVisibleColumns(columns as ResponsiveTableColumn<T>[], mode)
   }, [columns, mode, responsive])
@@ -413,7 +413,7 @@ export function DataTable<T extends object>({
                           const value = column.accessor(item)
                           return (
                             <TableCell key={column.id} align={column.align || 'left'}>
-                              {column.render ? column.render(value, item) : value}
+                              {column.render ? column.render(value, item) : value as React.ReactNode}
                             </TableCell>
                           )
                         })}
@@ -453,7 +453,7 @@ export function DataTable<T extends object>({
                       const value = column.accessor(item)
                       return (
                         <TableCell key={column.id} align={column.align || 'left'}>
-                          {column.render ? column.render(value, item) : value}
+                          {column.render ? column.render(value, item) : value as React.ReactNode}
                         </TableCell>
                       )
                     })}
