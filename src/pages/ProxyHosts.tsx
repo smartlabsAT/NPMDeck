@@ -44,6 +44,7 @@ import { Filter, FilterValue, BulkAction, GroupConfig } from '../components/Data
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { extractBaseDomain } from '../utils/domainUtils'
 import { getStatusIcon } from '../utils/statusUtils'
+import logger from '../utils/logger'
 
 export default function ProxyHosts() {
   const { id } = useParams<{ id?: string }>()
@@ -107,7 +108,7 @@ export default function ProxyHosts() {
         }
       } else if (hosts.length > 0) {
         // Host not found after loading (but other hosts exist)
-        console.error(`Proxy host with id ${id} not found`)
+        logger.error(`Proxy host with id ${id} not found`)
         navigate('/hosts/proxy')
       }
       // If hosts.length === 0, we'll wait for hosts to load
@@ -203,7 +204,7 @@ export default function ProxyHosts() {
       setHostToDelete(null)
     } catch (err: unknown) {
       showError('proxy-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
-      console.error('Failed to delete host:', err)
+      logger.error('Failed to delete host:', err)
     }
   }
 

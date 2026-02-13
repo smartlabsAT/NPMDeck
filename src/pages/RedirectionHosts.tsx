@@ -46,6 +46,7 @@ import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { extractBaseDomain } from '../utils/domainUtils'
 import { getHttpStatusLabel } from '../utils/httpUtils'
 import { getStatusIcon } from '../utils/statusUtils'
+import logger from '../utils/logger'
 
 export default function RedirectionHosts() {
   const { id } = useParams<{ id?: string }>()
@@ -109,7 +110,7 @@ export default function RedirectionHosts() {
         }
       } else if (hosts.length > 0) {
         // Host not found after loading (but other hosts exist)
-        console.error(`Redirection host with id ${id} not found`)
+        logger.error(`Redirection host with id ${id} not found`)
         navigate('/hosts/redirection')
       }
       // If hosts.length === 0, we'll wait for hosts to load
@@ -203,7 +204,7 @@ export default function RedirectionHosts() {
       setHostToDelete(null)
     } catch (err: unknown) {
       showError('redirection-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
-      console.error('Failed to delete redirection host:', err)
+      logger.error('Failed to delete redirection host:', err)
     }
   }
 

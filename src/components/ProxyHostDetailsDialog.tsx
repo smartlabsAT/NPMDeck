@@ -19,6 +19,7 @@ import {
 import { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { AccessList, accessListsApi } from '../api/accessLists'
+import logger from '../utils/logger'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import { usePermissions } from '../hooks/usePermissions'
@@ -117,7 +118,7 @@ const ProxyHostDetailsDialog = ({
       
       setLinkedRedirections(linkedRedirects)
     } catch (error) {
-      console.error('Failed to load connections:', error)
+      logger.error('Failed to load connections:', error)
     } finally {
       setLoadingConnections(false)
     }
@@ -131,7 +132,7 @@ const ProxyHostDetailsDialog = ({
       const data = await accessListsApi.getById(host.access_list.id, ['items', 'clients', 'owner'])
       setFullAccessList(data)
     } catch (error) {
-      console.error('Failed to load access list details:', error)
+      logger.error('Failed to load access list details:', error)
     } finally {
       setLoadingAccessList(false)
     }

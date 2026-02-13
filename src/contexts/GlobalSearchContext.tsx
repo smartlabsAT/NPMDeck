@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import logger from '../utils/logger'
 import { TIMING } from '../constants/timing'
 import { usePermissions } from '../hooks/usePermissions'
 import { proxyHostsApi } from '../api/proxyHosts'
@@ -88,7 +89,7 @@ export const GlobalSearchProvider = ({ children }: GlobalSearchProviderProps) =>
         const data = await loader()
         return data
       } catch (error) {
-        console.error(`Failed to load ${type}:`, error)
+        logger.error(`Failed to load ${type}:`, error)
         return []
       } finally {
         setSearchState(prev => ({

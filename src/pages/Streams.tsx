@@ -40,6 +40,7 @@ import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/R
 import { Filter, FilterValue, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
+import logger from '../utils/logger'
 
 export default function Streams() {
   const navigate = useNavigate()
@@ -132,7 +133,7 @@ export default function Streams() {
     } catch (err: unknown) {
       const streamName = streamToDelete ? `${streamToDelete.incoming_port}/${streamToDelete.tcp_forwarding ? 'TCP' : ''}${streamToDelete.udp_forwarding ? 'UDP' : ''}` : undefined
       showError('stream', 'delete', err instanceof Error ? err.message : 'Unknown error', streamName, streamToDelete?.id)
-      console.error('Failed to delete stream:', err)
+      logger.error('Failed to delete stream:', err)
     }
   }
 

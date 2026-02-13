@@ -25,6 +25,7 @@ import DomainInput from '../../DomainInput'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import logger from '../../../utils/logger'
 
 interface DeadHostDrawerProps {
   open: boolean
@@ -147,7 +148,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       const certs = await certificatesApi.getAll()
       setCertificates(certs)
     } catch (err: unknown) {
-      console.error('Failed to load certificates:', err)
+      logger.error('Failed to load certificates:', err)
     } finally {
       setLoadingCertificates(false)
     }

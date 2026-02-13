@@ -41,6 +41,7 @@ import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/R
 import { Filter, FilterValue, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
+import logger from '../utils/logger'
 
 export default function DeadHosts() {
   const { id } = useParams<{ id?: string }>()
@@ -104,7 +105,7 @@ export default function DeadHosts() {
         }
       } else if (hosts.length > 0) {
         // Host not found after loading (but other hosts exist)
-        console.error(`404 host with id ${id} not found`)
+        logger.error(`404 host with id ${id} not found`)
         navigate('/hosts/404')
       }
       // If hosts.length === 0, we'll wait for hosts to load
@@ -184,7 +185,7 @@ export default function DeadHosts() {
       setHostToDelete(null)
     } catch (err: unknown) {
       showError('dead-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
-      console.error('Failed to delete 404 host:', err)
+      logger.error('Failed to delete 404 host:', err)
     }
   }
 

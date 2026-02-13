@@ -13,6 +13,7 @@ import {
 import { useAuthStore } from '../stores/authStore'
 import { getErrorMessage } from '../types/common'
 import UserProfileModal from '../components/UserProfileModal'
+import logger from '../utils/logger'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -62,7 +63,7 @@ const Login = () => {
       }
     } catch (error: unknown) {
       // Error is handled in the store, but also set local error as fallback
-      console.error('Login error:', error)
+      logger.error('Login error:', error)
       const errorMessage = getErrorMessage(error)
       setLocalError(errorMessage)
     }

@@ -23,6 +23,7 @@ import {
 } from '@mui/icons-material'
 import { ImportExportService, ExportType } from '../services/importExport'
 import { NAVIGATION_COLORS } from '../constants/navigation'
+import logger from '../utils/logger'
 
 interface ExportDialogProps {
   open: boolean
@@ -64,7 +65,7 @@ export default function ExportDialog({
       ImportExportService.downloadExport(exportData, filename || defaultFilename)
       onClose()
     } catch (error) {
-      console.error('Export failed:', error)
+      logger.error('Export failed:', error)
     }
   }
 
