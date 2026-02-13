@@ -31,29 +31,11 @@ import {
   Settings as SettingsIcon,
 } from '@mui/icons-material'
 import { DeadHost } from '../api/deadHosts'
+import { formatDate } from '../utils/dateUtils'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
-
-interface TabPanelProps {
-  children?: React.ReactNode
-  index: number
-  value: number
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`dead-host-tabpanel-${index}`}
-      aria-labelledby={`dead-host-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
-    </div>
-  )
-}
+import TabPanel from './shared/TabPanel'
 
 interface DeadHostDetailsDialogProps {
   open: boolean
@@ -71,7 +53,7 @@ const DeadHostDetailsDialog = ({
   const navigate = useNavigate()
   const location = useLocation()
   const [activeTab, setActiveTab] = useState(0)
-  const [copiedText, setCopiedText] = useState<string>('')
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
   // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Parse tab from URL
@@ -91,23 +73,6 @@ const DeadHostDetailsDialog = ({
   }, [location.pathname, open, host])
 
   if (!host) return null
-
-  const copyToClipboard = (text: string, label?: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedText(label || text)
-    setTimeout(() => setCopiedText(''), 2000)
-  }
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
@@ -175,7 +140,7 @@ const DeadHostDetailsDialog = ({
           </Alert>
         )}
 
-        <TabPanel value={activeTab} index={0}>
+        <TabPanel value={activeTab} index={0} animation="none" padding={0} sx={{ py: 2 }}>
           {/* Overview Tab */}
           {/* Status Overview */}
           <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: 'background.default' }}>
@@ -590,7 +555,7 @@ const DeadHostDetailsDialog = ({
           </Grid>
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={1} animation="none" padding={0} sx={{ py: 2 }}>
           {/* Advanced Tab */}
           {host.advanced_config ? (
             <Paper variant="outlined" sx={{ p: 2 }}>

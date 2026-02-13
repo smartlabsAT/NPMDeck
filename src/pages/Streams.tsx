@@ -16,7 +16,6 @@ import {
   Power as PowerIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
-  Error as ErrorIcon,
   Sync as ProtocolIcon,
   PlayArrow as IncomingIcon,
   TrendingFlat as ForwardIcon,
@@ -40,6 +39,7 @@ import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { getStatusIcon } from '../utils/statusUtils'
 
 export default function Streams() {
   const navigate = useNavigate()
@@ -173,16 +173,6 @@ export default function Streams() {
 
   // Apply visibility filtering
   const visibleStreams = useFilteredData(optimisticStreams)
-
-  const getStatusIcon = (stream: Stream) => {
-    if (!stream.enabled) {
-      return <Tooltip title="Disabled"><CancelIcon color="disabled" /></Tooltip>
-    }
-    if (stream.meta.nginx_online === false) {
-      return <Tooltip title="Offline"><ErrorIcon color="error" /></Tooltip>
-    }
-    return <Tooltip title="Online"><CheckIcon color="success" /></Tooltip>
-  }
 
   const getProtocolChips = (stream: Stream) => {
     const chips = []

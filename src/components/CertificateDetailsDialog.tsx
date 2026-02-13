@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Typography,
   Box,
@@ -14,9 +14,11 @@ import {
 } from '@mui/icons-material'
 import { Certificate } from '../api/certificates'
 import { CertificateWithHosts } from '../types/common'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import { usePermissions } from '../hooks/usePermissions'
 import AdaptiveContainer from './AdaptiveContainer'
+import TabPanel from './shared/TabPanel'
 import CertificateInfoPanel from './features/certificates/CertificateInfoPanel'
 import CertificateHostsPanel from './features/certificates/CertificateHostsPanel'
 import CertificateActions from './features/certificates/CertificateActions'
@@ -26,27 +28,6 @@ interface CertificateDetailsDialogProps {
   onClose: () => void
   certificate: Certificate | null
   onEdit?: (certificate: Certificate) => void
-}
-
-interface TabPanelProps {
-  children?: React.ReactNode
-  index: number
-  value: number
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`certificate-tabpanel-${index}`}
-      aria-labelledby={`certificate-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
-    </div>
-  )
 }
 
 const CertificateDetailsDialog = ({
@@ -59,7 +40,7 @@ const CertificateDetailsDialog = ({
   const location = useLocation()
   const { } = usePermissions() // eslint-disable-line no-empty-pattern
   const [activeTab, setActiveTab] = useState(0)
-  const [copiedText, setCopiedText] = useState<string>('')
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     domains: true,
     hosts: false,
@@ -83,12 +64,6 @@ const CertificateDetailsDialog = ({
   }, [location.pathname, open, certificate])
 
   if (!certificate) return null
-
-  const copyToClipboard = (text: string, label?: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedText(label || text)
-    setTimeout(() => setCopiedText(''), 2000)
-  }
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
@@ -152,7 +127,7 @@ const CertificateDetailsDialog = ({
           </Alert>
         )}
 
-        <TabPanel value={activeTab} index={0}>
+        <TabPanel value={activeTab} index={0} animation="none" padding={0} sx={{ py: 2 }}>
           <CertificateInfoPanel
             certificate={certificate}
             expandedSections={expandedSections}
@@ -161,7 +136,7 @@ const CertificateDetailsDialog = ({
           />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={1} animation="none" padding={0} sx={{ py: 2 }}>
           <CertificateHostsPanel
             certificate={certificate as CertificateWithHosts}
             onNavigateToHost={handleNavigateToHost}

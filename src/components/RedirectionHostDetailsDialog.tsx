@@ -25,6 +25,9 @@ import {
   Info as InfoIcon,
 } from '@mui/icons-material'
 import { RedirectionHost } from '../api/redirectionHosts'
+import { getHttpStatusLabel } from '../utils/httpUtils'
+import { getStatusColor, getStatusText } from '../utils/statusUtils'
+import { getDaysUntilExpiry } from '../utils/dateUtils'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 
@@ -44,39 +47,6 @@ export default function RedirectionHostDetailsDialog({
   // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   if (!host) return null
-
-  const getHttpStatusLabel = (code: number): string => {
-    const statusMap: { [key: number]: string } = {
-      300: '300 Multiple Choices',
-      301: '301 Moved Permanently',
-      302: '302 Found',
-      303: '303 See Other',
-      307: '307 Temporary Redirect',
-      308: '308 Permanent Redirect',
-    }
-    return statusMap[code] || code.toString()
-  }
-
-  const getStatusColor = (enabled: boolean, online?: boolean) => {
-    if (!enabled) return 'default'
-    if (online === false) return 'error'
-    return 'success'
-  }
-
-  const getStatusText = (enabled: boolean, online?: boolean) => {
-    if (!enabled) return 'Disabled'
-    if (online === false) return 'Offline'
-    return 'Online'
-  }
-
-  const getDaysUntilExpiry = (expiresOn: string | null) => {
-    if (!expiresOn) return null
-    const expiryDate = new Date(expiresOn)
-    const today = new Date()
-    const diffTime = expiryDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
 
   const getCertificateStatus = () => {
     if (!host.certificate?.expires_on) return null
@@ -144,8 +114,8 @@ export default function RedirectionHostDetailsDialog({
               }}>
               <Chip
                 icon={host.enabled ? <CheckCircleIcon /> : <CancelIcon />}
-                label={getStatusText(host.enabled, host.meta.nginx_online)}
-                color={getStatusColor(host.enabled, host.meta.nginx_online)}
+                label={getStatusText(host)}
+                color={getStatusColor(host)}
               />
               {host.meta.nginx_err && (
                 <Alert severity="error" sx={{ flexGrow: 1 }}>

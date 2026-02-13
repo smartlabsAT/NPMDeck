@@ -38,6 +38,7 @@ import { useDashboardStats } from '../hooks/useDashboardStats'
 import { usePermissions } from '../hooks/usePermissions'
 import PermissionButton from '../components/PermissionButton'
 import { Resource } from '../types/permissions'
+import { getDaysUntilExpiry } from '../utils/dateUtils'
 
 interface StatCardProps {
   title: string
@@ -133,15 +134,6 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
       </CardContent>
     </Card>
   );
-}
-
-const getDaysUntilExpiry = (expiresOn: string | null) => {
-  if (!expiresOn) return null
-  const expiryDate = new Date(expiresOn)
-  const today = new Date()
-  const diffTime = expiryDate.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
 }
 
 const getGreeting = () => {

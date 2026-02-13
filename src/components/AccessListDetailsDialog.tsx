@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Button,
   Typography,
@@ -24,6 +23,8 @@ import {
   Security,
 } from '@mui/icons-material'
 import { AccessList } from '../api/accessLists'
+import { formatDate } from '../utils/dateUtils'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 
@@ -40,20 +41,10 @@ const AccessListDetailsDialog = ({
   accessList,
   onEdit,
 }: AccessListDetailsDialogProps) => {
-  const [copiedText, setCopiedText] = useState<string>('')
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
   // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   if (!accessList) return null
-
-  const copyToClipboard = (text: string, label?: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedText(label || text)
-    setTimeout(() => setCopiedText(''), 2000)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
-  }
 
   const hasAuthUsers = accessList.items && accessList.items.length > 0
   const hasAccessRules = accessList.clients && accessList.clients.length > 0

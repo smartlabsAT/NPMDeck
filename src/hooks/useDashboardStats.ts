@@ -6,6 +6,7 @@ import { streamsApi } from '../api/streams'
 import { certificatesApi, Certificate } from '../api/certificates'
 import { accessListsApi } from '../api/accessLists'
 import { usePermissions } from './usePermissions'
+import { getDaysUntilExpiry } from '../utils/dateUtils'
 
 export interface DashboardStats {
   proxyHosts: {
@@ -40,15 +41,6 @@ export interface DashboardStats {
   expiringCertificates: Certificate[]
   loading: boolean
   error: string | null
-}
-
-const getDaysUntilExpiry = (expiresOn: string | null) => {
-  if (!expiresOn) return null
-  const expiryDate = new Date(expiresOn)
-  const today = new Date()
-  const diffTime = expiryDate.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
 }
 
 export const useDashboardStats = () => {

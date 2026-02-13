@@ -43,43 +43,8 @@ import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
-
-// Helper to extract base domain for grouping
-const extractBaseDomain = (name: string): string => {
-  // First, try to extract domain from name (before any separators)
-  const separators = [' - ', ' – ', ' — ', ' | ', ' / ', ' \\ ']
-  let domainPart = name
-  for (const sep of separators) {
-    if (name.includes(sep)) {
-      domainPart = name.split(sep)[0].trim()
-      break
-    }
-  }
-  
-  // Now extract the base domain from the domain part
-  // Match domain pattern
-  const domainMatch = domainPart.match(/([a-zA-Z0-9][a-zA-Z0-9-]*\.)*([a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,})/)
-  if (domainMatch && domainMatch[2]) {
-    // Return the base domain (e.g., "mcp.dev" from "api.mcp.dev")
-    return domainMatch[2]
-  }
-  
-  // If it looks like a domain, try to extract base domain
-  if (domainPart.includes('.')) {
-    const parts = domainPart.split('.')
-    if (parts.length > 2) {
-      // Check for common second-level domains like .co.uk
-      const secondLevel = parts[parts.length - 2]
-      if (['co', 'com', 'net', 'org', 'gov', 'edu'].includes(secondLevel) && parts.length > 3) {
-        return parts.slice(-3).join('.')
-      }
-      return parts.slice(-2).join('.')
-    }
-    return domainPart
-  }
-  
-  return name
-}
+import { extractBaseDomain } from '../utils/domainUtils'
+import { getDaysUntilExpiry } from '../utils/dateUtils'
 
 const Certificates = () => {
   const { id, provider } = useParams<{ id?: string; provider?: string }>()
@@ -227,15 +192,6 @@ const Certificates = () => {
   }
 
 
-
-  const getDaysUntilExpiry = (expiresOn: string | null) => {
-    if (!expiresOn) return null
-    const expiryDate = new Date(expiresOn)
-    const today = new Date()
-    const diffTime = expiryDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
 
   const getExpiryChip = (cert: Certificate) => {
     const daysUntilExpiry = getDaysUntilExpiry(cert.expires_on)
@@ -400,7 +356,7 @@ const Certificates = () => {
   const groupConfig: GroupConfig<Certificate> = {
     groupBy: (cert) => {
       const certName = cert.nice_name || cert.domain_names[0] || 'Unknown'
-      return extractBaseDomain(certName)
+      return extractBaseDomain(certName, { parseCompoundNames: true })
     },
     groupLabel: (_groupId) => 'Domain',
     defaultEnabled: localStorage.getItem('npm.certificates.groupByDomain') === 'true',

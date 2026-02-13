@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Typography,
   Box,
@@ -19,36 +19,17 @@ import {
 import { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { AccessList, accessListsApi } from '../api/accessLists'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import { usePermissions } from '../hooks/usePermissions'
 import AdaptiveContainer from './AdaptiveContainer'
+import TabPanel from './shared/TabPanel'
 import ProxyHostInfoPanel from './features/proxy-hosts/ProxyHostInfoPanel'
 import ProxyHostSSLPanel from './features/proxy-hosts/ProxyHostSSLPanel'
 import ProxyHostAdvancedPanel from './features/proxy-hosts/ProxyHostAdvancedPanel'
 import ProxyHostConnectionsPanel from './features/proxy-hosts/ProxyHostConnectionsPanel'
 import ProxyHostAccessPanel from './features/proxy-hosts/ProxyHostAccessPanel'
 import ProxyHostActions from './features/proxy-hosts/ProxyHostActions'
-
-interface TabPanelProps {
-  children?: React.ReactNode
-  index: number
-  value: number
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`proxy-host-tabpanel-${index}`}
-      aria-labelledby={`proxy-host-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
-    </div>
-  )
-}
 
 interface ProxyHostDetailsDialogProps {
   open: boolean
@@ -67,7 +48,7 @@ const ProxyHostDetailsDialog = ({
   const location = useLocation()
   const { } = usePermissions() // eslint-disable-line no-empty-pattern
   const [activeTab, setActiveTab] = useState(0)
-  const [copiedText, setCopiedText] = useState<string>('')
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     config: true,
     ssl: false,
@@ -156,12 +137,6 @@ const ProxyHostDetailsDialog = ({
   }
 
   if (!host) return null
-
-  const copyToClipboard = (text: string, label?: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedText(label || text)
-    setTimeout(() => setCopiedText(''), 2000)
-  }
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
@@ -263,7 +238,7 @@ const ProxyHostDetailsDialog = ({
           </Alert>
         )}
 
-        <TabPanel value={activeTab} index={0}>
+        <TabPanel value={activeTab} index={0} animation="none" padding={0} sx={{ py: 2 }}>
           <ProxyHostInfoPanel
             host={host}
             expandedSections={expandedSections}
@@ -274,18 +249,18 @@ const ProxyHostDetailsDialog = ({
           />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={1} animation="none" padding={0} sx={{ py: 2 }}>
           <ProxyHostSSLPanel
             host={host}
             onNavigateToCertificate={handleNavigateToCertificate}
           />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={2}>
+        <TabPanel value={activeTab} index={2} animation="none" padding={0} sx={{ py: 2 }}>
           <ProxyHostAdvancedPanel host={host} />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={3}>
+        <TabPanel value={activeTab} index={3} animation="none" padding={0} sx={{ py: 2 }}>
           <ProxyHostConnectionsPanel
             linkedRedirections={linkedRedirections}
             loadingConnections={loadingConnections}
@@ -295,7 +270,7 @@ const ProxyHostDetailsDialog = ({
         </TabPanel>
 
         {host.access_list && (
-          <TabPanel value={activeTab} index={4}>
+          <TabPanel value={activeTab} index={4} animation="none" padding={0} sx={{ py: 2 }}>
             <ProxyHostAccessPanel
               host={host}
               fullAccessList={fullAccessList}

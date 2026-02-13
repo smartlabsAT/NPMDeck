@@ -13,7 +13,6 @@ import {
   Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
-  Error as ErrorIcon,
   PowerSettingsNew as PowerIcon,
   Language as LanguageIcon,
   Lock as LockIcon,
@@ -41,6 +40,7 @@ import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { getStatusIcon } from '../utils/statusUtils'
 
 export default function DeadHosts() {
   const { id } = useParams<{ id?: string }>()
@@ -188,16 +188,6 @@ export default function DeadHosts() {
 
   // Apply visibility filtering
   const visibleHosts = useFilteredData(optimisticHosts)
-
-  const getStatusIcon = (host: DeadHost) => {
-    if (!host.enabled) {
-      return <Tooltip title="Disabled"><CancelIcon color="disabled" /></Tooltip>
-    }
-    if (host.meta.nginx_online === false) {
-      return <Tooltip title={host.meta.nginx_err || 'Offline'}><ErrorIcon color="error" /></Tooltip>
-    }
-    return <Tooltip title="Online"><CheckCircleIcon color="success" /></Tooltip>
-  }
 
   // Column definitions for DataTable with responsive priorities
   const columns: ResponsiveTableColumn<DeadHost>[] = [
