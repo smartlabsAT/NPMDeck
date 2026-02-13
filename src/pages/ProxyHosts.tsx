@@ -1,5 +1,5 @@
 import { getErrorMessage } from '../types/common'
-import React, { useState, useEffect, useOptimistic } from 'react'
+import React, { useState, useEffect, useOptimistic, startTransition } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -149,27 +149,29 @@ export default function ProxyHosts() {
     }
   }
 
-  const handleToggleEnabled = async (host: ProxyHost) => {
-    // Optimistic update - UI changes instantly
-    setOptimisticHost({ id: host.id, enabled: !host.enabled })
+  const handleToggleEnabled = (host: ProxyHost) => {
+    startTransition(async () => {
+      // Optimistic update - UI changes instantly
+      setOptimisticHost({ id: host.id, enabled: !host.enabled })
 
-    try {
-      const hostName = host.domain_names[0] || `#${host.id}`
+      try {
+        const hostName = host.domain_names[0] || `#${host.id}`
 
-      if (host.enabled) {
-        await proxyHostsApi.disable(host.id)
-        showSuccess('proxy-host', 'disabled', hostName, host.id)
-      } else {
-        await proxyHostsApi.enable(host.id)
-        showSuccess('proxy-host', 'enabled', hostName, host.id)
+        if (host.enabled) {
+          await proxyHostsApi.disable(host.id)
+          showSuccess('proxy-host', 'disabled', hostName, host.id)
+        } else {
+          await proxyHostsApi.enable(host.id)
+          showSuccess('proxy-host', 'enabled', hostName, host.id)
+        }
+        await loadHosts()
+      } catch (err: unknown) {
+        const hostName = host.domain_names[0] || `#${host.id}`
+        showError('proxy-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
+        setError(getErrorMessage(err))
+        await loadHosts()
       }
-      await loadHosts()
-    } catch (err: unknown) {
-      const hostName = host.domain_names[0] || `#${host.id}`
-      showError('proxy-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
-      setError(getErrorMessage(err))
-      await loadHosts()
-    }
+    })
   }
 
   const handleEdit = (host: ProxyHost) => {

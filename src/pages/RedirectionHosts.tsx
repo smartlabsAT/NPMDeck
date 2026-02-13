@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useOptimistic } from 'react'
+import React, { useState, useEffect, useOptimistic, startTransition } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -149,27 +149,29 @@ export default function RedirectionHosts() {
     }
   }
 
-  const handleToggleEnabled = async (host: RedirectionHost) => {
-    // Optimistic update - UI changes instantly
-    setOptimisticHost({ id: host.id, enabled: !host.enabled })
+  const handleToggleEnabled = (host: RedirectionHost) => {
+    startTransition(async () => {
+      // Optimistic update - UI changes instantly
+      setOptimisticHost({ id: host.id, enabled: !host.enabled })
 
-    try {
-      const hostName = host.domain_names[0] || `#${host.id}`
+      try {
+        const hostName = host.domain_names[0] || `#${host.id}`
 
-      if (host.enabled) {
-        await redirectionHostsApi.disable(host.id)
-        showSuccess('redirection-host', 'disabled', hostName, host.id)
-      } else {
-        await redirectionHostsApi.enable(host.id)
-        showSuccess('redirection-host', 'enabled', hostName, host.id)
+        if (host.enabled) {
+          await redirectionHostsApi.disable(host.id)
+          showSuccess('redirection-host', 'disabled', hostName, host.id)
+        } else {
+          await redirectionHostsApi.enable(host.id)
+          showSuccess('redirection-host', 'enabled', hostName, host.id)
+        }
+        await loadHosts()
+      } catch (err: unknown) {
+        const hostName = host.domain_names[0] || `#${host.id}`
+        showError('redirection-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
+        setError(getErrorMessage(err))
+        await loadHosts()
       }
-      await loadHosts()
-    } catch (err: unknown) {
-      const hostName = host.domain_names[0] || `#${host.id}`
-      showError('redirection-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
-      setError(getErrorMessage(err))
-      await loadHosts()
-    }
+    })
   }
 
   const handleEdit = (host: RedirectionHost) => {
