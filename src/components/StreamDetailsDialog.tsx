@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Button,
   Typography,
@@ -15,12 +14,12 @@ import {
   ContentCopy as CopyIcon,
   Edit as EditIcon,
   Stream as StreamIcon,
-  CheckCircle as CheckIcon,
-  Cancel as CancelIcon,
-  Error as ErrorIcon,
   OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material'
 import { Stream } from '../api/streams'
+import { getStatusIcon, getStatusText, getStatusColor } from '../utils/statusUtils'
+import { formatDate } from '../utils/dateUtils'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 // import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 import OwnerDisplay from './shared/OwnerDisplay'
@@ -38,42 +37,10 @@ const StreamDetailsDialog = ({
   stream,
   onEdit,
 }: StreamDetailsDialogProps) => {
-  const [copiedText, setCopiedText] = useState<string>('')
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
   // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   if (!stream) return null
-
-  const copyToClipboard = (text: string, label?: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedText(label || text)
-    setTimeout(() => setCopiedText(''), 2000)
-  }
-
-  const getStatusIcon = () => {
-    if (!stream.enabled) {
-      return <CancelIcon color="disabled" />
-    }
-    if (stream.meta.nginx_online === false) {
-      return <ErrorIcon color="error" />
-    }
-    return <CheckIcon color="success" />
-  }
-
-  const getStatusText = () => {
-    if (!stream.enabled) return 'Disabled'
-    if (stream.meta.nginx_online === false) return 'Offline'
-    return 'Online'
-  }
-
-  const getStatusColor = () => {
-    if (!stream.enabled) return 'default'
-    if (stream.meta.nginx_online === false) return 'error'
-    return 'success'
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
-  }
 
   return (
     <>
@@ -124,13 +91,13 @@ const StreamDetailsDialog = ({
       >
           {/* Status Alert */}
           <Alert 
-            severity={getStatusColor() as any}
-            icon={getStatusIcon()}
+            severity={getStatusColor(stream) as any}
+            icon={getStatusIcon(stream)}
             sx={{ mb: 3 }}
           >
             <Box>
               <Typography variant="body2">
-                Status: <strong>{getStatusText()}</strong>
+                Status: <strong>{getStatusText(stream)}</strong>
               </Typography>
               {stream.meta.nginx_err && (
                 <Typography variant="body2" sx={{ mt: 1 }}>

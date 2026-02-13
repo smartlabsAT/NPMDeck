@@ -18,6 +18,7 @@ import {
   Dns as DnsIcon,
 } from '@mui/icons-material'
 import { Certificate } from '../../../api/certificates'
+import { getDaysUntilExpiry, formatDate } from '../../../utils/dateUtils'
 import OwnerDisplay from '../../shared/OwnerDisplay'
 
 interface CertificateInfoPanelProps {
@@ -33,26 +34,6 @@ const CertificateInfoPanel = ({
   onToggleSection: _onToggleSection,
   onCopyToClipboard,
 }: CertificateInfoPanelProps) => {
-  const getDaysUntilExpiry = (expiresOn: string | null) => {
-    if (!expiresOn) return null
-    const expiryDate = new Date(expiresOn)
-    const today = new Date()
-    const diffTime = expiryDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
   const daysUntilExpiry = getDaysUntilExpiry(certificate.expires_on)
   const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0
   const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= 30

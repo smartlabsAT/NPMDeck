@@ -15,7 +15,6 @@ import {
   Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
-  Error as ErrorIcon,
   PowerSettingsNew as PowerIcon,
   Language as LanguageIcon,
   Lock as LockIcon,
@@ -43,22 +42,8 @@ import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
-
-
-// Helper to extract base domain from a full domain
-const extractBaseDomain = (domain: string): string => {
-  // Remove subdomain parts, keep only base domain
-  const parts = domain.split('.')
-  if (parts.length > 2) {
-    // Check for common second-level domains like .co.uk
-    const secondLevel = parts[parts.length - 2]
-    if (['co', 'com', 'net', 'org', 'gov', 'edu'].includes(secondLevel) && parts.length > 3) {
-      return parts.slice(-3).join('.')
-    }
-    return parts.slice(-2).join('.')
-  }
-  return domain
-}
+import { extractBaseDomain } from '../utils/domainUtils'
+import { getStatusIcon } from '../utils/statusUtils'
 
 export default function ProxyHosts() {
   const { id } = useParams<{ id?: string }>()
@@ -223,16 +208,6 @@ export default function ProxyHosts() {
 
   // Apply visibility filtering
   const visibleHosts = useFilteredData(optimisticHosts)
-
-  const getStatusIcon = (host: ProxyHost) => {
-    if (!host.enabled) {
-      return <Tooltip title="Disabled"><CancelIcon color="disabled" /></Tooltip>
-    }
-    if (host.meta.nginx_online === false) {
-      return <Tooltip title={host.meta.nginx_err || 'Offline'}><ErrorIcon color="error" /></Tooltip>
-    }
-    return <Tooltip title="Online"><CheckCircleIcon color="success" /></Tooltip>
-  }
 
   const getLinkedRedirections = (host: ProxyHost): RedirectionHost[] => {
     const redirections: RedirectionHost[] = []

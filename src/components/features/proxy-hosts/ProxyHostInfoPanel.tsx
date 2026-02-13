@@ -31,6 +31,7 @@ import {
   Security as SecurityIcon,
 } from '@mui/icons-material'
 import { ProxyHost } from '../../../api/proxyHosts'
+import { formatDate } from '../../../utils/dateUtils'
 
 interface ProxyHostInfoPanelProps {
   host: ProxyHost
@@ -49,17 +50,6 @@ const ProxyHostInfoPanel = ({
   onCopyToClipboard,
   onNavigateToAccess,
 }: ProxyHostInfoPanelProps) => {
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
   return (
     <Grid container spacing={3}>
       {/* Status Overview */}
