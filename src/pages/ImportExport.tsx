@@ -27,6 +27,7 @@ import { deadHostsApi } from '../api/deadHosts'
 import { streamsApi } from '../api/streams'
 import { certificatesApi } from '../api/certificates'
 import { accessListsApi } from '../api/accessLists'
+import logger from '../utils/logger'
 
 export default function ImportExport() {
   const [importDialogOpen, setImportDialogOpen] = useState(false)
@@ -64,7 +65,7 @@ export default function ImportExport() {
       setExportTypeName('All Configurations')
       setExportDialogOpen(true)
     } catch (error) {
-      console.error('Failed to fetch data for export:', error)
+      logger.error('Failed to fetch data for export:', error)
     } finally {
       setLoading(false)
     }
@@ -115,7 +116,7 @@ export default function ImportExport() {
       setExportTypeName(typeName)
       setExportDialogOpen(true)
     } catch (error) {
-      console.error('Failed to fetch data for export:', error)
+      logger.error('Failed to fetch data for export:', error)
     } finally {
       setLoading(false)
     }
