@@ -151,7 +151,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
       }
       
       if (host) {
-        await redirectionHostsApi.update({ ...payload, id: host.id })
+        await redirectionHostsApi.update(host.id, payload)
       } else {
         await redirectionHostsApi.create(payload)
       }

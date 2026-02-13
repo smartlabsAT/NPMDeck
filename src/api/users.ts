@@ -1,4 +1,5 @@
 import api from './config'
+import { buildExpandParams } from './utils'
 import type { BaseEntity } from '../types/base'
 
 export interface User extends BaseEntity {
@@ -43,60 +44,51 @@ export interface LoginAsResponse {
 
 export const usersApi = {
   // Get all users
-  getAll: async (expand?: string[], query?: string): Promise<User[]> => {
-    const params: Record<string, string> = {}
-    if (expand && expand.length > 0) {
-      params.expand = expand.join(',')
-    }
+  async getAll(expand?: string[], query?: string): Promise<User[]> {
+    const params: Record<string, string> = { ...buildExpandParams(expand) }
     if (query) {
       params.query = query
     }
-
     const response = await api.get('/users', { params })
     return response.data
   },
 
   // Get a single user
-  getOne: async (id: number, expand?: string[]): Promise<User> => {
-    const params: Record<string, string> = {}
-    if (expand && expand.length > 0) {
-      params.expand = expand.join(',')
-    }
-
-    const response = await api.get(`/users/${id}`, { params })
+  async getById(id: number, expand?: string[]): Promise<User> {
+    const response = await api.get(`/users/${id}`, { params: buildExpandParams(expand) })
     return response.data
   },
 
   // Create a new user
-  create: async (data: CreateUserPayload): Promise<User> => {
+  async create(data: CreateUserPayload): Promise<User> {
     const response = await api.post('/users', data)
     return response.data
   },
 
   // Update a user
-  update: async (id: number, data: UpdateUserPayload): Promise<User> => {
+  async update(id: number, data: UpdateUserPayload): Promise<User> {
     const response = await api.put(`/users/${id}`, data)
     return response.data
   },
 
   // Delete a user
-  delete: async (id: number): Promise<void> => {
+  async delete(id: number): Promise<void> {
     await api.delete(`/users/${id}`)
   },
 
   // Update user password
-  updatePassword: async (id: number, data: UserPasswordPayload): Promise<void> => {
+  async updatePassword(id: number, data: UserPasswordPayload): Promise<void> {
     await api.put(`/users/${id}/auth`, data)
   },
 
   // Update user permissions
-  updatePermissions: async (id: number, permissions: User['permissions']): Promise<void> => {
+  async updatePermissions(id: number, permissions: User['permissions']): Promise<void> {
     await api.put(`/users/${id}/permissions`, permissions)
   },
 
   // Login as another user (admin only)
-  loginAs: async (id: number): Promise<LoginAsResponse> => {
+  async loginAs(id: number): Promise<LoginAsResponse> {
     const response = await api.post(`/users/${id}/login`)
     return response.data
-  }
+  },
 }

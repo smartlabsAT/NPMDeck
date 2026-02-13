@@ -1,4 +1,5 @@
 import api from './config'
+import { buildExpandParams } from './utils'
 import type { HostEntity, NginxMeta, LetsEncryptMeta } from '../types/base'
 import type { Certificate } from './certificates'
 import type { AccessList } from './accessLists'
@@ -39,21 +40,17 @@ export interface CreateRedirectionHost {
   access_list_id?: number
 }
 
-export interface UpdateRedirectionHost extends Partial<CreateRedirectionHost> {
-  id: number
-}
+export type UpdateRedirectionHost = Partial<CreateRedirectionHost>
 
 // API functions
 export const redirectionHostsApi = {
   async getAll(expand?: string[]): Promise<RedirectionHost[]> {
-    const params = expand?.length ? { expand: expand.join(',') } : {}
-    const response = await api.get('/nginx/redirection-hosts', { params })
+    const response = await api.get('/nginx/redirection-hosts', { params: buildExpandParams(expand) })
     return response.data
   },
 
   async getById(id: number, expand?: string[]): Promise<RedirectionHost> {
-    const params = expand?.length ? { expand: expand.join(',') } : {}
-    const response = await api.get(`/nginx/redirection-hosts/${id}`, { params })
+    const response = await api.get(`/nginx/redirection-hosts/${id}`, { params: buildExpandParams(expand) })
     return response.data
   },
 
@@ -62,9 +59,8 @@ export const redirectionHostsApi = {
     return response.data
   },
 
-  async update(data: UpdateRedirectionHost): Promise<RedirectionHost> {
-    const { id, ...updateData } = data
-    const response = await api.put(`/nginx/redirection-hosts/${id}`, updateData)
+  async update(id: number, data: UpdateRedirectionHost): Promise<RedirectionHost> {
+    const response = await api.put(`/nginx/redirection-hosts/${id}`, data)
     return response.data
   },
 
@@ -72,13 +68,11 @@ export const redirectionHostsApi = {
     await api.delete(`/nginx/redirection-hosts/${id}`)
   },
 
-  async enable(id: number): Promise<RedirectionHost> {
-    const response = await api.post(`/nginx/redirection-hosts/${id}/enable`)
-    return response.data
+  async enable(id: number): Promise<void> {
+    await api.post(`/nginx/redirection-hosts/${id}/enable`)
   },
 
-  async disable(id: number): Promise<RedirectionHost> {
-    const response = await api.post(`/nginx/redirection-hosts/${id}/disable`)
-    return response.data
+  async disable(id: number): Promise<void> {
+    await api.post(`/nginx/redirection-hosts/${id}/disable`)
   },
 }
