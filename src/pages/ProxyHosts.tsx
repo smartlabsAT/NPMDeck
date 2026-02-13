@@ -1,6 +1,5 @@
-import { getErrorMessage } from '../types/common'
-import React, { useState, useEffect, useOptimistic, startTransition, useCallback } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import React, { useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Container,
@@ -10,13 +9,12 @@ import {
 } from '@mui/icons-material'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
-import { usePermissions } from '../hooks/usePermissions'
-import { useFilteredData } from '../hooks/useFilteredData'
 import { useResponsive } from '../hooks/useResponsive'
+import { useEntityCrud } from '../hooks/useEntityCrud'
 import useProxyHostColumns from '../hooks/useProxyHostColumns'
 import useProxyHostFilters from '../hooks/useProxyHostFilters'
-import useProxyHostBulkActions from '../hooks/useProxyHostBulkActions'
 import useDomainGroupConfig from '../hooks/useDomainGroupConfig'
+import { createStandardBulkActions } from '../utils/bulkActionFactory'
 import ProxyHostDrawer from '../components/features/proxy-hosts/ProxyHostDrawer'
 import ProxyHostDetailsDialog from '../components/ProxyHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -25,198 +23,105 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
-import logger from '../utils/logger'
+
+/** Type for the redirection lookup map loaded as additional data */
+type RedirectionsByTarget = Map<string, RedirectionHost[]>
+
+const PROXY_HOST_BASE_PATH = '/hosts/proxy'
+const PROXY_HOST_EXPAND = ['owner', 'access_list', 'certificate']
+const PROXY_HOST_ENTITY_LABEL = 'proxy hosts'
+
+/** Build a lookup map from target domain to redirection hosts */
+const buildRedirectionTargetMap = async (): Promise<RedirectionsByTarget> => {
+  const redirectionData = await redirectionHostsApi.getAll()
+  const targetMap = new Map<string, RedirectionHost[]>()
+  redirectionData.forEach(redirect => {
+    const target = redirect.forward_domain_name.toLowerCase()
+    if (!targetMap.has(target)) {
+      targetMap.set(target, [])
+    }
+    targetMap.get(target)!.push(redirect)
+  })
+  return targetMap
+}
 
 export default function ProxyHosts() {
-  const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
-  const location = useLocation()
-  
-  const { canManage: canManageProxyHosts } = usePermissions()
   const { showSuccess, showError } = useToast()
   const { isMobileTable } = useResponsive()
-  
-  // State
-  const [hosts, setHosts] = useState<ProxyHost[]>([])
-  const [redirectionsByTarget, setRedirectionsByTarget] = useState<Map<string, RedirectionHost[]>>(new Map())
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [optimisticHosts, setOptimisticHost] = useOptimistic(
-    hosts,
-    (state, toggledItem: { id: number; enabled: boolean }) =>
-      state.map(item =>
-        item.id === toggledItem.id ? { ...item, enabled: toggledItem.enabled } : item
-      )
-  )
-  
-  // Dialogs
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editingHost, setEditingHost] = useState<ProxyHost | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [hostToDelete, setHostToDelete] = useState<ProxyHost | null>(null)
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
-  const [viewingHost, setViewingHost] = useState<ProxyHost | null>(null)
 
-  useEffect(() => {
-    loadHosts()
-  }, [])
+  // Entity CRUD hook handles all state, URL routing, dialogs, and data loading
+  const {
+    visibleItems,
+    loading,
+    error,
+    additionalData: redirectionsByTarget,
+    drawerOpen,
+    editingItem,
+    deleteDialogOpen,
+    itemToDelete,
+    detailsDialogOpen,
+    viewingItem,
+    handleToggleEnabled,
+    handleEdit,
+    handleView,
+    handleAdd,
+    handleDelete,
+    handleConfirmDelete,
+    closeDrawer,
+    closeDetailsDialog,
+    closeDeleteDialog,
+    loadItems,
+    canManage,
+  } = useEntityCrud<ProxyHost, RedirectionsByTarget>({
+    api: proxyHostsApi,
+    expand: PROXY_HOST_EXPAND,
+    basePath: PROXY_HOST_BASE_PATH,
+    entityType: 'proxy-host',
+    resource: 'proxy_hosts',
+    getDisplayName: (host) => host.domain_names[0] || `#${host.id}`,
+    entityLabel: PROXY_HOST_ENTITY_LABEL,
+    additionalLoader: {
+      load: buildRedirectionTargetMap,
+    },
+  })
 
-  // Handle URL parameter for editing or viewing
-  useEffect(() => {
-    if (location.pathname.includes('/new') && canManageProxyHosts('proxy_hosts')) {
-      setEditingHost(null)
-      setDrawerOpen(true)
-      setDetailsDialogOpen(false)
-      setViewingHost(null)
-    } else if (id) {
-      // Wait for hosts to load
-      if (loading) {
-        return
-      }
-      
-      const host = hosts.find(h => h.id === parseInt(id))
-      if (host) {
-        if (location.pathname.includes('/edit') && canManageProxyHosts('proxy_hosts')) {
-          setEditingHost(host)
-          setDrawerOpen(true)
-          setDetailsDialogOpen(false)
-          setViewingHost(null)
-        } else if (location.pathname.includes('/view')) {
-          setViewingHost(host)
-          setDetailsDialogOpen(true)
-          setDrawerOpen(false)
-          setEditingHost(null)
-        }
-      } else if (hosts.length > 0) {
-        // Host not found after loading (but other hosts exist)
-        logger.error(`Proxy host with id ${id} not found`)
-        navigate('/hosts/proxy')
-      }
-      // If hosts.length === 0, we'll wait for hosts to load
-    } else {
-      // No ID in URL, close dialogs
-      setDrawerOpen(false)
-      setEditingHost(null)
-      setDetailsDialogOpen(false)
-      setViewingHost(null)
-    }
-  }, [id, hosts, location.pathname, navigate, loading, canManageProxyHosts])
-
-  const loadHosts = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      // Load both proxy hosts and redirection hosts
-      const [proxyData, redirectionData] = await Promise.all([
-        proxyHostsApi.getAll(['owner', 'access_list', 'certificate']),
-        redirectionHostsApi.getAll()
-      ])
-      
-      setHosts(proxyData)
-      
-      // Create lookup map for redirections by target domain
-      const targetMap = new Map<string, RedirectionHost[]>()
-      redirectionData.forEach(redirect => {
-        const target = redirect.forward_domain_name.toLowerCase()
-        if (!targetMap.has(target)) {
-          targetMap.set(target, [])
-        }
-        targetMap.get(target)!.push(redirect)
-      })
-      setRedirectionsByTarget(targetMap)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleToggleEnabled = useCallback((host: ProxyHost) => {
-    startTransition(async () => {
-      // Optimistic update - UI changes instantly
-      setOptimisticHost({ id: host.id, enabled: !host.enabled })
-
-      try {
-        const hostName = host.domain_names[0] || `#${host.id}`
-
-        if (host.enabled) {
-          await proxyHostsApi.disable(host.id)
-          showSuccess('proxy-host', 'disabled', hostName, host.id)
-        } else {
-          await proxyHostsApi.enable(host.id)
-          showSuccess('proxy-host', 'enabled', hostName, host.id)
-        }
-        await loadHosts()
-      } catch (err: unknown) {
-        const hostName = host.domain_names[0] || `#${host.id}`
-        showError('proxy-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
-        setError(getErrorMessage(err))
-        await loadHosts()
-      }
-    })
-  }, [showSuccess, showError])
-
-  const handleEdit = useCallback((host: ProxyHost) => {
-    navigate(`/hosts/proxy/${host.id}/edit`)
+  // Navigate-only callbacks for viewing connections/access tabs
+  // The hook's URL routing effect detects /view in the path and opens the details dialog
+  const onViewConnections = useCallback((host: ProxyHost) => {
+    navigate(`${PROXY_HOST_BASE_PATH}/${host.id}/view/connections`)
   }, [navigate])
 
-  const handleView = useCallback((host: ProxyHost) => {
-    navigate(`/hosts/proxy/${host.id}/view`)
+  const onViewAccess = useCallback((host: ProxyHost) => {
+    navigate(`${PROXY_HOST_BASE_PATH}/${host.id}/view/access`)
   }, [navigate])
-
-  const handleAdd = useCallback(() => {
-    setEditingHost(null)
-    navigate('/hosts/proxy/new')
-  }, [navigate])
-
-  const handleDelete = useCallback((host: ProxyHost) => {
-    setHostToDelete(host)
-    setDeleteDialogOpen(true)
-  }, [])
-
-  const handleConfirmDelete = useCallback(async () => {
-    if (!hostToDelete) return
-
-    try {
-      await proxyHostsApi.delete(hostToDelete.id)
-      showSuccess('proxy-host', 'deleted', hostToDelete.domain_names[0] || `#${hostToDelete.id}`, hostToDelete.id)
-      await loadHosts()
-      setDeleteDialogOpen(false)
-      setHostToDelete(null)
-    } catch (err: unknown) {
-      showError('proxy-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
-      logger.error('Failed to delete host:', err)
-    }
-  }, [hostToDelete, showSuccess, showError, loadHosts])
-
-
-  // Apply visibility filtering
-  const visibleHosts = useFilteredData(optimisticHosts)
 
   // Column definitions for DataTable with responsive priorities
   const columns = useProxyHostColumns({
-    redirectionsByTarget,
+    redirectionsByTarget: redirectionsByTarget ?? new Map(),
     onToggleEnabled: handleToggleEnabled,
     onEdit: handleEdit,
     onDelete: handleDelete,
-    onViewConnections: (host) => {
-      setViewingHost(host)
-      setDetailsDialogOpen(true)
-      navigate(`/hosts/proxy/${host.id}/view/connections`)
-    },
-    onViewAccess: (host) => {
-      setViewingHost(host)
-      setDetailsDialogOpen(true)
-      navigate(`/hosts/proxy/${host.id}/view/access`)
-    },
+    onViewConnections,
+    onViewAccess,
     navigate,
   })
 
   // Filter definitions and filter function
   const { filters, filterFunction } = useProxyHostFilters()
 
-  // Bulk actions
-  const bulkActions = useProxyHostBulkActions({ showSuccess, showError, loadHosts })
+  // Bulk actions via factory
+  const bulkActions = useMemo(
+    () => createStandardBulkActions<ProxyHost>({
+      api: proxyHostsApi,
+      entityType: 'proxy-host',
+      entityLabel: PROXY_HOST_ENTITY_LABEL,
+      showSuccess,
+      showError,
+      loadItems,
+    }),
+    [showSuccess, showError, loadItems]
+  )
 
   // Group configuration for domain grouping
   const groupConfig = useDomainGroupConfig<ProxyHost>()
@@ -255,7 +160,7 @@ export default function ProxyHosts() {
 
         {/* DataTable */}
         <DataTable
-          data={visibleHosts}
+          data={visibleItems}
           columns={columns}
           keyExtractor={(item: ProxyHost) => item.id.toString()}
           onRowClick={handleView}
@@ -280,7 +185,7 @@ export default function ProxyHosts() {
           cardBreakpoint={900}
           compactBreakpoint={1250}
         />
-        
+
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
           <Box
@@ -303,38 +208,30 @@ export default function ProxyHosts() {
           </Box>
         )}
       </Box>
-      {canManageProxyHosts('proxy_hosts') && (
+      {canManage && (
         <ProxyHostDrawer
           open={drawerOpen}
-          onClose={() => {
-            setDrawerOpen(false)
-            navigate('/hosts/proxy')
-          }}
-          host={editingHost}
+          onClose={closeDrawer}
+          host={editingItem}
           onSave={() => {
-            loadHosts()
-            navigate('/hosts/proxy')
+            loadItems()
+            navigate(PROXY_HOST_BASE_PATH)
           }}
         />
       )}
       <ProxyHostDetailsDialog
         open={detailsDialogOpen}
-        onClose={() => {
-          setDetailsDialogOpen(false)
-          if (id) {
-            navigate('/hosts/proxy')
-          }
-        }}
-        host={viewingHost}
-        onEdit={canManageProxyHosts('proxy_hosts') ? handleEdit : undefined}
+        onClose={closeDetailsDialog}
+        host={viewingItem}
+        onEdit={canManage ? handleEdit : undefined}
       />
       <ConfirmDialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={closeDeleteDialog}
         onConfirm={handleConfirmDelete}
         title="Delete Proxy Host?"
         titleIcon={React.createElement(NAVIGATION_CONFIG.proxyHosts.icon, { sx: { color: NAVIGATION_CONFIG.proxyHosts.color } })}
-        message={`Are you sure you want to delete the proxy host for ${hostToDelete?.domain_names.join(', ')}? This action cannot be undone.`}
+        message={`Are you sure you want to delete the proxy host for ${itemToDelete?.domain_names.join(', ')}? This action cannot be undone.`}
         confirmText="Delete"
         confirmColor="error"
       />
