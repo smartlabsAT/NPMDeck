@@ -3,7 +3,7 @@ import type { OwnedEntity, BaseEntity } from '../types/base'
 
 export interface AccessList extends OwnedEntity {
   name: string
-  meta: Record<string, any>
+  meta: Record<string, unknown>
   satisfy_any: boolean
   pass_auth: boolean
   // Relations

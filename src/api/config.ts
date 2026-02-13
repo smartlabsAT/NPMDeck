@@ -10,11 +10,11 @@ const API_URL = import.meta.env.VITE_API_URL || '/api'
 let isRefreshing = false
 let failedQueue: Array<{
   resolve: (token: string) => void
-  reject: (error: any) => void
+  reject: (error: unknown) => void
 }> = []
 
 // Process the queue when token is refreshed
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error)
@@ -99,7 +99,7 @@ api.interceptors.response.use(
             try {
               const authStoreApi = getAuthStoreApi()
               // Get the state and call refreshToken
-              const state = authStoreApi.getState() as any
+              const state = authStoreApi.getState() as { refreshToken?: () => Promise<void> }
               if (state && typeof state.refreshToken === 'function') {
                 void state.refreshToken()
               }

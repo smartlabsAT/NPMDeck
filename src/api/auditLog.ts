@@ -11,7 +11,7 @@ export interface AuditLogUser {
 }
 
 export interface AuditLogMeta {
-  [key: string]: any
+  [key: string]: unknown
   domain_names?: string[]
   name?: string
   nice_name?: string

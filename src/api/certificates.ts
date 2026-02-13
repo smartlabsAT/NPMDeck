@@ -112,7 +112,7 @@ class CertificatesApi {
     return response.data
   }
 
-  async validateFiles(files: { certificate: File; certificateKey: File; intermediateCertificate?: File }): Promise<any> {
+  async validateFiles(files: { certificate: File; certificateKey: File; intermediateCertificate?: File }): Promise<{ certificate?: string; certificate_key?: string; valid?: boolean; error?: string }> {
     const formData = new FormData()
     formData.append('certificate', files.certificate)
     formData.append('certificate_key', files.certificateKey)
