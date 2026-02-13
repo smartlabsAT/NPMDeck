@@ -521,10 +521,13 @@ const Settings = () => {
       if (defaultSiteSetting && defaultSiteSetting.value) {
         if (typeof defaultSiteSetting.value === 'string') {
           setDefaultSiteType(defaultSiteSetting.value)
-        } else if (defaultSiteSetting.value.type) {
-          setDefaultSiteType(defaultSiteSetting.value.type)
-          if (defaultSiteSetting.value.type === 'html' && defaultSiteSetting.value.html) {
-            setDefaultSiteHtml(defaultSiteSetting.value.html)
+        } else if (typeof defaultSiteSetting.value === 'object' && defaultSiteSetting.value !== null) {
+          const valueObj = defaultSiteSetting.value
+          if (typeof valueObj.type === 'string') {
+            setDefaultSiteType(valueObj.type)
+            if (valueObj.type === 'html' && typeof valueObj.html === 'string') {
+              setDefaultSiteHtml(valueObj.html)
+            }
           }
         }
       }

@@ -1,23 +1,15 @@
 import { useAuthStore } from '../stores/authStore'
 
-interface CreateData {
-  [key: string]: any
-}
-
-interface UpdateData {
-  [key: string]: any
-}
-
 /**
  * Wrapper für API-Methoden, der automatisch owner_user_id hinzufügt
  * wenn der User nicht Admin ist und visibility auf 'user' steht
  */
-export function withOwnerFilter<T extends CreateData>(
-  createFn: (data: T) => Promise<any>
-): (data: T) => Promise<any> {
+export function withOwnerFilter<T extends Record<string, unknown>>(
+  createFn: (data: T) => Promise<T>
+): (data: T) => Promise<T> {
   return async (data: T) => {
     const { user, shouldFilterByUser } = useAuthStore.getState()
-    
+
     // Wenn User-Filterung aktiv ist, füge owner_user_id hinzu
     if (shouldFilterByUser() && user) {
       data = {
@@ -25,7 +17,7 @@ export function withOwnerFilter<T extends CreateData>(
         owner_user_id: user.id
       }
     }
-    
+
     return createFn(data)
   }
 }
@@ -33,18 +25,21 @@ export function withOwnerFilter<T extends CreateData>(
 /**
  * Wrapper für Update-Methoden, der sicherstellt dass User nur eigene Ressourcen updaten können
  */
-export function withOwnerCheck<T extends { owner_user_id?: number }>(
+export function withOwnerCheck<
+  T extends { owner_user_id?: number },
+  U extends Record<string, unknown>
+>(
   getFn: (id: number) => Promise<T>,
-  updateFn: (id: number, data: UpdateData) => Promise<any>
-): (id: number, data: UpdateData) => Promise<any> {
-  return async (id: number, data: UpdateData) => {
+  updateFn: (id: number, data: U) => Promise<T>
+): (id: number, data: U) => Promise<T> {
+  return async (id: number, data: U) => {
     const { user, shouldFilterByUser, isAdmin } = useAuthStore.getState()
-    
+
     // Admins können alles updaten
     if (isAdmin()) {
       return updateFn(id, data)
     }
-    
+
     // Wenn User-Filterung aktiv ist, prüfe Ownership
     if (shouldFilterByUser() && user) {
       const resource = await getFn(id)
@@ -52,7 +47,7 @@ export function withOwnerCheck<T extends { owner_user_id?: number }>(
         throw new Error('Sie haben keine Berechtigung, diese Ressource zu bearbeiten')
       }
     }
-    
+
     return updateFn(id, data)
   }
 }
@@ -62,16 +57,16 @@ export function withOwnerCheck<T extends { owner_user_id?: number }>(
  */
 export function withOwnerDelete<T extends { owner_user_id?: number }>(
   getFn: (id: number) => Promise<T>,
-  deleteFn: (id: number) => Promise<any>
-): (id: number) => Promise<any> {
+  deleteFn: (id: number) => Promise<void>
+): (id: number) => Promise<void> {
   return async (id: number) => {
     const { user, shouldFilterByUser, isAdmin } = useAuthStore.getState()
-    
+
     // Admins können alles löschen
     if (isAdmin()) {
       return deleteFn(id)
     }
-    
+
     // Wenn User-Filterung aktiv ist, prüfe Ownership
     if (shouldFilterByUser() && user) {
       const resource = await getFn(id)
@@ -79,7 +74,7 @@ export function withOwnerDelete<T extends { owner_user_id?: number }>(
         throw new Error('Sie haben keine Berechtigung, diese Ressource zu löschen')
       }
     }
-    
+
     return deleteFn(id)
   }
 }

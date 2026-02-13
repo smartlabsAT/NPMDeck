@@ -44,25 +44,25 @@ export interface LoginAsResponse {
 export const usersApi = {
   // Get all users
   getAll: async (expand?: string[], query?: string): Promise<User[]> => {
-    const params: any = {}
+    const params: Record<string, string> = {}
     if (expand && expand.length > 0) {
       params.expand = expand.join(',')
     }
     if (query) {
       params.query = query
     }
-    
+
     const response = await api.get('/users', { params })
     return response.data
   },
 
   // Get a single user
   getOne: async (id: number, expand?: string[]): Promise<User> => {
-    const params: any = {}
+    const params: Record<string, string> = {}
     if (expand && expand.length > 0) {
       params.expand = expand.join(',')
     }
-    
+
     const response = await api.get(`/users/${id}`, { params })
     return response.data
   },
