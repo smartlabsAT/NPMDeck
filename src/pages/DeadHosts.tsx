@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useOptimistic, startTransition } from 'react'
+import React, { useState, useEffect, useOptimistic, startTransition, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -131,7 +131,7 @@ export default function DeadHosts() {
     }
   }
 
-  const handleToggleEnabled = (host: DeadHost) => {
+  const handleToggleEnabled = useCallback((host: DeadHost) => {
     startTransition(async () => {
       // Optimistic update - UI changes instantly
       setOptimisticHost({ id: host.id, enabled: !host.enabled })
@@ -154,29 +154,29 @@ export default function DeadHosts() {
         await loadHosts()
       }
     })
-  }
+  }, [showSuccess, showError])
 
-  const handleEdit = (host: DeadHost) => {
+  const handleEdit = useCallback((host: DeadHost) => {
     navigate(`/hosts/404/${host.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleView = (host: DeadHost) => {
+  const handleView = useCallback((host: DeadHost) => {
     navigate(`/hosts/404/${host.id}/view`)
-  }
+  }, [navigate])
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingHost(null)
     navigate('/hosts/404/new')
-  }
+  }, [navigate])
 
-  const handleDelete = (host: DeadHost) => {
+  const handleDelete = useCallback((host: DeadHost) => {
     setHostToDelete(host)
     setDeleteDialogOpen(true)
-  }
+  }, [])
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!hostToDelete) return
-    
+
     try {
       await deadHostsApi.delete(hostToDelete.id)
       showSuccess('dead-host', 'deleted', hostToDelete.domain_names[0] || `#${hostToDelete.id}`, hostToDelete.id)
@@ -187,13 +187,13 @@ export default function DeadHosts() {
       showError('dead-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
       logger.error('Failed to delete 404 host:', err)
     }
-  }
+  }, [hostToDelete, showSuccess, showError, loadHosts])
 
   // Apply visibility filtering
   const visibleHosts = useFilteredData(optimisticHosts)
 
   // Column definitions for DataTable with responsive priorities
-  const columns: ResponsiveTableColumn<DeadHost>[] = [
+  const columns = useMemo<ResponsiveTableColumn<DeadHost>[]>(() => [
     {
       id: 'status',
       label: 'Status',
@@ -217,12 +217,12 @@ export default function DeadHosts() {
       render: (value, item) => (
         <Box>
           {item.domain_names.map((domain, index) => (
-            <Typography 
+            <Typography
               key={index}
               variant="body2"
-              sx={{ 
+              sx={{
                 cursor: 'pointer',
-                '&:hover': { 
+                '&:hover': {
                   textDecoration: 'underline',
                   color: 'primary.main'
                 }
@@ -339,10 +339,10 @@ export default function DeadHosts() {
         </Box>
       )
     }
-  ]
+  ], [handleToggleEnabled, handleEdit, handleDelete])
 
   // Filter definitions
-  const filters: Filter[] = [
+  const filters = useMemo<Filter[]>(() => [
     {
       id: 'ssl',
       label: 'SSL',
@@ -366,10 +366,10 @@ export default function DeadHosts() {
         { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
       ]
     }
-  ]
+  ], [])
 
   // Custom filter function for DataTable
-  const filterFunction = (item: DeadHost, activeFilters: Record<string, FilterValue>) => {
+  const filterFunction = useCallback((item: DeadHost, activeFilters: Record<string, FilterValue>) => {
     // SSL filter
     if (activeFilters.ssl && activeFilters.ssl !== 'all') {
       if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false
@@ -384,10 +384,10 @@ export default function DeadHosts() {
     }
 
     return true
-  }
+  }, [])
 
   // Bulk actions
-  const bulkActions: BulkAction<DeadHost>[] = [
+  const bulkActions = useMemo<BulkAction<DeadHost>[]>(() => [
     {
       id: 'enable',
       label: 'Enable',
@@ -434,7 +434,7 @@ export default function DeadHosts() {
         }
       }
     }
-  ]
+  ], [showSuccess, showError, loadHosts])
 
   return (
     <Container maxWidth={false}>
