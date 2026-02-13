@@ -317,7 +317,8 @@ export const BaseDrawer = ({
         onClose={disableBackdropClick ? undefined : handleClose}
         className={className}
         ModalProps={{
-          keepMounted: false, // Better performance on mobile
+          keepMounted: false,
+          disableEnforceFocus: true, // Prevent aria-hidden conflict when focus moves outside drawer
         }}
         slotProps={{
           paper: {

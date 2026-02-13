@@ -17,7 +17,7 @@ import {
 import { TOKEN_REFRESH_INTERVAL_MS, CONFIGURED_WARNING_MINUTES } from '../constants/auth'
 import { STORAGE_KEYS } from '../constants/storage'
 
-interface TokenInfo {
+export interface TokenInfo {
   token: string
   user: User
   expires: string

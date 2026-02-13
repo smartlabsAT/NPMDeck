@@ -1,77 +1,21 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import logger from '../utils/logger'
 import {
   Autocomplete,
   TextField,
   InputAdornment,
   CircularProgress,
-  Box,
-  Typography,
   Paper,
-  Divider,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   alpha,
   useTheme,
 } from '@mui/material'
 import {
   Search as SearchIcon,
-  SwapHoriz,
-  TrendingFlat,
-  Block,
-  Stream,
-  Security,
-  VpnKey,
-  Group,
-  Add,
-  CheckCircle,
-  Cancel,
-  Error as ErrorIcon,
 } from '@mui/icons-material'
 import { useGlobalSearch } from '../contexts/GlobalSearchContext'
-import { NAVIGATION_COLORS } from '../constants/navigation'
 import { TIMING } from '../constants/timing'
-import { SearchResult, ResourceType } from '../types/search'
-
-const getResourceIcon = (type: ResourceType, isAction: boolean = false) => {
-  if (type === 'action' && !isAction) {
-    return <Add sx={{ color: 'primary.main' }} />
-  }
-  
-  switch (type) {
-    case 'proxy_hosts':
-      return <SwapHoriz sx={{ color: NAVIGATION_COLORS.success }} />
-    case 'redirection_hosts':
-      return <TrendingFlat sx={{ color: NAVIGATION_COLORS.warning }} />
-    case 'dead_hosts':
-      return <Block sx={{ color: NAVIGATION_COLORS.danger }} />
-    case 'streams':
-      return <Stream sx={{ color: NAVIGATION_COLORS.info }} />
-    case 'access_lists':
-      return <Security sx={{ color: NAVIGATION_COLORS.primary }} />
-    case 'certificates':
-      return <VpnKey sx={{ color: NAVIGATION_COLORS.info }} />
-    case 'users':
-      return <Group sx={{ color: NAVIGATION_COLORS.secondary }} />
-    default:
-      return <Add sx={{ color: 'primary.main' }} />
-  }
-}
-
-const getStatusIcon = (status?: string) => {
-  switch (status) {
-    case 'online':
-      return <CheckCircle sx={{ color: 'success.main', fontSize: 16 }} />
-    case 'offline':
-      return <ErrorIcon sx={{ color: 'error.main', fontSize: 16 }} />
-    case 'disabled':
-      return <Cancel sx={{ color: 'text.disabled', fontSize: 16 }} />
-    default:
-      return null
-  }
-}
+import { SearchResult } from '../types/search'
+import SearchResultItem from './features/search/SearchResultItem'
 
 const SearchBar = () => {
   const navigate = useNavigate()
@@ -268,79 +212,9 @@ const SearchBar = () => {
           }}
         />
       )}
-      renderOption={(props, option) => {
-        if (option.type === 'divider') {
-          return <Divider key="divider" />
-        }
-
-        // Determine the icon to show
-        let icon
-        if (option.type === 'action' && option.metadata?.resourceType) {
-          logger.debug('Rendering action with resourceType:', option.metadata.resourceType)
-          // For actions, show the Add icon with the resource type icon
-          icon = (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5
-              }}>
-              <Add sx={{ fontSize: 18 }} />
-              {getResourceIcon(option.metadata.resourceType)}
-            </Box>
-          )
-        } else {
-          // For regular resources, show the resource icon
-          icon = getResourceIcon(option.type)
-        }
-
-        return (
-          <ListItem {...props} key={option.id}>
-            <ListItemIcon sx={{ minWidth: 56 }}>
-              {icon}
-            </ListItemIcon>
-            <ListItemText
-              primary={
-                <Box
-                  component="span"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1
-                  }}>
-                  {option.title}
-                  {option.metadata?.ssl && (
-                    <VpnKey sx={{ fontSize: 16, color: 'success.main' }} />
-                  )}
-                  {option.metadata?.status && getStatusIcon(option.metadata.status)}
-                </Box>
-              }
-              secondary={
-                <Box component="span">
-                  {option.subtitle && (
-                    <Typography variant="caption" component="span" sx={{
-                      color: "text.secondary"
-                    }}>
-                      {option.subtitle}
-                    </Typography>
-                  )}
-                  {option.metadata?.owner && (
-                    <Typography
-                      variant="caption"
-                      component="span"
-                      sx={{
-                        color: "text.secondary",
-                        ml: 1
-                      }}>
-                      • {option.metadata.owner}
-                    </Typography>
-                  )}
-                </Box>
-              }
-            />
-          </ListItem>
-        );
-      }}
+      renderOption={(props, option) => (
+        <SearchResultItem key={'id' in option ? option.id : 'divider'} option={option} listItemProps={props} />
+      )}
       slots={{
         paper: ({ children }) => (
           <Paper 
