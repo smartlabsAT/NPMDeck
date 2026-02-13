@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -136,14 +136,14 @@ const Certificates = () => {
   // Apply visibility filtering
   const visibleCertificates = useFilteredData(certificates)
 
-  const handleDelete = (cert: Certificate) => {
+  const handleDelete = useCallback((cert: Certificate) => {
     setCertToDelete(cert)
     setDeleteDialogOpen(true)
-  }
+  }, [])
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!certToDelete) return
-    
+
     try {
       await certificatesApi.delete(certToDelete.id)
       showSuccess('certificate', 'deleted', certToDelete.nice_name || certToDelete.domain_names[0], certToDelete.id)
@@ -154,13 +154,13 @@ const Certificates = () => {
       showError('certificate', 'delete', err instanceof Error ? err.message : 'Unknown error', certToDelete.nice_name || certToDelete.domain_names[0], certToDelete.id)
       setError(getErrorMessage(err))
     }
-  }
+  }, [certToDelete, showSuccess, showError, loadCertificates])
 
-  const handleRenew = async (cert: Certificate) => {
+  const handleRenew = useCallback(async (cert: Certificate) => {
     if (cert.provider !== 'letsencrypt') return
-    
+
     setRenewingCerts(prev => new Set(prev).add(cert.id))
-    
+
     try {
       await certificatesApi.renew(cert.id)
       showSuccess('certificate', 'renewed', cert.nice_name || cert.domain_names[0], cert.id)
@@ -175,22 +175,22 @@ const Certificates = () => {
         return newSet
       })
     }
-  }
+  }, [showSuccess, showError])
 
 
-  const handleView = (cert: Certificate) => {
+  const handleView = useCallback((cert: Certificate) => {
     navigate(`/security/certificates/${cert.id}/view`)
-  }
+  }, [navigate])
 
-  const handleAddLetsEncrypt = () => {
+  const handleAddLetsEncrypt = useCallback(() => {
     setAddMenuAnchor(null)
     navigate('/security/certificates/new/letsencrypt')
-  }
+  }, [navigate])
 
-  const handleAddCustom = () => {
+  const handleAddCustom = useCallback(() => {
     setAddMenuAnchor(null)
     navigate('/security/certificates/new/other')
-  }
+  }, [navigate])
 
 
 
@@ -228,7 +228,7 @@ const Certificates = () => {
   }
 
   // Column definitions for DataTable with responsive priorities
-  const columns: ResponsiveTableColumn<Certificate>[] = [
+  const columns = useMemo<ResponsiveTableColumn<Certificate>[]>(() => [
     {
       id: 'nice_name',
       label: 'Name',
@@ -351,10 +351,10 @@ const Certificates = () => {
         </Box>
       )
     }
-  ]
+  ], [renewingCerts, handleView, handleRenew, handleDelete])
 
   // Group configuration
-  const groupConfig: GroupConfig<Certificate> = {
+  const groupConfig = useMemo<GroupConfig<Certificate>>(() => ({
     groupBy: (cert) => {
       const certName = cert.nice_name || cert.domain_names[0] || 'Unknown'
       return extractBaseDomain(certName, { parseCompoundNames: true })
@@ -382,10 +382,10 @@ const Certificates = () => {
         </Typography>
       </Box>
     )
-  }
+  }), [])
 
   // Filter definitions
-  const filters: Filter[] = [
+  const filters = useMemo<Filter[]>(() => [
     {
       id: 'provider',
       label: 'Provider',
@@ -397,10 +397,10 @@ const Certificates = () => {
         { value: 'other', label: 'Custom' }
       ]
     }
-  ]
+  ], [])
 
   // Bulk actions
-  const bulkActions: BulkAction<Certificate>[] = [
+  const bulkActions = useMemo<BulkAction<Certificate>[]>(() => [
     {
       id: 'delete',
       label: 'Delete',
@@ -417,7 +417,7 @@ const Certificates = () => {
         }
       }
     }
-  ]
+  ], [showSuccess, showError, loadCertificates])
 
   return (
     <Container maxWidth={false}>

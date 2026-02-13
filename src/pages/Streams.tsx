@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useOptimistic, startTransition } from 'react'
+import React, { useState, useEffect, useOptimistic, startTransition, useMemo, useCallback } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -108,19 +108,19 @@ export default function Streams() {
     }
   }
 
-  const handleCreateStream = () => {
+  const handleCreateStream = useCallback(() => {
     navigate('/hosts/streams/new')
-  }
+  }, [navigate])
 
-  const handleEditStream = (stream: Stream) => {
+  const handleEditStream = useCallback((stream: Stream) => {
     navigate(`/hosts/streams/${stream.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleViewStream = (stream: Stream) => {
+  const handleViewStream = useCallback((stream: Stream) => {
     navigate(`/hosts/streams/${stream.id}/view`)
-  }
+  }, [navigate])
 
-  const handleDeleteStream = async () => {
+  const handleDeleteStream = useCallback(async () => {
     if (!streamToDelete) return
 
     try {
@@ -135,9 +135,9 @@ export default function Streams() {
       showError('stream', 'delete', err instanceof Error ? err.message : 'Unknown error', streamName, streamToDelete?.id)
       logger.error('Failed to delete stream:', err)
     }
-  }
+  }, [streamToDelete, showSuccess, showError, loadStreams])
 
-  const handleToggleEnabled = (stream: Stream) => {
+  const handleToggleEnabled = useCallback((stream: Stream) => {
     startTransition(async () => {
       // Optimistic update - UI changes instantly
       setOptimisticStream({ id: stream.id, enabled: !stream.enabled })
@@ -160,19 +160,19 @@ export default function Streams() {
         await loadStreams()
       }
     })
-  }
+  }, [showSuccess, showError])
 
-  const handleCloseDrawer = () => {
+  const handleCloseDrawer = useCallback(() => {
     setDrawerOpen(false)
     setSelectedStream(null)
     navigate('/hosts/streams')
-  }
+  }, [navigate])
 
-  const handleCloseDetails = () => {
+  const handleCloseDetails = useCallback(() => {
     setDetailsOpen(false)
     setSelectedStream(null)
     navigate('/hosts/streams')
-  }
+  }, [navigate])
 
   // Apply visibility filtering
   const visibleStreams = useFilteredData(optimisticStreams)
@@ -189,7 +189,7 @@ export default function Streams() {
   }
 
   // Column definitions for DataTable with responsive priorities
-  const columns: ResponsiveTableColumn<Stream>[] = [
+  const columns = useMemo<ResponsiveTableColumn<Stream>[]>(() => [
     {
       id: 'status',
       label: 'Status',
@@ -365,10 +365,10 @@ export default function Streams() {
         </Box>
       )
     }
-  ]
+  ], [handleViewStream, handleToggleEnabled, handleEditStream])
 
   // Filter definitions
-  const filters: Filter[] = [
+  const filters = useMemo<Filter[]>(() => [
     {
       id: 'protocols',
       label: 'Protocols',
@@ -384,7 +384,7 @@ export default function Streams() {
     {
       id: 'ssl',
       label: 'SSL',
-      type: 'select', 
+      type: 'select',
       defaultValue: 'all',
       options: [
         { value: 'all', label: 'All' },
@@ -403,10 +403,10 @@ export default function Streams() {
         { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
       ]
     }
-  ]
+  ], [])
 
   // Custom filter function for DataTable
-  const filterFunction = (item: Stream, activeFilters: Record<string, FilterValue>) => {
+  const filterFunction = useCallback((item: Stream, activeFilters: Record<string, FilterValue>) => {
     // Protocol filter
     if (activeFilters.protocols && activeFilters.protocols !== 'all') {
       if (activeFilters.protocols === 'tcp') {
@@ -436,10 +436,10 @@ export default function Streams() {
     }
 
     return true
-  }
+  }, [])
 
   // Bulk actions
-  const bulkActions: BulkAction<Stream>[] = [
+  const bulkActions = useMemo<BulkAction<Stream>[]>(() => [
     {
       id: 'enable',
       label: 'Enable',
@@ -486,7 +486,7 @@ export default function Streams() {
         }
       }
     }
-  ]
+  ], [showSuccess, showError, loadStreams])
 
   return (
     <Container maxWidth={false}>

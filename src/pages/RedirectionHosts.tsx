@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useOptimistic, startTransition } from 'react'
+import React, { useState, useEffect, useOptimistic, startTransition, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -150,7 +150,7 @@ export default function RedirectionHosts() {
     }
   }
 
-  const handleToggleEnabled = (host: RedirectionHost) => {
+  const handleToggleEnabled = useCallback((host: RedirectionHost) => {
     startTransition(async () => {
       // Optimistic update - UI changes instantly
       setOptimisticHost({ id: host.id, enabled: !host.enabled })
@@ -173,29 +173,29 @@ export default function RedirectionHosts() {
         await loadHosts()
       }
     })
-  }
+  }, [showSuccess, showError])
 
-  const handleEdit = (host: RedirectionHost) => {
+  const handleEdit = useCallback((host: RedirectionHost) => {
     navigate(`/hosts/redirection/${host.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleView = (host: RedirectionHost) => {
+  const handleView = useCallback((host: RedirectionHost) => {
     navigate(`/hosts/redirection/${host.id}/view`)
-  }
+  }, [navigate])
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingHost(null)
     navigate('/hosts/redirection/new')
-  }
+  }, [navigate])
 
-  const handleDelete = (host: RedirectionHost) => {
+  const handleDelete = useCallback((host: RedirectionHost) => {
     setHostToDelete(host)
     setDeleteDialogOpen(true)
-  }
+  }, [])
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!hostToDelete) return
-    
+
     try {
       await redirectionHostsApi.delete(hostToDelete.id)
       showSuccess('redirection-host', 'deleted', hostToDelete.domain_names[0] || `#${hostToDelete.id}`, hostToDelete.id)
@@ -206,23 +206,19 @@ export default function RedirectionHosts() {
       showError('redirection-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
       logger.error('Failed to delete redirection host:', err)
     }
-  }
+  }, [hostToDelete, showSuccess, showError, loadHosts])
 
   // Apply visibility filtering
   const visibleHosts = useFilteredData(optimisticHosts)
 
-  const getLinkedProxyHost = (forwardDomain: string): ProxyHost | undefined => {
-    return proxyHostsByDomain.get(forwardDomain.toLowerCase())
-  }
-
-  const handleViewProxyHost = (proxyHost: ProxyHost, event: React.MouseEvent) => {
+  const handleViewProxyHost = useCallback((proxyHost: ProxyHost, event: React.MouseEvent) => {
     event.stopPropagation()
     // Navigate to proxy host overview
     navigate(`/hosts/proxy/${proxyHost.id}/view/overview`)
-  }
+  }, [navigate])
 
   // Column definitions for DataTable with responsive priorities
-  const columns: ResponsiveTableColumn<RedirectionHost>[] = [
+  const columns = useMemo<ResponsiveTableColumn<RedirectionHost>[]>(() => [
     {
       id: 'status',
       label: 'Status',
@@ -258,9 +254,9 @@ export default function RedirectionHosts() {
               </Typography>
               <IconButton
                 size="small"
-                sx={{ 
+                sx={{
                   p: 0.25,
-                  '&:hover': { 
+                  '&:hover': {
                     backgroundColor: 'action.hover'
                   }
                 }}
@@ -286,7 +282,7 @@ export default function RedirectionHosts() {
       showInCard: true,
       mobileLabel: '',
       render: (value, item) => {
-        const linkedProxy = getLinkedProxyHost(item.forward_domain_name)
+        const linkedProxy = proxyHostsByDomain.get(item.forward_domain_name.toLowerCase())
         return (
           <Box>
             <Box
@@ -303,9 +299,9 @@ export default function RedirectionHosts() {
               </Typography>
               <IconButton
                 size="small"
-                sx={{ 
+                sx={{
                   p: 0.25,
-                  '&:hover': { 
+                  '&:hover': {
                     backgroundColor: 'action.hover'
                   }
                 }}
@@ -351,8 +347,8 @@ export default function RedirectionHosts() {
       showInCard: true,
       mobileLabel: '', // Empty string to hide label - HTTP code is self-explanatory
       render: (value, item) => (
-        <Chip 
-          label={getHttpStatusLabel(item.forward_http_code)} 
+        <Chip
+          label={getHttpStatusLabel(item.forward_http_code)}
           size="small"
           color={item.forward_http_code >= 300 && item.forward_http_code < 400 ? 'primary' : 'default'}
         />
@@ -434,10 +430,10 @@ export default function RedirectionHosts() {
         </Box>
       )
     }
-  ]
+  ], [proxyHostsByDomain, handleToggleEnabled, handleEdit, handleDelete, handleViewProxyHost, navigate])
 
   // Filter definitions
-  const filters: Filter[] = [
+  const filters = useMemo<Filter[]>(() => [
     {
       id: 'http_code',
       label: 'HTTP Code',
@@ -474,10 +470,10 @@ export default function RedirectionHosts() {
         { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
       ]
     }
-  ]
+  ], [])
 
   // Custom filter function for DataTable
-  const filterFunction = (item: RedirectionHost, activeFilters: Record<string, FilterValue>) => {
+  const filterFunction = useCallback((item: RedirectionHost, activeFilters: Record<string, FilterValue>) => {
     // HTTP Code filter
     if (activeFilters.http_code && activeFilters.http_code !== 'all') {
       if (item.forward_http_code.toString() !== activeFilters.http_code) return false
@@ -497,10 +493,10 @@ export default function RedirectionHosts() {
     }
 
     return true
-  }
+  }, [])
 
   // Bulk actions
-  const bulkActions: BulkAction<RedirectionHost>[] = [
+  const bulkActions = useMemo<BulkAction<RedirectionHost>[]>(() => [
     {
       id: 'enable',
       label: 'Enable',
@@ -547,10 +543,10 @@ export default function RedirectionHosts() {
         }
       }
     }
-  ]
+  ], [showSuccess, showError, loadHosts])
 
   // Group configuration for domain grouping
-  const groupConfig: GroupConfig<RedirectionHost> = {
+  const groupConfig = useMemo<GroupConfig<RedirectionHost>>(() => ({
     groupBy: (item) => {
       const mainDomain = item.domain_names[0] || ''
       return extractBaseDomain(mainDomain)
@@ -577,7 +573,7 @@ export default function RedirectionHosts() {
         </Typography>
       </Box>
     )
-  }
+  }), [])
 
   return (
     <Container maxWidth={false}>

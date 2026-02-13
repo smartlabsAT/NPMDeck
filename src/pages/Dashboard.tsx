@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { 
   Typography, 
   Paper, 
@@ -150,7 +150,7 @@ const Dashboard = () => {
   const { canView } = usePermissions()
   const stats = useDashboardStats()
   
-  const statsCards = [
+  const statsCards = useMemo(() => [
     {
       title: 'Proxy Hosts',
       value: stats.proxyHosts.total,
@@ -207,9 +207,9 @@ const Dashboard = () => {
       path: '/security/access-lists',
       show: canView('access_lists')
     }
-  ]
+  ], [stats, canView])
 
-  const quickActions = [
+  const quickActions = useMemo(() => [
     {
       label: 'New Proxy Host',
       icon: <ProxyIcon />,
@@ -238,7 +238,7 @@ const Dashboard = () => {
       color: NAVIGATION_COLORS.primary,
       resource: 'access_lists'
     }
-  ]
+  ], [])
 
   return (
     <Box>

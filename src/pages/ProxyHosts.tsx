@@ -1,5 +1,5 @@
 import { getErrorMessage } from '../types/common'
-import React, { useState, useEffect, useOptimistic, startTransition } from 'react'
+import React, { useState, useEffect, useOptimistic, startTransition, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -150,7 +150,7 @@ export default function ProxyHosts() {
     }
   }
 
-  const handleToggleEnabled = (host: ProxyHost) => {
+  const handleToggleEnabled = useCallback((host: ProxyHost) => {
     startTransition(async () => {
       // Optimistic update - UI changes instantly
       setOptimisticHost({ id: host.id, enabled: !host.enabled })
@@ -173,29 +173,29 @@ export default function ProxyHosts() {
         await loadHosts()
       }
     })
-  }
+  }, [showSuccess, showError])
 
-  const handleEdit = (host: ProxyHost) => {
+  const handleEdit = useCallback((host: ProxyHost) => {
     navigate(`/hosts/proxy/${host.id}/edit`)
-  }
+  }, [navigate])
 
-  const handleView = (host: ProxyHost) => {
+  const handleView = useCallback((host: ProxyHost) => {
     navigate(`/hosts/proxy/${host.id}/view`)
-  }
+  }, [navigate])
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     setEditingHost(null)
     navigate('/hosts/proxy/new')
-  }
+  }, [navigate])
 
-  const handleDelete = (host: ProxyHost) => {
+  const handleDelete = useCallback((host: ProxyHost) => {
     setHostToDelete(host)
     setDeleteDialogOpen(true)
-  }
+  }, [])
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!hostToDelete) return
-    
+
     try {
       await proxyHostsApi.delete(hostToDelete.id)
       showSuccess('proxy-host', 'deleted', hostToDelete.domain_names[0] || `#${hostToDelete.id}`, hostToDelete.id)
@@ -206,7 +206,7 @@ export default function ProxyHosts() {
       showError('proxy-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
       logger.error('Failed to delete host:', err)
     }
-  }
+  }, [hostToDelete, showSuccess, showError, loadHosts])
 
 
   // Apply visibility filtering
@@ -225,7 +225,7 @@ export default function ProxyHosts() {
   }
 
   // Column definitions for DataTable with responsive priorities
-  const columns: ResponsiveTableColumn<ProxyHost>[] = [
+  const columns = useMemo<ResponsiveTableColumn<ProxyHost>[]>(() => [
     {
       id: 'status',
       label: 'Status',
@@ -475,10 +475,10 @@ export default function ProxyHosts() {
         </Box>
       )
     }
-  ]
+  ], [redirectionsByTarget, handleToggleEnabled, handleEdit, handleDelete, navigate])
 
   // Filter definitions
-  const filters: Filter[] = [
+  const filters = useMemo<Filter[]>(() => [
     {
       id: 'ssl',
       label: 'SSL',
@@ -513,10 +513,10 @@ export default function ProxyHosts() {
         { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
       ]
     }
-  ]
+  ], [])
 
   // Custom filter function for DataTable
-  const filterFunction = (item: ProxyHost, activeFilters: Record<string, FilterValue>) => {
+  const filterFunction = useCallback((item: ProxyHost, activeFilters: Record<string, FilterValue>) => {
     // SSL filter
     if (activeFilters.ssl && activeFilters.ssl !== 'all') {
       if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false
@@ -537,10 +537,10 @@ export default function ProxyHosts() {
     }
 
     return true
-  }
+  }, [])
 
   // Bulk actions
-  const bulkActions: BulkAction<ProxyHost>[] = [
+  const bulkActions = useMemo<BulkAction<ProxyHost>[]>(() => [
     {
       id: 'enable',
       label: 'Enable',
@@ -587,10 +587,10 @@ export default function ProxyHosts() {
         }
       }
     }
-  ]
+  ], [showSuccess, showError, loadHosts])
 
   // Group configuration for domain grouping
-  const groupConfig: GroupConfig<ProxyHost> = {
+  const groupConfig = useMemo<GroupConfig<ProxyHost>>(() => ({
     groupBy: (item) => {
       const mainDomain = item.domain_names[0] || ''
       return extractBaseDomain(mainDomain)
@@ -617,7 +617,7 @@ export default function ProxyHosts() {
         </Typography>
       </Box>
     )
-  }
+  }), [])
 
   return (
     <Container maxWidth={false}>

@@ -1,4 +1,4 @@
-import React, { useState, useTransition } from 'react'
+import React, { useState, useTransition, useMemo, useCallback } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   AppBar,
@@ -58,78 +58,76 @@ const Layout = () => {
   const [securityOpen, setSecurityOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
   
-  const handleNavigate = (path: string) => {
+  const handleNavigate = useCallback((path: string) => {
     startTransition(() => {
       navigate(path)
     })
-  }
+  }, [navigate])
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen)
-  }
+  const handleDrawerToggle = useCallback(() => {
+    setMobileOpen(prev => !prev)
+  }, [])
 
   // Auto-close mobile drawer after navigation
-  const handleMobileNavigate = (path: string) => {
+  const handleMobileNavigate = useCallback((path: string) => {
     handleNavigate(path)
     // Close mobile drawer after navigation click
-    if (mobileOpen) {
-      setMobileOpen(false)
-    }
-  }
+    setMobileOpen(false)
+  }, [handleNavigate])
 
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenu = useCallback((event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
-  }
+  }, [])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setAnchorEl(null)
-  }
+  }, [])
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     startTransition(() => {
       logout()
       navigate('/login')
     })
-  }
+  }, [logout, navigate])
 
   // Build menu items based on permissions using navigation constants
-  const hostsChildren: MenuItem[] = [
-    canView('proxy_hosts') && { 
-      text: NAVIGATION_CONFIG.proxyHosts.text, 
-      icon: React.createElement(NAVIGATION_CONFIG.proxyHosts.icon, { sx: { color: NAVIGATION_CONFIG.proxyHosts.color } }), 
-      path: NAVIGATION_CONFIG.proxyHosts.path 
+  const hostsChildren = useMemo<MenuItem[]>(() => [
+    canView('proxy_hosts') && {
+      text: NAVIGATION_CONFIG.proxyHosts.text,
+      icon: React.createElement(NAVIGATION_CONFIG.proxyHosts.icon, { sx: { color: NAVIGATION_CONFIG.proxyHosts.color } }),
+      path: NAVIGATION_CONFIG.proxyHosts.path
     },
-    canView('redirection_hosts') && { 
-      text: NAVIGATION_CONFIG.redirectionHosts.text, 
-      icon: React.createElement(NAVIGATION_CONFIG.redirectionHosts.icon, { sx: { color: NAVIGATION_CONFIG.redirectionHosts.color } }), 
-      path: NAVIGATION_CONFIG.redirectionHosts.path 
+    canView('redirection_hosts') && {
+      text: NAVIGATION_CONFIG.redirectionHosts.text,
+      icon: React.createElement(NAVIGATION_CONFIG.redirectionHosts.icon, { sx: { color: NAVIGATION_CONFIG.redirectionHosts.color } }),
+      path: NAVIGATION_CONFIG.redirectionHosts.path
     },
-    canView('dead_hosts') && { 
-      text: NAVIGATION_CONFIG.deadHosts.text, 
-      icon: React.createElement(NAVIGATION_CONFIG.deadHosts.icon, { sx: { color: NAVIGATION_CONFIG.deadHosts.color } }), 
-      path: NAVIGATION_CONFIG.deadHosts.path 
+    canView('dead_hosts') && {
+      text: NAVIGATION_CONFIG.deadHosts.text,
+      icon: React.createElement(NAVIGATION_CONFIG.deadHosts.icon, { sx: { color: NAVIGATION_CONFIG.deadHosts.color } }),
+      path: NAVIGATION_CONFIG.deadHosts.path
     },
-    canView('streams') && { 
-      text: NAVIGATION_CONFIG.streams.text, 
-      icon: React.createElement(NAVIGATION_CONFIG.streams.icon, { sx: { color: NAVIGATION_CONFIG.streams.color } }), 
-      path: NAVIGATION_CONFIG.streams.path 
+    canView('streams') && {
+      text: NAVIGATION_CONFIG.streams.text,
+      icon: React.createElement(NAVIGATION_CONFIG.streams.icon, { sx: { color: NAVIGATION_CONFIG.streams.color } }),
+      path: NAVIGATION_CONFIG.streams.path
     }
-  ].filter(Boolean) as MenuItem[]
+  ].filter(Boolean) as MenuItem[], [canView])
 
-  const securityChildren: MenuItem[] = [
-    canView('access_lists') && { 
-      text: NAVIGATION_CONFIG.accessLists.text, 
-      icon: React.createElement(NAVIGATION_CONFIG.accessLists.icon, { sx: { color: NAVIGATION_CONFIG.accessLists.color } }), 
-      path: NAVIGATION_CONFIG.accessLists.path 
+  const securityChildren = useMemo<MenuItem[]>(() => [
+    canView('access_lists') && {
+      text: NAVIGATION_CONFIG.accessLists.text,
+      icon: React.createElement(NAVIGATION_CONFIG.accessLists.icon, { sx: { color: NAVIGATION_CONFIG.accessLists.color } }),
+      path: NAVIGATION_CONFIG.accessLists.path
     },
-    canView('certificates') && { 
-      text: NAVIGATION_CONFIG.certificates.text, 
-      icon: React.createElement(NAVIGATION_CONFIG.certificates.icon, { sx: { color: NAVIGATION_CONFIG.certificates.color } }), 
-      path: NAVIGATION_CONFIG.certificates.path 
+    canView('certificates') && {
+      text: NAVIGATION_CONFIG.certificates.text,
+      icon: React.createElement(NAVIGATION_CONFIG.certificates.icon, { sx: { color: NAVIGATION_CONFIG.certificates.color } }),
+      path: NAVIGATION_CONFIG.certificates.path
     }
-  ].filter(Boolean) as MenuItem[]
+  ].filter(Boolean) as MenuItem[], [canView])
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     {
       text: NAVIGATION_CONFIG.dashboard.text,
       icon: React.createElement(NAVIGATION_CONFIG.dashboard.icon, { sx: { color: NAVIGATION_CONFIG.dashboard.color } }),
@@ -149,33 +147,33 @@ const Layout = () => {
       onClick: () => setSecurityOpen(!securityOpen),
       children: securityChildren
     },
-  ].filter(Boolean) as MenuItem[]
+  ].filter(Boolean) as MenuItem[], [hostsChildren, hostsOpen, securityChildren, securityOpen])
 
-  const adminItems = [
+  const adminItems = useMemo(() => [
     {
       text: NAVIGATION_CONFIG.administration.text,
       icon: React.createElement(NAVIGATION_CONFIG.administration.icon, { sx: { color: NAVIGATION_CONFIG.administration.color } }),
       open: adminOpen,
       onClick: () => setAdminOpen(!adminOpen),
       children: [
-        { 
-          text: NAVIGATION_CONFIG.users.text, 
-          icon: React.createElement(NAVIGATION_CONFIG.users.icon, { sx: { color: NAVIGATION_CONFIG.users.color } }), 
-          path: NAVIGATION_CONFIG.users.path 
+        {
+          text: NAVIGATION_CONFIG.users.text,
+          icon: React.createElement(NAVIGATION_CONFIG.users.icon, { sx: { color: NAVIGATION_CONFIG.users.color } }),
+          path: NAVIGATION_CONFIG.users.path
         },
-        { 
-          text: NAVIGATION_CONFIG.auditLog.text, 
-          icon: React.createElement(NAVIGATION_CONFIG.auditLog.icon, { sx: { color: NAVIGATION_CONFIG.auditLog.color } }), 
-          path: NAVIGATION_CONFIG.auditLog.path 
+        {
+          text: NAVIGATION_CONFIG.auditLog.text,
+          icon: React.createElement(NAVIGATION_CONFIG.auditLog.icon, { sx: { color: NAVIGATION_CONFIG.auditLog.color } }),
+          path: NAVIGATION_CONFIG.auditLog.path
         },
-        { 
-          text: NAVIGATION_CONFIG.settings.text, 
-          icon: React.createElement(NAVIGATION_CONFIG.settings.icon, { sx: { color: NAVIGATION_CONFIG.settings.color } }), 
-          path: NAVIGATION_CONFIG.settings.path 
+        {
+          text: NAVIGATION_CONFIG.settings.text,
+          icon: React.createElement(NAVIGATION_CONFIG.settings.icon, { sx: { color: NAVIGATION_CONFIG.settings.color } }),
+          path: NAVIGATION_CONFIG.settings.path
         }
       ]
     }
-  ]
+  ], [adminOpen])
 
   const drawer = (
     <div>
