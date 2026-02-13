@@ -1,30 +1,17 @@
 import api from './config'
+import type { ToggleableEntity, NginxMeta, LetsEncryptMeta } from '../types/base'
+import type { Certificate } from './certificates'
 
-export interface Stream {
-  id: number
-  created_on: string
-  modified_on: string
-  owner_user_id: number
+export interface Stream extends ToggleableEntity {
   incoming_port: number
   forwarding_host: string
   forwarding_port: number
   tcp_forwarding: boolean
   udp_forwarding: boolean
-  enabled: boolean
   certificate_id: number
-  meta: {
-    nginx_online?: boolean
-    nginx_err?: string | null
-    letsencrypt_email?: string
-    letsencrypt_agree?: boolean
-    dns_challenge?: boolean
-    dns_provider?: string
-    dns_provider_credentials?: string
-    propagation_seconds?: number
-  }
+  meta: NginxMeta & LetsEncryptMeta
   // Expanded relations
-  owner?: any
-  certificate?: any
+  certificate?: Certificate
 }
 
 export interface CreateStream {

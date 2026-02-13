@@ -1,30 +1,11 @@
 import api from './config'
+import type { HostEntity, NginxMeta, LetsEncryptMeta } from '../types/base'
+import type { Certificate } from './certificates'
 
-export interface DeadHost {
-  id: number
-  created_on: string
-  modified_on: string
-  owner_user_id: number
-  domain_names: string[]
-  certificate_id: number
-  ssl_forced: boolean
-  hsts_enabled: boolean
-  hsts_subdomains: boolean
-  http2_support: boolean
-  advanced_config: string
-  enabled: boolean
-  meta: {
-    nginx_online?: boolean
-    nginx_err?: string | null
-    letsencrypt_agree?: boolean
-    dns_challenge?: boolean
-    dns_provider?: string
-    dns_provider_credentials?: string
-    propagation_seconds?: number
-  }
+export interface DeadHost extends HostEntity {
+  meta: NginxMeta & LetsEncryptMeta
   // Expanded relations
-  certificate?: any
-  owner?: any
+  certificate?: Certificate
 }
 
 export interface CreateDeadHost {

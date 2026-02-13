@@ -1,7 +1,7 @@
 import api from './config'
+import type { BaseEntity } from '../types/base'
 
-export interface User {
-  id: number
+export interface User extends BaseEntity {
   email: string
   name: string
   nickname: string
@@ -17,8 +17,6 @@ export interface User {
     access_lists?: 'hidden' | 'view' | 'manage'
     certificates?: 'hidden' | 'view' | 'manage'
   }
-  created_on: string
-  modified_on: string
   last_login?: string
 }
 
