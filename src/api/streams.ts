@@ -1,5 +1,6 @@
 import api from './config'
 import type { ToggleableEntity, NginxMeta, LetsEncryptMeta } from '../types/base'
+import { buildExpandParams } from './utils'
 import type { Certificate } from './certificates'
 
 export interface Stream extends ToggleableEntity {
@@ -35,43 +36,38 @@ export interface UpdateStream extends Partial<CreateStream> {
   enabled?: boolean
 }
 
-class StreamsApi {
+export const streamsApi = {
   async getAll(expand?: string[]): Promise<Stream[]> {
-    const params = expand?.length ? { expand: expand.join(',') } : undefined
+    const params = buildExpandParams(expand)
     const response = await api.get('/nginx/streams', { params })
     return response.data
-  }
+  },
 
   async getById(id: number, expand?: string[]): Promise<Stream> {
-    const params = expand?.length ? { expand: expand.join(',') } : undefined
+    const params = buildExpandParams(expand)
     const response = await api.get(`/nginx/streams/${id}`, { params })
     return response.data
-  }
+  },
 
   async create(data: CreateStream): Promise<Stream> {
     const response = await api.post('/nginx/streams', data)
     return response.data
-  }
+  },
 
   async update(id: number, data: UpdateStream): Promise<Stream> {
     const response = await api.put(`/nginx/streams/${id}`, data)
     return response.data
-  }
+  },
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: number): Promise<void> {
     await api.delete(`/nginx/streams/${id}`)
-    return true
-  }
+  },
 
-  async enable(id: number): Promise<boolean> {
+  async enable(id: number): Promise<void> {
     await api.post(`/nginx/streams/${id}/enable`)
-    return true
-  }
+  },
 
-  async disable(id: number): Promise<boolean> {
+  async disable(id: number): Promise<void> {
     await api.post(`/nginx/streams/${id}/disable`)
-    return true
-  }
+  },
 }
-
-export const streamsApi = new StreamsApi()

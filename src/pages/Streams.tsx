@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useOptimistic } from 'react'
+import React, { useState, useEffect, useOptimistic, startTransition } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -136,27 +136,29 @@ export default function Streams() {
     }
   }
 
-  const handleToggleEnabled = async (stream: Stream) => {
-    // Optimistic update - UI changes instantly
-    setOptimisticStream({ id: stream.id, enabled: !stream.enabled })
+  const handleToggleEnabled = (stream: Stream) => {
+    startTransition(async () => {
+      // Optimistic update - UI changes instantly
+      setOptimisticStream({ id: stream.id, enabled: !stream.enabled })
 
-    try {
-      const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
+      try {
+        const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
 
-      if (stream.enabled) {
-        await streamsApi.disable(stream.id)
-        showSuccess('stream', 'disabled', streamName, stream.id)
-      } else {
-        await streamsApi.enable(stream.id)
-        showSuccess('stream', 'enabled', streamName, stream.id)
+        if (stream.enabled) {
+          await streamsApi.disable(stream.id)
+          showSuccess('stream', 'disabled', streamName, stream.id)
+        } else {
+          await streamsApi.enable(stream.id)
+          showSuccess('stream', 'enabled', streamName, stream.id)
+        }
+        await loadStreams()
+      } catch (err: unknown) {
+        const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
+        showError('stream', stream.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', streamName, stream.id)
+        setError(getErrorMessage(err))
+        await loadStreams()
       }
-      await loadStreams()
-    } catch (err: unknown) {
-      const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
-      showError('stream', stream.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', streamName, stream.id)
-      setError(getErrorMessage(err))
-      await loadStreams()
-    }
+    })
   }
 
   const handleCloseDrawer = () => {

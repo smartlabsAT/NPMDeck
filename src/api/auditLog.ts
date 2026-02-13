@@ -38,20 +38,14 @@ export interface AuditLogSearchParams {
 
 export const auditLogApi = {
   async getAll(params: AuditLogSearchParams = {}): Promise<AuditLogEntry[]> {
-    const queryParams = new URLSearchParams()
-    
-    if (params.expand && params.expand.length > 0) {
-      queryParams.append('expand', params.expand.join(','))
+    const queryParams: Record<string, string> = {}
+    if (params.expand?.length) {
+      queryParams.expand = params.expand.join(',')
     }
-    
     if (params.query) {
-      queryParams.append('query', params.query)
+      queryParams.query = params.query
     }
-    
-    const queryString = queryParams.toString()
-    const url = `/audit-log${queryString ? `?${queryString}` : ''}`
-    
-    const response = await api.get<AuditLogEntry[]>(url)
+    const response = await api.get<AuditLogEntry[]>('/audit-log', { params: queryParams })
     return response.data
   },
 }

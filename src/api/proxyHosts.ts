@@ -1,5 +1,6 @@
 import api from './config'
 import type { HostEntity } from '../types/base'
+import { buildExpandParams } from './utils'
 import { Certificate } from './certificates'
 import { AccessList } from './accessLists'
 
@@ -49,43 +50,38 @@ export interface UpdateProxyHost extends CreateProxyHost {
   enabled?: boolean
 }
 
-class ProxyHostsApi {
+export const proxyHostsApi = {
   async getAll(expand?: string[]): Promise<ProxyHost[]> {
-    const params = expand?.length ? { expand: expand.join(',') } : undefined
+    const params = buildExpandParams(expand)
     const response = await api.get('/nginx/proxy-hosts', { params })
     return response.data
-  }
+  },
 
   async getById(id: number, expand?: string[]): Promise<ProxyHost> {
-    const params = expand?.length ? { expand: expand.join(',') } : undefined
+    const params = buildExpandParams(expand)
     const response = await api.get(`/nginx/proxy-hosts/${id}`, { params })
     return response.data
-  }
+  },
 
   async create(data: CreateProxyHost): Promise<ProxyHost> {
     const response = await api.post('/nginx/proxy-hosts', data)
     return response.data
-  }
+  },
 
   async update(id: number, data: UpdateProxyHost): Promise<ProxyHost> {
     const response = await api.put(`/nginx/proxy-hosts/${id}`, data)
     return response.data
-  }
+  },
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: number): Promise<void> {
     await api.delete(`/nginx/proxy-hosts/${id}`)
-    return true
-  }
+  },
 
-  async enable(id: number): Promise<boolean> {
+  async enable(id: number): Promise<void> {
     await api.post(`/nginx/proxy-hosts/${id}/enable`)
-    return true
-  }
+  },
 
-  async disable(id: number): Promise<boolean> {
+  async disable(id: number): Promise<void> {
     await api.post(`/nginx/proxy-hosts/${id}/disable`)
-    return true
-  }
+  },
 }
-
-export const proxyHostsApi = new ProxyHostsApi()
