@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
-import { AxiosError } from 'axios'
+import { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import { useAuthStore } from '../stores/authStore'
 import { TIMING } from '../constants/timing'
 import api from '../api/config'
+
+type RetryableAxiosConfig = InternalAxiosRequestConfig & { _retry?: boolean }
 
 export const useAuthInterceptors = () => {
   const { showToast, showError, showInfo } = useToast()
@@ -17,7 +19,7 @@ export const useAuthInterceptors = () => {
       (response) => response,
       async (error: AxiosError) => {
         // Skip toast for initial 401 that triggers refresh
-        if (error.response?.status === 401 && !(error.config as any)?._retry) {
+        if (error.response?.status === 401 && !(error.config as RetryableAxiosConfig)?._retry) {
           // Don't show toast here, it will be handled by refresh logic
           return Promise.reject(error)
         }
@@ -28,7 +30,7 @@ export const useAuthInterceptors = () => {
         }
 
         // Session expired (after refresh attempt failed)
-        if (error.response?.status === 401 && (error.config as any)?._retry) {
+        if (error.response?.status === 401 && (error.config as RetryableAxiosConfig)?._retry) {
           showToast({
             message: 'Session expired. Please login again.',
             severity: 'error',

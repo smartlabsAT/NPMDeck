@@ -1,16 +1,17 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getErrorMessage } from '../types/common';
 import { TIMING } from '../constants/timing';
+import logger from '../utils/logger';
 
 /**
  * Validation function type
  */
-export type ValidationFunction<T> = (value: T, formData?: any) => string | null;
+export type ValidationFunction<T> = (value: T, formData?: Record<string, unknown>) => string | null;
 
 /**
  * Field configuration for form management
  */
-export interface FieldConfig<T = any> {
+export interface FieldConfig<T = unknown> {
   /** Initial value for the field */
   initialValue: T;
   /** Validation function */
@@ -32,7 +33,7 @@ export interface UseDrawerFormOptions<T> {
   /** Initial form data */
   initialData: T;
   /** Field configurations */
-  fields?: Partial<Record<keyof T, FieldConfig>>;
+  fields?: { [K in keyof T]?: FieldConfig<T[K]> };
   /** Global validation function */
   validate?: (data: T) => Partial<Record<keyof T, string>> | null;
   /** Submit handler */
@@ -137,9 +138,9 @@ const defaultIsEqual = <T>(a: T, b: T): boolean => {
  * />
  * ```
  */
-export const useDrawerForm = <T extends Record<string, any>>({
+export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
   initialData,
-  fields = {} as Partial<Record<keyof T, FieldConfig>>,
+  fields = {} as { [K in keyof T]?: FieldConfig<T[K]> },
   validate,
   onSubmit,
   onSuccess,
@@ -169,7 +170,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
   /**
    * Validate a single field
    */
-  const validateField = useCallback((key: keyof T, value: any, data?: T): string | null => {
+  const validateField = useCallback((key: keyof T, value: T[keyof T], data?: T): string | null => {
     const fieldConfig = fields[key];
     
     // Required validation
@@ -245,7 +246,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
   /**
    * Update a single field value
    */
-  const setFieldValue = useCallback((key: keyof T, value: any) => {
+  const setFieldValue = useCallback((key: keyof T, value: T[keyof T]) => {
     setFormState((prev) => {
       const newData = { ...prev.data, [key]: value };
       
@@ -381,7 +382,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
         }, TIMING.AUTOSAVE_RESET);
       } catch (error) {
         setFormState((prev) => ({ ...prev, autoSaveStatus: 'error' }));
-        console.error('Auto-save failed:', error);
+        logger.error('Auto-save failed:', error);
       }
     }, autoSave.delay || TIMING.AUTOSAVE_RESET);
     
@@ -406,7 +407,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
         const value = event.target.type === 'number' 
           ? Number(event.target.value)
           : event.target.value;
-        setFieldValue(key, value);
+        setFieldValue(key, value as T[keyof T]);
       },
       onBlur: () => {
         setFieldTouched(key, true);

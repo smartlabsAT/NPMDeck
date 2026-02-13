@@ -100,7 +100,7 @@ export default function CertificateDrawer({
     },
     fields: {
       provider: {
-        required: true, initialValue: undefined,
+        required: true, initialValue: 'letsencrypt',
       },
       niceName: {
         initialValue: '',
