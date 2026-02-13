@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material'
 import { RedirectionHost, CreateRedirectionHost, redirectionHostsApi } from '../api/redirectionHosts'
 import { Certificate, certificatesApi } from '../api/certificates'
-import BaseDrawer, { Tab } from './base/BaseDrawer'
+import BaseDrawer, { DrawerTab } from './base/BaseDrawer'
 import { useDrawerForm } from '../hooks/useDrawerForm'
 import CertificateDrawer from './features/certificates/CertificateDrawer'
 import DomainInput from './DomainInput'
@@ -227,7 +227,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
     { value: 'route53', label: 'AWS Route53' },
   ]
 
-  const tabs: Tab[] = [
+  const tabs: DrawerTab[] = [
     {
       id: 'details',
       label: 'Details',

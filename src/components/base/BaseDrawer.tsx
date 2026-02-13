@@ -28,7 +28,7 @@ import {
 /**
  * Tab configuration interface for BaseDrawer
  */
-export interface Tab {
+export interface DrawerTab {
   /** Unique identifier for the tab */
   id: string;
   /** Display label for the tab */
@@ -68,7 +68,7 @@ export interface BaseDrawerProps {
   /** Success message to display */
   success?: string;
   /** Tabs configuration */
-  tabs?: Tab[];
+  tabs?: DrawerTab[];
   /** Active tab index */
   activeTab?: number;
   /** Tab change handler */
@@ -240,7 +240,7 @@ export const BaseDrawer = ({
   /**
    * Render tab with badge and error state
    */
-  const renderTab = (tab: Tab, _index: number) => (
+  const renderTab = (tab: DrawerTab, _index: number) => (
     <Tab
       key={tab.id}
       label={
