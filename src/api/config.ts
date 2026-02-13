@@ -15,7 +15,7 @@ let failedQueue: Array<{
 }> = []
 
 // Process the queue when token is refreshed
-const processQueue = (error: unknown, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null): void => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error)

@@ -73,7 +73,7 @@ const loadTokenStack = (): TokenInfo[] => {
 }
 
 // Helper to save token stack to localStorage
-const saveTokenStack = (stack: TokenInfo[]) => {
+const saveTokenStack = (stack: TokenInfo[]): void => {
   localStorage.setItem(STORAGE_KEYS.TOKEN_STACK, JSON.stringify(stack))
 }
 

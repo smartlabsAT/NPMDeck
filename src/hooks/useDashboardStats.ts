@@ -49,7 +49,7 @@ export interface DashboardStats {
   error: string | null
 }
 
-export const useDashboardStats = () => {
+export const useDashboardStats = (): DashboardStats => {
   const { canView } = usePermissions()
   const [stats, setStats] = useState<DashboardStats>({
     proxyHosts: { total: 0, active: 0, inactive: 0 },

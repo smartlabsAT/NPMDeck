@@ -13,7 +13,7 @@ interface Logger {
   table: (data: Record<string, unknown> | unknown[]) => void
 }
 
-const noop = () => {}
+const noop = (): void => {}
 
 const logger: Logger = {
   log: isDevelopment ? console.log.bind(console) : noop,

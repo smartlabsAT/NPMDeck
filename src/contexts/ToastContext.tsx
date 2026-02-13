@@ -71,14 +71,14 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 /**
  * Slide transition for toast
  */
-function _SlideTransition(props: SlideProps) {
+function _SlideTransition(props: SlideProps): React.JSX.Element {
   return <Slide {...props} direction="down" />;
 }
 
 /**
  * Get entity icon
  */
-function getEntityIcon(entityType: EntityType) {
+function getEntityIcon(entityType: EntityType): React.ElementType {
   const icons: Record<EntityType, React.ElementType> = {
     'proxy-host': ProxyIcon,
     'redirection-host': RedirectionIcon,
@@ -96,7 +96,7 @@ function getEntityIcon(entityType: EntityType) {
 /**
  * Get action icon
  */
-function getActionIcon(action?: ActionType) {
+function getActionIcon(action?: ActionType): React.ElementType | null {
   if (!action) return null;
   
   const icons: Record<ActionType, React.ElementType> = {
@@ -475,7 +475,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 /**
  * Hook to use toast functionality
  */
-export function useToast() {
+export function useToast(): ToastContextValue {
   const context = useContext(ToastContext);
   if (!context) {
     throw new Error('useToast must be used within a ToastProvider');
