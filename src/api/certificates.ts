@@ -1,11 +1,7 @@
 import api from './config'
-import { Owner } from '../types/common'
+import type { OwnedEntity } from '../types/base'
 
-export interface Certificate {
-  id: number
-  created_on: string
-  modified_on: string
-  owner_user_id: number
+export interface Certificate extends OwnedEntity {
   provider: 'letsencrypt' | 'other'
   nice_name: string
   domain_names: string[]
@@ -19,8 +15,6 @@ export interface Certificate {
     propagation_seconds?: number
     certificate_id?: string
   }
-  // Relations
-  owner?: Owner
 }
 
 export interface CreateCertificate {

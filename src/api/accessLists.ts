@@ -1,33 +1,22 @@
 import api from './config'
-import { Owner } from '../types/common'
+import type { OwnedEntity, BaseEntity } from '../types/base'
 
-export interface AccessList {
-  id: number
-  created_on: string
-  modified_on: string
-  owner_user_id: number
+export interface AccessList extends OwnedEntity {
   name: string
   meta: Record<string, any>
   satisfy_any: boolean
   pass_auth: boolean
   // Relations
-  owner?: Owner
   items?: AccessListItem[]
   clients?: AccessListClient[]
 }
 
-export interface AccessListItem {
-  id: number
-  created_on: string
-  modified_on: string
+export interface AccessListItem extends BaseEntity {
   username: string
   password: string
 }
 
-export interface AccessListClient {
-  id: number
-  created_on: string
-  modified_on: string
+export interface AccessListClient extends BaseEntity {
   address: string
   directive: 'allow' | 'deny'
 }

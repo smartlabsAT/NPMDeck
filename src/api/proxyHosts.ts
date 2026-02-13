@@ -1,36 +1,19 @@
 import api from './config'
-import { Owner } from '../types/common'
+import type { HostEntity } from '../types/base'
 import { Certificate } from './certificates'
 import { AccessList } from './accessLists'
 
-export interface ProxyHost {
-  id: number
-  created_on: string
-  modified_on: string
-  owner_user_id: number
-  domain_names: string[]
+export interface ProxyHost extends HostEntity {
   forward_host: string
   forward_port: number
   access_list_id: number
-  certificate_id: number
-  ssl_forced: boolean
   caching_enabled: boolean
   block_exploits: boolean
-  advanced_config: string
-  meta: {
-    nginx_online?: boolean
-    nginx_err?: string | null
-  }
   allow_websocket_upgrade: boolean
-  http2_support: boolean
   forward_scheme: 'http' | 'https'
-  enabled: boolean
   locations: ProxyHostLocation[] | null
-  hsts_enabled: boolean
-  hsts_subdomains: boolean
   // Expanded relations
   certificate?: Certificate
-  owner?: Owner
   access_list?: AccessList
 }
 

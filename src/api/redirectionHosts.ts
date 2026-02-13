@@ -1,51 +1,18 @@
 import api from './config'
+import type { HostEntity, NginxMeta, LetsEncryptMeta } from '../types/base'
+import type { Certificate } from './certificates'
+import type { AccessList } from './accessLists'
 
-// Interfaces
-export interface RedirectionHost {
-  id: number
-  created_on: string
-  modified_on: string
-  domain_names: string[]
+export interface RedirectionHost extends HostEntity {
   forward_http_code: number
   forward_scheme: string
   forward_domain_name: string
   preserve_path: boolean
-  certificate_id: number
-  ssl_forced: boolean
-  hsts_enabled: boolean
-  hsts_subdomains: boolean
   block_exploits: boolean
-  http2_support: boolean
-  advanced_config: string
-  enabled: boolean
-  meta: {
-    nginx_online?: boolean
-    nginx_err?: string
-    dns_challenge?: boolean
-    dns_provider?: string
-    dns_provider_credentials?: string
-    propagation_seconds?: number
-    letsencrypt_email?: string
-    letsencrypt_agree?: boolean
-  }
-  // Expansions
-  owner?: {
-    id: number
-    email: string
-    name: string
-  }
-  certificate?: {
-    id: number
-    provider: string
-    nice_name: string
-    domain_names: string[]
-    expires_on: string | null
-    meta: any
-  }
-  access_list?: {
-    id: number
-    name: string
-  }
+  meta: NginxMeta & LetsEncryptMeta
+  // Expanded relations
+  certificate?: Certificate
+  access_list?: AccessList
 }
 
 export interface CreateRedirectionHost {

@@ -7,10 +7,12 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import ErrorIcon from '@mui/icons-material/Error'
 
+import type { NginxMeta } from '../types/base'
+
 /** Entity shape required for status utilities */
 interface StatusEntity {
   enabled: boolean
-  meta: { nginx_online?: boolean; nginx_err?: string | null }
+  meta: NginxMeta
 }
 
 /**

@@ -1,9 +1,9 @@
-import { User } from '../api/users'
+import type { Owner } from './base'
 import { Certificate } from '../api/certificates'
 import { AccessList } from '../api/accessLists'
 
-// Common owner type used across entities
-export type Owner = Pick<User, 'id' | 'email' | 'name' | 'nickname'>
+// Re-export Owner from base types for backward compatibility
+export type { Owner }
 
 // Extended certificate type with proper relations
 export interface CertificateWithRelations extends Omit<Certificate, 'owner'> {
