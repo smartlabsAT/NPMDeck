@@ -10,6 +10,7 @@ import {
   Paper,
   CircularProgress,
   ListItemIcon,
+  Alert,
 } from '@mui/material'
 import {
   Security as SecurityIcon,
@@ -26,6 +27,7 @@ interface ProxyHostAccessPanelProps {
   host: ProxyHost
   fullAccessList: AccessList | null
   loadingAccessList: boolean
+  error?: string | null
   onNavigateToFullAccessList: () => void
 }
 
@@ -33,10 +35,19 @@ const ProxyHostAccessPanel = ({
   host,
   fullAccessList,
   loadingAccessList,
+  error,
   onNavigateToFullAccessList,
 }: ProxyHostAccessPanelProps) => {
   if (!host.access_list) {
     return null
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        {error}
+      </Alert>
+    )
   }
 
   if (loadingAccessList) {

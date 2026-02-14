@@ -4,6 +4,7 @@ import { CircularProgress, Box } from '@mui/material'
 import ProtectedRoute from './components/ProtectedRoute'
 import PermissionRoute from './components/PermissionRoute'
 import LayoutWithSearch from './components/LayoutWithSearch'
+import PageErrorBoundary from './components/PageErrorBoundary'
 
 // Loading component
 const PageLoader = () => (
@@ -18,11 +19,13 @@ const PageLoader = () => (
   </Box>
 )
 
-// Wrap lazy components in Suspense
+// Wrap lazy components in ErrorBoundary + Suspense to catch chunk load failures
 const withSuspense = (Component: React.LazyExoticComponent<any>) => (
-  <Suspense fallback={<PageLoader />}>
-    <Component />
-  </Suspense>
+  <PageErrorBoundary>
+    <Suspense fallback={<PageLoader />}>
+      <Component />
+    </Suspense>
+  </PageErrorBoundary>
 )
 
 // Lazy load pages

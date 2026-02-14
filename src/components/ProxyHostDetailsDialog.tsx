@@ -55,8 +55,10 @@ const ProxyHostDetailsDialog = ({
   })
   const [linkedRedirections, setLinkedRedirections] = useState<RedirectionHost[]>([])
   const [loadingConnections, setLoadingConnections] = useState(false)
+  const [connectionsError, setConnectionsError] = useState<string | null>(null)
   const [fullAccessList, setFullAccessList] = useState<AccessList | null>(null)
   const [loadingAccessList, setLoadingAccessList] = useState(false)
+  const [accessListError, setAccessListError] = useState<string | null>(null)
 
   // Parse tab from URL
   useEffect(() => {
@@ -101,20 +103,22 @@ const ProxyHostDetailsDialog = ({
 
   const loadConnections = async () => {
     if (!host) return
-    
+
     setLoadingConnections(true)
+    setConnectionsError(null)
     try {
       const redirections = await redirectionHostsApi.getAll()
-      
+
       // Filter redirections that point to any of this host's domains
       const linkedRedirects = redirections.filter(redirect => {
         const targetDomain = redirect.forward_domain_name.toLowerCase()
         return host.domain_names.some(domain => domain.toLowerCase() === targetDomain)
       })
-      
+
       setLinkedRedirections(linkedRedirects)
     } catch (error) {
       logger.error('Failed to load connections:', error)
+      setConnectionsError('Failed to load connected redirections.')
     } finally {
       setLoadingConnections(false)
     }
@@ -122,13 +126,15 @@ const ProxyHostDetailsDialog = ({
 
   const loadAccessListDetails = async () => {
     if (!host?.access_list?.id) return
-    
+
     try {
       setLoadingAccessList(true)
+      setAccessListError(null)
       const data = await accessListsApi.getById(host.access_list.id, ['items', 'clients', 'owner'])
       setFullAccessList(data)
     } catch (error) {
       logger.error('Failed to load access list details:', error)
+      setAccessListError('Failed to load access list details.')
     } finally {
       setLoadingAccessList(false)
     }
@@ -262,6 +268,7 @@ const ProxyHostDetailsDialog = ({
           <ProxyHostConnectionsPanel
             linkedRedirections={linkedRedirections}
             loadingConnections={loadingConnections}
+            error={connectionsError}
             onNavigateToRedirection={handleNavigateToRedirection}
             onEditRedirection={handleEditRedirection}
           />
@@ -273,6 +280,7 @@ const ProxyHostDetailsDialog = ({
               host={host}
               fullAccessList={fullAccessList}
               loadingAccessList={loadingAccessList}
+              error={accessListError}
               onNavigateToFullAccessList={handleNavigateToFullAccessList}
             />
           </TabPanel>

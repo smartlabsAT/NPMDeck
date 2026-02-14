@@ -47,7 +47,7 @@ const buildRedirectionTargetMap = async (): Promise<RedirectionsByTarget> => {
 
 export default function ProxyHosts() {
   const navigate = useNavigate()
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
   // Entity CRUD hook handles all state, URL routing, dialogs, and data loading
@@ -118,9 +118,10 @@ export default function ProxyHosts() {
       entityLabel: PROXY_HOST_ENTITY_LABEL,
       showSuccess,
       showError,
+      showWarning,
       loadItems,
     }),
-    [showSuccess, showError, loadItems]
+    [showSuccess, showError, showWarning, loadItems]
   )
 
   // Group configuration for domain grouping

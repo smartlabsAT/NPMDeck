@@ -283,21 +283,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   pushCurrentToStack: () => {
     const state = get()
     if (!state.token || !state.user) return
-    
-    // Get current token expiry
-    const tokenData = JSON.parse(atob(state.token.split('.')[1]))
-    const expires = new Date(tokenData.exp * 1000).toISOString()
-    
-    const tokenInfo: TokenInfo = {
-      token: state.token,
-      user: state.user,
-      expires,
-      addedAt: new Date()
+
+    if (!isValidJWT(state.token)) {
+      logger.warn('Cannot push invalid JWT to stack')
+      return
     }
-    
-    const newStack = [...state.tokenStack, tokenInfo]
-    set({ tokenStack: newStack })
-    saveTokenStack(newStack)
+
+    try {
+      const tokenData = JSON.parse(atob(state.token.split('.')[1]))
+      const expires = new Date(tokenData.exp * 1000).toISOString()
+
+      const tokenInfo: TokenInfo = {
+        token: state.token,
+        user: state.user,
+        expires,
+        addedAt: new Date()
+      }
+
+      const newStack = [...state.tokenStack, tokenInfo]
+      set({ tokenStack: newStack })
+      saveTokenStack(newStack)
+    } catch (error) {
+      logger.error('Failed to parse JWT token in pushCurrentToStack:', error)
+    }
   },
 
   popFromStack: async () => {

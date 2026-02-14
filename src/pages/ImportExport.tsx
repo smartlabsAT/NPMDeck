@@ -40,8 +40,7 @@ export default function ImportExport() {
   const handleExportAll = async () => {
     setLoading(true)
     try {
-      // Fetch all data
-      const [proxyHosts, redirectionHosts, deadHosts, streams, certificates, accessLists] = await Promise.all([
+      const results = await Promise.allSettled([
         proxyHostsApi.getAll(),
         redirectionHostsApi.getAll(),
         deadHostsApi.getAll(),
@@ -50,14 +49,26 @@ export default function ImportExport() {
         accessListsApi.getAll(),
       ])
 
-      // Create bundle
+      const failed = results.filter(r => r.status === 'rejected').length
+      if (failed === results.length) {
+        logger.error('Failed to fetch any data for export')
+        return
+      }
+
+      if (failed > 0) {
+        logger.warn(`Export: ${failed} of ${results.length} data sources failed to load`)
+      }
+
+      const getValue = <T,>(result: PromiseSettledResult<T[]>): T[] =>
+        result.status === 'fulfilled' ? result.value : []
+
       const allItems = {
-        proxy_hosts: proxyHosts,
-        redirection_hosts: redirectionHosts,
-        dead_hosts: deadHosts,
-        streams: streams,
-        certificates: certificates,
-        access_lists: accessLists,
+        proxy_hosts: getValue(results[0]),
+        redirection_hosts: getValue(results[1]),
+        dead_hosts: getValue(results[2]),
+        streams: getValue(results[3]),
+        certificates: getValue(results[4]),
+        access_lists: getValue(results[5]),
       }
 
       setExportItems([allItems])

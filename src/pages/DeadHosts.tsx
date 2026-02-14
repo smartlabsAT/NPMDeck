@@ -38,7 +38,7 @@ import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
 
 export default function DeadHosts() {
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
   const {
@@ -273,8 +273,9 @@ export default function DeadHosts() {
     entityLabel: '404 hosts',
     showSuccess,
     showError,
+    showWarning,
     loadItems,
-  }), [showSuccess, showError, loadItems])
+  }), [showSuccess, showError, showWarning, loadItems])
 
   return (
     <Container maxWidth={false}>
