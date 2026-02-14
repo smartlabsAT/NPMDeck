@@ -338,6 +338,14 @@ export const routes = [
         ),
       },
       {
+        path: 'users/:id/edit',
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            {withSuspense(Users)}
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'users/:id',
         element: (
           <ProtectedRoute requiredRole="admin">

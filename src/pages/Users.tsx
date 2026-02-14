@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import React, { useState, useMemo, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -26,9 +25,9 @@ import {
   Settings as SettingsIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
-import { getErrorMessage } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
 import { useResponsive } from '../hooks/useResponsive'
+import { useEntityCrud } from '../hooks/useEntityCrud'
 import UserDrawer from '../components/users/UserDrawer'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PageHeader from '../components/PageHeader'
@@ -40,81 +39,45 @@ import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { STORAGE_KEYS } from '../constants/storage'
 
 const Users = () => {
-  const { id } = useParams<{ id?: string }>()
-  const navigate = useNavigate()
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [usersToDelete, setUsersToDelete] = useState<User[]>([])
-  const [bulkProcessing, setBulkProcessing] = useState(false)
-  
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
   const { showSuccess, showError } = useToast()
   const { isMobileTable } = useResponsive()
   const isAdmin = currentUser?.roles?.includes('admin')
 
-  const loadUsers = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await usersApi.getAll(['permissions'])
-      setUsers(data)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  // Standard CRUD via shared hook (drawerOnly: Users has no separate view/edit URL distinction)
+  const {
+    items: users,
+    loading,
+    error,
+    drawerOpen,
+    editingItem,
+    handleEdit,
+    handleAdd,
+    closeDrawer,
+    loadItems,
+  } = useEntityCrud<User>({
+    api: usersApi,
+    expand: ['permissions'],
+    basePath: '/users',
+    entityType: 'user',
+    getDisplayName: (user) => user.name || user.email,
+    entityLabel: 'user',
+    drawerOnly: true,
+  })
 
-  useEffect(() => {
-    loadUsers()
-  }, [loadUsers])
+  // User-specific state: bulk-capable delete workflow
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [usersToDelete, setUsersToDelete] = useState<User[]>([])
+  const [bulkProcessing, setBulkProcessing] = useState(false)
 
-  // Handle URL parameter for viewing/editing
-  useEffect(() => {
-    if (id && id !== 'new') {
-      const user = users.find(u => u.id === parseInt(id))
-      if (user) {
-        setSelectedUser(user)
-        setDrawerOpen(true)
-      }
-    } else if (id === 'new') {
-      setSelectedUser(null)
-      setDrawerOpen(true)
-    } else {
-      setDrawerOpen(false)
-      setSelectedUser(null)
-    }
-  }, [id, users])
-
-  const handleRowClick = useCallback((user: User) => {
-    setSelectedUser(user)
-    setDrawerOpen(true)
-    navigate(`/users/${user.id}`)
-  }, [navigate])
-
-  const handleEdit = useCallback((user: User) => {
-    handleRowClick(user)
-  }, [handleRowClick])
-
-  const handleAdd = () => {
-    setSelectedUser(null)
-    setDrawerOpen(true)
-    navigate('/users/new')
-  }
-
-  const handleDelete = (user: User) => {
+  const handleDeleteUser = useCallback((user: User) => {
     setUsersToDelete([user])
     setDeleteDialogOpen(true)
-    setDrawerOpen(false)
-  }
+  }, [])
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (usersToDelete.length === 0) return
-    
+
     setBulkProcessing(true)
     let successCount = 0
 
@@ -126,19 +89,19 @@ const Users = () => {
         showError('user', 'delete', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
-    
+
     if (successCount > 0) {
       showSuccess('user', 'deleted', `${successCount} user${successCount > 1 ? 's' : ''}`)
-      await loadUsers()
+      await loadItems()
     }
-    
+
     setBulkProcessing(false)
     setDeleteDialogOpen(false)
     setUsersToDelete([])
-  }
+  }, [usersToDelete, showError, showSuccess, loadItems])
 
-  const handleBulkDisable = useCallback(async (users: User[]) => {
-    const eligibleUsers = users.filter(u => !u.is_disabled && u.id !== currentUser?.id)
+  const handleBulkDisable = useCallback(async (selectedUsers: User[]) => {
+    const eligibleUsers = selectedUsers.filter(u => !u.is_disabled && u.id !== currentUser?.id)
     if (eligibleUsers.length === 0) return
 
     let successCount = 0
@@ -154,12 +117,12 @@ const Users = () => {
 
     if (successCount > 0) {
       showSuccess('user', 'disabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
-      await loadUsers()
+      await loadItems()
     }
-  }, [currentUser?.id, showError, showSuccess, loadUsers])
+  }, [currentUser?.id, showError, showSuccess, loadItems])
 
-  const handleBulkEnable = useCallback(async (users: User[]) => {
-    const eligibleUsers = users.filter(u => u.is_disabled && u.id !== currentUser?.id)
+  const handleBulkEnable = useCallback(async (selectedUsers: User[]) => {
+    const eligibleUsers = selectedUsers.filter(u => u.is_disabled && u.id !== currentUser?.id)
     if (eligibleUsers.length === 0) return
 
     let successCount = 0
@@ -175,10 +138,9 @@ const Users = () => {
 
     if (successCount > 0) {
       showSuccess('user', 'enabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
-      await loadUsers()
+      await loadItems()
     }
-  }, [currentUser?.id, showError, showSuccess, loadUsers])
-
+  }, [currentUser?.id, showError, showSuccess, loadItems])
 
   const handleLoginAs = useCallback(async (user: User) => {
     if (currentUser?.id === user.id) return
@@ -193,15 +155,15 @@ const Users = () => {
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user))
       window.location.href = '/'
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      showError('user', 'login-as', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
     }
-  }, [currentUser?.id, pushCurrentToStack])
+  }, [currentUser?.id, pushCurrentToStack, showError])
 
   const getRoleDisplay = (roles: string[]) => {
     if (!roles || roles.length === 0) {
       return 'User'
     }
-    return roles.map(role => 
+    return roles.map(role =>
       role === 'admin' ? 'Administrator' : role.charAt(0).toUpperCase() + role.slice(1)
     ).join(', ')
   }
@@ -356,7 +318,7 @@ const Users = () => {
           {currentUser?.id !== user.id && (
             <IconButton
               size="small"
-              onClick={() => handleDelete(user)}
+              onClick={() => handleDeleteUser(user)}
               color="error"
               title="Delete User"
             >
@@ -366,7 +328,7 @@ const Users = () => {
         </Box>
       ),
     },
-  ], [currentUser, handleEdit, handleLoginAs])
+  ], [currentUser, handleEdit, handleLoginAs, handleDeleteUser])
 
   // Filter definitions
   const filters: Filter[] = useMemo(() => [
@@ -401,10 +363,10 @@ const Users = () => {
       label: 'Enable',
       icon: <CheckIcon />,
       color: 'success',
-      action: async (users) => {
-        await handleBulkEnable(users)
+      action: async (selectedUsers) => {
+        await handleBulkEnable(selectedUsers)
       },
-      disabled: (users) => users.every(u => !u.is_disabled || u.id === currentUser?.id),
+      disabled: (selectedUsers) => selectedUsers.every(u => !u.is_disabled || u.id === currentUser?.id),
       confirmMessage: 'Enable {count} users?',
     },
     {
@@ -412,10 +374,10 @@ const Users = () => {
       label: 'Disable',
       icon: <BlockIcon />,
       color: 'warning',
-      action: async (users) => {
-        await handleBulkDisable(users)
+      action: async (selectedUsers) => {
+        await handleBulkDisable(selectedUsers)
       },
-      disabled: (users) => users.every(u => u.is_disabled || u.id === currentUser?.id),
+      disabled: (selectedUsers) => selectedUsers.every(u => u.is_disabled || u.id === currentUser?.id),
       confirmMessage: 'Disable {count} users?',
     },
     {
@@ -423,11 +385,11 @@ const Users = () => {
       label: 'Delete',
       icon: <DeleteIcon />,
       color: 'error',
-      action: async (users) => {
-        setUsersToDelete(users.filter(u => u.id !== currentUser?.id))
+      action: async (selectedUsers) => {
+        setUsersToDelete(selectedUsers.filter(u => u.id !== currentUser?.id))
         setDeleteDialogOpen(true)
       },
-      disabled: (users) => users.every(u => u.id === currentUser?.id),
+      disabled: (selectedUsers) => selectedUsers.every(u => u.id === currentUser?.id),
       confirmMessage: 'Delete {count} users? This action cannot be undone.',
     },
   ], [currentUser, handleBulkDisable, handleBulkEnable])
@@ -466,7 +428,7 @@ const Users = () => {
           data={users}
           columns={columns}
           keyExtractor={(user) => user.id}
-          onRowClick={handleRowClick}
+          onRowClick={handleEdit}
           bulkActions={isAdmin ? bulkActions : []}
           filters={filters}
           searchPlaceholder="Search by name, nickname, or email..."
@@ -482,7 +444,7 @@ const Users = () => {
           cardBreakpoint={900}
           compactBreakpoint={1250}
         />
-        
+
         {/* Mobile Add Button - shown at bottom */}
         {isAdmin && isMobileTable && (
           <Box
@@ -504,16 +466,12 @@ const Users = () => {
           </Box>
         )}
 
-
       <UserDrawer
         open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false)
-          navigate('/users')
-        }}
-        user={selectedUser}
+        onClose={closeDrawer}
+        user={editingItem}
         onSave={() => {
-          loadUsers()
+          loadItems()
         }}
       />
 

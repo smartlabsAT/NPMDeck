@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import React, { useState } from 'react'
 import {
   Box,
   Container,
@@ -22,10 +21,10 @@ import {
   MoreVert as ActionsIcon,
 } from '@mui/icons-material'
 import { usePermissions } from '../hooks/usePermissions'
-import { useFilteredData, useFilteredInfo } from '../hooks/useFilteredData'
+import { useFilteredInfo } from '../hooks/useFilteredData'
 import { useResponsive } from '../hooks/useResponsive'
+import { useEntityCrud } from '../hooks/useEntityCrud'
 import { AccessList, accessListsApi } from '../api/accessLists'
-import { getErrorMessage } from '../types/common'
 import AccessListDrawer from '../components/features/access-lists/AccessListDrawer'
 import AccessListDetailsDialog from '../components/AccessListDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -40,106 +39,46 @@ import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 
 export default function AccessLists() {
-  const navigate = useNavigate()
-  const { id } = useParams()
-  const location = useLocation()
-  const { canManage: canManageAccessLists, isAdmin } = usePermissions()
+  const { isAdmin } = usePermissions()
   const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
-  // State
-  const [accessLists, setAccessLists] = useState<AccessList[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  
-  // Dialogs
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedAccessList, setSelectedAccessList] = useState<AccessList | null>(null)
-  const [detailsOpen, setDetailsOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [accessListToDelete, setAccessListToDelete] = useState<AccessList | null>(null)
+  // Standard CRUD via shared hook
+  const {
+    items,
+    visibleItems,
+    loading,
+    error,
+    drawerOpen,
+    editingItem,
+    deleteDialogOpen,
+    itemToDelete,
+    detailsDialogOpen,
+    viewingItem,
+    handleEdit,
+    handleView,
+    handleAdd,
+    handleDelete,
+    handleConfirmDelete,
+    closeDrawer,
+    closeDetailsDialog,
+    closeDeleteDialog,
+    loadItems,
+    canManage,
+  } = useEntityCrud<AccessList>({
+    api: accessListsApi,
+    expand: ['owner', 'items', 'clients'],
+    basePath: '/security/access-lists',
+    entityType: 'access-list',
+    resource: 'access_lists',
+    getDisplayName: (item) => item.name,
+    entityLabel: 'access list',
+  })
+
+  // AccessList-specific state
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
-  const loadAccessLists = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await accessListsApi.getAll(['owner', 'items', 'clients'])
-      setAccessLists(data)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  // Load access lists
-  useEffect(() => {
-    loadAccessLists()
-  }, [loadAccessLists])
-
-  // Handle URL-based navigation
-  useEffect(() => {
-    if (location.pathname.includes('/new') && canManageAccessLists('access_lists')) {
-      setSelectedAccessList(null)
-      setDrawerOpen(true)
-    } else if (location.pathname.includes('/edit') && id && canManageAccessLists('access_lists')) {
-      const accessList = accessLists.find(al => al.id === parseInt(id))
-      if (accessList) {
-        setSelectedAccessList(accessList)
-        setDrawerOpen(true)
-      }
-    } else if (location.pathname.includes('/view') && id) {
-      const accessList = accessLists.find(al => al.id === parseInt(id))
-      if (accessList) {
-        setSelectedAccessList(accessList)
-        setDetailsOpen(true)
-      }
-    }
-  }, [location.pathname, id, accessLists, canManageAccessLists])
-
-  const handleCreateAccessList = () => {
-    navigate('/security/access-lists/new')
-  }
-
-  const handleEditAccessList = (accessList: AccessList) => {
-    navigate(`/security/access-lists/${accessList.id}/edit`)
-  }
-
-  const handleViewAccessList = (accessList: AccessList) => {
-    navigate(`/security/access-lists/${accessList.id}/view`)
-  }
-
-  const handleDeleteAccessList = async () => {
-    if (!accessListToDelete) return
-
-    try {
-      await accessListsApi.delete(accessListToDelete.id)
-      showSuccess('access-list', 'deleted', accessListToDelete.name, accessListToDelete.id)
-      await loadAccessLists()
-      setDeleteDialogOpen(false)
-      setAccessListToDelete(null)
-    } catch (err: unknown) {
-      showError('access-list', 'delete', err instanceof Error ? err.message : 'Unknown error', accessListToDelete.name, accessListToDelete.id)
-      setError(getErrorMessage(err))
-    }
-  }
-
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false)
-    setSelectedAccessList(null)
-    navigate('/security/access-lists')
-  }
-
-  const handleCloseDetails = () => {
-    setDetailsOpen(false)
-    setSelectedAccessList(null)
-    navigate('/security/access-lists')
-  }
-
-  // Apply visibility filtering
-  const visibleAccessLists = useFilteredData(accessLists)
-  const filterInfo = useFilteredInfo(accessLists, visibleAccessLists)
+  const filterInfo = useFilteredInfo(items, visibleItems)
 
   const getUsersChip = (accessList: AccessList) => {
     const count = accessList.items?.length || 0
@@ -286,7 +225,7 @@ export default function AccessLists() {
               size="small"
               onClick={(e) => {
                 e.stopPropagation()
-                handleViewAccessList(item)
+                handleView(item)
               }}
             >
               <ViewIcon />
@@ -299,7 +238,7 @@ export default function AccessLists() {
             tooltipTitle="Edit"
             onClick={(e) => {
               e.stopPropagation()
-              handleEditAccessList(item)
+              handleEdit(item)
             }}
           >
             <EditIcon />
@@ -310,8 +249,7 @@ export default function AccessLists() {
             size="small"
             onClick={(e) => {
               e.stopPropagation()
-              setAccessListToDelete(item)
-              setDeleteDialogOpen(true)
+              handleDelete(item)
             }}
             color="error"
           >
@@ -356,8 +294,8 @@ export default function AccessLists() {
       icon: <DeleteIcon />,
       color: 'error',
       confirmMessage: 'Are you sure you want to delete the selected access lists?',
-      action: async (items) => {
-        const results = await Promise.allSettled(items.map(item => accessListsApi.delete(item.id)))
+      action: async (selectedItems) => {
+        const results = await Promise.allSettled(selectedItems.map(item => accessListsApi.delete(item.id)))
         const succeeded = results.filter(r => r.status === 'fulfilled').length
         const failed = results.filter(r => r.status === 'rejected').length
         if (failed === 0) {
@@ -367,7 +305,7 @@ export default function AccessLists() {
         } else {
           showWarning(`${succeeded} access lists deleted successfully, ${failed} failed`, 'access-list')
         }
-        await loadAccessLists()
+        await loadItems()
       }
     }
   ]
@@ -398,7 +336,7 @@ export default function AccessLists() {
               permissionAction="create"
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={handleCreateAccessList}
+              onClick={handleAdd}
             >
               Add Access List
             </PermissionButton>
@@ -407,17 +345,17 @@ export default function AccessLists() {
 
         {filterInfo.isFiltered && (
           <Alert severity="info" sx={{ mb: 2 }}>
-            Showing {filterInfo.visibleCount} of {filterInfo.totalCount} access lists 
+            Showing {filterInfo.visibleCount} of {filterInfo.totalCount} access lists
             (only your own entries are displayed)
           </Alert>
         )}
 
         {/* DataTable */}
         <DataTable
-          data={visibleAccessLists}
+          data={visibleItems}
           columns={columns}
           keyExtractor={(item) => item.id.toString()}
-          onRowClick={handleViewAccessList}
+          onRowClick={handleView}
           bulkActions={isAdmin ? bulkActions : []}
           filters={filters}
           searchPlaceholder="Search by name, username, or IP address..."
@@ -435,7 +373,7 @@ export default function AccessLists() {
           cardBreakpoint={900}
           compactBreakpoint={1250}
         />
-        
+
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
           <Box
@@ -449,7 +387,7 @@ export default function AccessLists() {
               permissionAction="create"
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={handleCreateAccessList}
+              onClick={handleAdd}
               fullWidth
               sx={{ maxWidth: 400 }}
             >
@@ -459,35 +397,32 @@ export default function AccessLists() {
         )}
       </Box>
       {/* Drawer for create/edit */}
-      {canManageAccessLists('access_lists') && (
+      {canManage && (
         <AccessListDrawer
           open={drawerOpen}
-          onClose={handleCloseDrawer}
-          accessList={selectedAccessList}
+          onClose={closeDrawer}
+          accessList={editingItem}
           onSave={() => {
-            handleCloseDrawer()
-            loadAccessLists()
+            closeDrawer()
+            loadItems()
           }}
         />
       )}
       {/* Details dialog */}
       <AccessListDetailsDialog
-        open={detailsOpen}
-        onClose={handleCloseDetails}
-        accessList={selectedAccessList}
-        onEdit={canManageAccessLists('access_lists') ? handleEditAccessList : undefined}
+        open={detailsDialogOpen}
+        onClose={closeDetailsDialog}
+        accessList={viewingItem}
+        onEdit={canManage ? handleEdit : undefined}
       />
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
-        onClose={() => {
-          setDeleteDialogOpen(false)
-          setAccessListToDelete(null)
-        }}
-        onConfirm={handleDeleteAccessList}
+        onClose={closeDeleteDialog}
+        onConfirm={handleConfirmDelete}
         title="Delete Access List"
         titleIcon={React.createElement(NAVIGATION_CONFIG.accessLists.icon, { sx: { color: NAVIGATION_CONFIG.accessLists.color } })}
-        message={`Are you sure you want to delete the access list "${accessListToDelete?.name}"?`}
+        message={`Are you sure you want to delete the access list "${itemToDelete?.name}"?`}
         confirmText="Delete"
         confirmColor="error"
       />
@@ -495,7 +430,7 @@ export default function AccessLists() {
       <ExportDialog
         open={exportDialogOpen}
         onClose={() => setExportDialogOpen(false)}
-        items={accessLists}
+        items={items}
         type="access_list"
         itemName="Access Lists"
       />
