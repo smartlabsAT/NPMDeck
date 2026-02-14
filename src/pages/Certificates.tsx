@@ -61,7 +61,7 @@ const Certificates = () => {
   const [viewingCert, setViewingCert] = useState<Certificate | null>(null)
   const [initialProvider, setInitialProvider] = useState<'letsencrypt' | 'other'>('letsencrypt')
   
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
   useEffect(() => {
@@ -405,16 +405,20 @@ const Certificates = () => {
       color: 'error',
       confirmMessage: 'Are you sure you want to delete the selected certificates?',
       action: async (items) => {
-        try {
-          await Promise.all(items.map(item => certificatesApi.delete(item.id)))
-          showSuccess('certificate', 'deleted', `${items.length} certificates`)
-          await loadCertificates()
-        } catch (err) {
-          showError('certificate', 'delete', err instanceof Error ? err.message : 'Unknown error')
+        const results = await Promise.allSettled(items.map(item => certificatesApi.delete(item.id)))
+        const succeeded = results.filter(r => r.status === 'fulfilled').length
+        const failed = results.filter(r => r.status === 'rejected').length
+        if (failed === 0) {
+          showSuccess('certificate', 'deleted', `${succeeded} certificates`)
+        } else if (succeeded === 0) {
+          showError('certificate', 'delete', `All ${failed} operations failed`)
+        } else {
+          showWarning(`${succeeded} certificates deleted successfully, ${failed} failed`, 'certificate')
         }
+        await loadCertificates()
       }
     }
-  ], [showSuccess, showError, loadCertificates])
+  ], [showSuccess, showError, showWarning, loadCertificates])
 
   return (
     <Container maxWidth={false}>

@@ -44,7 +44,7 @@ export default function AccessLists() {
   const { id } = useParams()
   const location = useLocation()
   const { canManage: canManageAccessLists, isAdmin } = usePermissions()
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
   // State
@@ -357,13 +357,17 @@ export default function AccessLists() {
       color: 'error',
       confirmMessage: 'Are you sure you want to delete the selected access lists?',
       action: async (items) => {
-        try {
-          await Promise.all(items.map(item => accessListsApi.delete(item.id)))
-          showSuccess('access-list', 'deleted', `${items.length} access lists`)
-          await loadAccessLists()
-        } catch (err) {
-          showError('access-list', 'delete', err instanceof Error ? err.message : 'Unknown error')
+        const results = await Promise.allSettled(items.map(item => accessListsApi.delete(item.id)))
+        const succeeded = results.filter(r => r.status === 'fulfilled').length
+        const failed = results.filter(r => r.status === 'rejected').length
+        if (failed === 0) {
+          showSuccess('access-list', 'deleted', `${succeeded} access lists`)
+        } else if (succeeded === 0) {
+          showError('access-list', 'delete', `All ${failed} operations failed`)
+        } else {
+          showWarning(`${succeeded} access lists deleted successfully, ${failed} failed`, 'access-list')
         }
+        await loadAccessLists()
       }
     }
   ]

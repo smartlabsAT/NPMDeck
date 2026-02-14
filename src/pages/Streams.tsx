@@ -44,7 +44,7 @@ const getStreamDisplayName = (stream: Stream): string =>
   `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
 
 export default function Streams() {
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
   const {
@@ -346,8 +346,9 @@ export default function Streams() {
     entityLabel: 'streams',
     showSuccess,
     showError,
+    showWarning,
     loadItems,
-  }), [showSuccess, showError, loadItems])
+  }), [showSuccess, showError, showWarning, loadItems])
 
   return (
     <Container maxWidth={false}>

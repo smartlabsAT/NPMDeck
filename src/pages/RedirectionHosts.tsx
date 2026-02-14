@@ -38,7 +38,7 @@ const buildProxyHostDomainMap = async (): Promise<Map<string, ProxyHost>> => {
 
 export default function RedirectionHosts() {
   const navigate = useNavigate()
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
   const {
@@ -101,9 +101,10 @@ export default function RedirectionHosts() {
       entityLabel: 'redirection hosts',
       showSuccess,
       showError,
+      showWarning,
       loadItems,
     }),
-    [showSuccess, showError, loadItems]
+    [showSuccess, showError, showWarning, loadItems]
   )
 
   // Group configuration for domain grouping

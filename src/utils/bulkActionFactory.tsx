@@ -20,13 +20,40 @@ interface StandardBulkActionsConfig {
   entityLabel: string
   showSuccess: (entityType: ToastEntityType, action: string, entityName?: string, entityId?: number | string) => void
   showError: (entityType: ToastEntityType, action: string, error?: string, entityName?: string, entityId?: number | string) => void
+  showWarning: (message: string, entityType?: ToastEntityType) => void
   loadItems: () => Promise<void>
+}
+
+/**
+ * Reports the outcome of a bulk operation using Promise.allSettled results.
+ * Shows success toast when all items succeed, warning when some fail,
+ * and error when all fail.
+ */
+function reportBulkResults(
+  results: PromiseSettledResult<void>[],
+  action: string,
+  entityType: ToastEntityType,
+  entityLabel: string,
+  showSuccess: StandardBulkActionsConfig['showSuccess'],
+  showError: StandardBulkActionsConfig['showError'],
+  showWarning: StandardBulkActionsConfig['showWarning']
+): void {
+  const succeeded = results.filter(r => r.status === 'fulfilled').length
+  const failed = results.filter(r => r.status === 'rejected').length
+
+  if (failed === 0) {
+    showSuccess(entityType, action, `${succeeded} ${entityLabel}`)
+  } else if (succeeded === 0) {
+    showError(entityType, action, `All ${failed} operations failed`)
+  } else {
+    showWarning(`${succeeded} ${entityLabel} ${action} successfully, ${failed} failed`, entityType)
+  }
 }
 
 export function createStandardBulkActions<T extends ToggleableEntity>(
   config: StandardBulkActionsConfig
 ): BulkAction<T>[] {
-  const { api, entityType, entityLabel, showSuccess, showError, loadItems } = config
+  const { api, entityType, entityLabel, showSuccess, showError, showWarning, loadItems } = config
 
   return [
     {
@@ -35,13 +62,11 @@ export function createStandardBulkActions<T extends ToggleableEntity>(
       icon: <CheckCircleIcon />,
       confirmMessage: `Are you sure you want to enable the selected ${entityLabel}?`,
       action: async (items: T[]) => {
-        try {
-          await Promise.all(items.filter(item => !item.enabled).map(item => api.enable(item.id)))
-          showSuccess(entityType, 'enabled', `${items.length} ${entityLabel}`)
-          await loadItems()
-        } catch (err) {
-          showError(entityType, 'enable', err instanceof Error ? err.message : 'Unknown error')
-        }
+        const results = await Promise.allSettled(
+          items.filter(item => !item.enabled).map(item => api.enable(item.id))
+        )
+        reportBulkResults(results, 'enabled', entityType, entityLabel, showSuccess, showError, showWarning)
+        await loadItems()
       }
     },
     {
@@ -50,13 +75,11 @@ export function createStandardBulkActions<T extends ToggleableEntity>(
       icon: <CancelIcon />,
       confirmMessage: `Are you sure you want to disable the selected ${entityLabel}?`,
       action: async (items: T[]) => {
-        try {
-          await Promise.all(items.filter(item => item.enabled).map(item => api.disable(item.id)))
-          showSuccess(entityType, 'disabled', `${items.length} ${entityLabel}`)
-          await loadItems()
-        } catch (err) {
-          showError(entityType, 'disable', err instanceof Error ? err.message : 'Unknown error')
-        }
+        const results = await Promise.allSettled(
+          items.filter(item => item.enabled).map(item => api.disable(item.id))
+        )
+        reportBulkResults(results, 'disabled', entityType, entityLabel, showSuccess, showError, showWarning)
+        await loadItems()
       }
     },
     {
@@ -66,13 +89,11 @@ export function createStandardBulkActions<T extends ToggleableEntity>(
       color: 'error',
       confirmMessage: `Are you sure you want to delete the selected ${entityLabel}?`,
       action: async (items: T[]) => {
-        try {
-          await Promise.all(items.map(item => api.delete(item.id)))
-          showSuccess(entityType, 'deleted', `${items.length} ${entityLabel}`)
-          await loadItems()
-        } catch (err) {
-          showError(entityType, 'delete', err instanceof Error ? err.message : 'Unknown error')
-        }
+        const results = await Promise.allSettled(
+          items.map(item => api.delete(item.id))
+        )
+        reportBulkResults(results, 'deleted', entityType, entityLabel, showSuccess, showError, showWarning)
+        await loadItems()
       }
     }
   ]
