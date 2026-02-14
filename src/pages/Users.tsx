@@ -37,6 +37,7 @@ import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/R
 import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { STORAGE_KEYS } from '../constants/storage'
+import { LAYOUT } from '../constants/layout'
 
 const Users = () => {
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
@@ -442,7 +443,7 @@ const Users = () => {
           rowsPerPageOptions={[10, 25, 50, 100]}
           responsive={true}
           cardBreakpoint={900}
-          compactBreakpoint={1250}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
         {/* Mobile Add Button - shown at bottom */}

@@ -43,6 +43,8 @@ import { createStandardBulkActions } from '../utils/bulkActionFactory'
 import { extractBaseDomain } from '../utils/domainUtils'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
 import { STORAGE_KEYS } from '../constants/storage'
+import { CERTIFICATE_EXPIRY } from '../constants/certificates'
+import { LAYOUT } from '../constants/layout'
 
 const getCertDisplayName = (cert: Certificate): string =>
   cert.nice_name || cert.domain_names[0] || 'Unnamed Certificate'
@@ -138,9 +140,9 @@ const Certificates = () => {
 
     if (daysUntilExpiry < 0) {
       return <Chip label="Expired" color="error" size="small" icon={<WarningIcon />} />
-    } else if (daysUntilExpiry <= 7) {
+    } else if (daysUntilExpiry <= CERTIFICATE_EXPIRY.CRITICAL_DAYS) {
       return <Chip label={`${daysUntilExpiry} days`} color="error" size="small" />
-    } else if (daysUntilExpiry <= 30) {
+    } else if (daysUntilExpiry <= CERTIFICATE_EXPIRY.WARNING_DAYS) {
       return <Chip label={`${daysUntilExpiry} days`} color="warning" size="small" />
     } else {
       return <Chip label={`${daysUntilExpiry} days`} color="success" size="small" />
@@ -421,7 +423,7 @@ const Certificates = () => {
           showGroupToggle={true}
           responsive={true}
           cardBreakpoint={900}
-          compactBreakpoint={1250}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
         {/* Mobile Add Button with Menu - shown at bottom */}

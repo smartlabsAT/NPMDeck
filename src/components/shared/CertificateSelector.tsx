@@ -17,6 +17,7 @@ import {
   Error as ErrorIcon,
 } from '@mui/icons-material'
 import { Certificate } from '../../api/certificates'
+import { CERTIFICATE_EXPIRY } from '../../constants/certificates'
 
 interface NewCertificateOption {
   id: 'new'
@@ -77,7 +78,7 @@ export default function CertificateSelector({
         text: 'Expired',
         icon: ErrorIcon
       }
-    } else if (daysUntilExpiry < 30) {
+    } else if (daysUntilExpiry < CERTIFICATE_EXPIRY.WARNING_DAYS) {
       return {
         color: 'warning' as const,
         text: `Expires in ${daysUntilExpiry} days`,

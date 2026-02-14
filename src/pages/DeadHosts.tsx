@@ -36,6 +36,7 @@ import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/R
 import { Filter, FilterValue } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
+import { LAYOUT } from '../constants/layout'
 
 export default function DeadHosts() {
   const { showSuccess, showError, showWarning } = useToast()
@@ -332,7 +333,7 @@ export default function DeadHosts() {
           rowsPerPageOptions={[10, 25, 50, 100]}
           responsive={true}
           cardBreakpoint={900}
-          compactBreakpoint={1250}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
         {/* Mobile Add Button - shown at bottom */}

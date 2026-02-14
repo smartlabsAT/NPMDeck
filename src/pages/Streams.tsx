@@ -38,6 +38,7 @@ import { Filter, FilterValue } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
 import { createStandardBulkActions } from '../utils/bulkActionFactory'
+import { LAYOUT } from '../constants/layout'
 
 /** Build a display name for a stream (e.g. "8080/TCP" or "53/TCPUDP"). */
 const getStreamDisplayName = (stream: Stream): string =>
@@ -405,7 +406,7 @@ export default function Streams() {
           rowsPerPageOptions={[10, 25, 50, 100]}
           responsive={true}
           cardBreakpoint={900}
-          compactBreakpoint={1250}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
         {/* Mobile Add Button - shown at bottom */}

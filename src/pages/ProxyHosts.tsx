@@ -23,6 +23,7 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { LAYOUT } from '../constants/layout'
 
 /** Type for the redirection lookup map loaded as additional data */
 type RedirectionsByTarget = Map<string, RedirectionHost[]>
@@ -184,7 +185,7 @@ export default function ProxyHosts() {
           showGroupToggle={true}
           responsive={true}
           cardBreakpoint={900}
-          compactBreakpoint={1250}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
         {/* Mobile Add Button - shown at bottom */}

@@ -40,6 +40,7 @@ import PermissionButton from '../components/PermissionButton'
 import { Resource } from '../types/permissions'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
 import { NAVIGATION_COLORS } from '../constants/navigation'
+import { CERTIFICATE_EXPIRY } from '../constants/certificates'
 
 interface StatCardProps {
   title: string
@@ -352,7 +353,7 @@ const Dashboard = () => {
                   {stats.expiringCertificates.slice(0, 5).map((cert, index) => {
                     const days = getDaysUntilExpiry(cert.expires_on) || 0
                     const isExpired = days < 0
-                    const isCritical = days <= 7
+                    const isCritical = days <= CERTIFICATE_EXPIRY.CRITICAL_DAYS
                     
                     return (
                       <React.Fragment key={cert.id}>

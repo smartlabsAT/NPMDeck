@@ -51,6 +51,7 @@ import { Filter } from '../components/DataTable/types'
 import { useToast } from '../contexts/ToastContext'
 import ActionChip from '../components/shared/ActionChip'
 import { NAVIGATION_CONFIG, NAVIGATION_COLORS } from '../constants/navigation'
+import { LAYOUT } from '../constants/layout'
 
 const AuditLog = () => {
   const navigate = useNavigate()
@@ -438,7 +439,7 @@ const AuditLog = () => {
           stickyHeader
           responsive={true}
           cardBreakpoint={900}
-          compactBreakpoint={1250}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
       </Box>
       <Dialog
