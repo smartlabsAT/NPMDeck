@@ -54,8 +54,9 @@ const BasicInfoPanel = ({ host, onCopyToClipboard }: BasicInfoPanelProps) => {
             }}>
               #{host.id}
             </Typography>
-            <IconButton 
-              size="small" 
+            <IconButton
+              size="small"
+              aria-label="Copy to clipboard"
               onClick={() => onCopyToClipboard(host.id.toString(), 'Host ID')}
             >
               <CopyIcon fontSize="small" />

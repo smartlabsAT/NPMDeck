@@ -45,9 +45,10 @@ const DomainNamesPanel = ({ domainNames, onCopyToClipboard }: DomainNamesPanelPr
             <ListItem
               key={index}
               secondaryAction={
-                <IconButton 
-                  edge="end" 
-                  size="small" 
+                <IconButton
+                  edge="end"
+                  size="small"
+                  aria-label="Copy to clipboard"
                   onClick={() => onCopyToClipboard(domain, domain)}
                 >
                   <CopyIcon fontSize="small" />

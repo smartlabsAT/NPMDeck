@@ -95,6 +95,7 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
                 </Typography>
                 <IconButton
                   size="small"
+                  aria-label="Open domain in new tab"
                   sx={{
                     p: 0.25,
                     '&:hover': {
@@ -123,12 +124,26 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
                 }
               >
                 <Box
+                  role="link"
+                  tabIndex={0}
+                  aria-label={`View ${linkedRedirections.length} linked redirection${linkedRedirections.length > 1 ? 's' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     if (linkedRedirections.length === 1) {
                       navigate(`/hosts/redirection/${linkedRedirections[0].id}/view`)
                     } else {
                       onViewConnections(item)
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      if (linkedRedirections.length === 1) {
+                        navigate(`/hosts/redirection/${linkedRedirections[0].id}/view`)
+                      } else {
+                        onViewConnections(item)
+                      }
                     }
                   }}
                   sx={{
@@ -176,6 +191,7 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
           </Typography>
           <IconButton
             size="small"
+            aria-label="Open forward host in new tab"
             sx={{
               p: 0.25,
               '&:hover': {

@@ -24,14 +24,17 @@ const DrawerUserInfoSection = ({ userName, userEmail, isAdmin, onMenuOpen }: Dra
   return (
     <Box sx={{ mt: 'auto' }}>
       <Divider sx={{ mb: 0 }} />
-      <Box 
-        sx={{ 
-          p: 2, 
-          display: 'flex', 
-          alignItems: 'center', 
+      <Box
+        role="button"
+        tabIndex={0}
+        aria-label="Open user menu"
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
           gap: 2,
-          backgroundColor: (theme) => theme.palette.mode === 'dark' 
-            ? 'rgba(255, 255, 255, 0.05)' 
+          backgroundColor: (theme) => theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.05)'
             : 'rgba(0, 0, 0, 0.04)',
           cursor: 'pointer',
           '&:hover': {
@@ -41,6 +44,12 @@ const DrawerUserInfoSection = ({ userName, userEmail, isAdmin, onMenuOpen }: Dra
           }
         }}
         onClick={onMenuOpen}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onMenuOpen(e as unknown as React.MouseEvent<HTMLElement>)
+          }
+        }}
       >
         <Avatar
           sx={{

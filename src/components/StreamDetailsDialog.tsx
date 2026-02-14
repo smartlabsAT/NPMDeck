@@ -123,8 +123,9 @@ const StreamDetailsDialog = ({
                   <Typography variant="body1">
                     {stream.incoming_port}
                   </Typography>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
+                    aria-label="Copy to clipboard"
                     onClick={() => copyToClipboard(stream.incoming_port.toString(), 'Port')}
                   >
                     <CopyIcon fontSize="small" />
@@ -153,20 +154,21 @@ const StreamDetailsDialog = ({
                   <Typography variant="body1">
                     {stream.forwarding_host}:{stream.forwarding_port}
                   </Typography>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
+                    aria-label="Copy to clipboard"
                     onClick={() => copyToClipboard(`${stream.forwarding_host}:${stream.forwarding_port}`, 'Destination')}
                   >
                     <CopyIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
+                    aria-label="Open in new tab"
                     onClick={() => {
                       const protocol = stream.certificate_id ? 'https' : 'http'
                       const url = `${protocol}://${stream.forwarding_host}:${stream.forwarding_port}`
                       window.open(url, '_blank', 'noopener,noreferrer')
                     }}
-                    title="Open in new tab"
                   >
                     <OpenInNewIcon fontSize="small" />
                   </IconButton>

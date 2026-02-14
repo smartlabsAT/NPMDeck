@@ -303,6 +303,7 @@ const Certificates = () => {
           <Tooltip title="View Details">
             <IconButton
               size="small"
+              aria-label="View certificate details"
               onClick={(e) => {
                 e.stopPropagation()
                 handleView(item)
@@ -315,6 +316,7 @@ const Certificates = () => {
             <Tooltip title="Renew">
               <IconButton
                 size="small"
+                aria-label="Renew certificate"
                 onClick={(e) => {
                   e.stopPropagation()
                   handleRenew(item)

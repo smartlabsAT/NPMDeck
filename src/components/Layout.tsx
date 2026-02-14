@@ -171,7 +171,7 @@ const Layout = () => {
       <Box
         component="nav"
         sx={{ width: { lg: LAYOUT.DRAWER_WIDTH }, flexShrink: { lg: 0 } }}
-        aria-label="mailbox folders"
+        aria-label="Main navigation"
       >
         <Drawer
           variant="temporary"

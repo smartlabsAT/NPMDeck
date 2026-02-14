@@ -106,6 +106,7 @@ const ProxyHostConnectionsPanel = ({
                   />
                   <IconButton
                     edge="end"
+                    aria-label="Edit redirection"
                     onClick={(e) => {
                       e.stopPropagation()
                       onEditRedirection(redirect.id)

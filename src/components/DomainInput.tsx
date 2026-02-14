@@ -322,6 +322,7 @@ export default function DomainInput({
               {!disabled && (
                 <IconButton
                   size="small"
+                  aria-label="Remove domain"
                   onClick={() => {
                     const originalIndex = value.indexOf(domain)
                     handleDelete(originalIndex)

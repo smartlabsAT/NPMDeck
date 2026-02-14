@@ -75,7 +75,7 @@ const AdaptiveContainer = ({
           ) : (
             title
           )}
-          <IconButton onClick={onClose} edge="end">
+          <IconButton onClick={onClose} edge="end" aria-label="Close">
             <CloseIcon />
           </IconButton>
         </Box>
@@ -127,6 +127,7 @@ const AdaptiveContainer = ({
         {title}
         <IconButton
           onClick={onClose}
+          aria-label="Close"
           sx={{
             position: 'absolute',
             right: 8,
