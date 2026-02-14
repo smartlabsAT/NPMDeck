@@ -82,9 +82,9 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
         const linkedRedirections = getLinkedRedirections(item)
         return (
           <Box>
-            {item.domain_names.map((domain: string, index: number) => (
+            {item.domain_names.map((domain: string) => (
               <Box
-                key={index}
+                key={domain}
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -115,8 +115,8 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
               <Tooltip
                 title={
                   <Box>
-                    {linkedRedirections.map((redirect, idx) => (
-                      <div key={idx}>
+                    {linkedRedirections.map((redirect) => (
+                      <div key={redirect.id}>
                         {redirect.domain_names.join(', ')} → {redirect.forward_domain_name}
                       </div>
                     ))}

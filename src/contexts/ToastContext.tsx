@@ -133,14 +133,13 @@ function formatEntityType(entityType: EntityType): string {
 }
 
 /**
- * Custom Toast Component
+ * Shared Alert content used by both demo and non-demo toast modes
  */
-export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMessage; onClose: () => void; demo?: boolean }) {
+function ToastAlertContent({ toast }: { toast: ToastMessage }) {
   const theme = useTheme();
   const EntityIcon = toast.entityType ? getEntityIcon(toast.entityType) : InfoIcon;
   const ActionIcon = getActionIcon(toast.action);
-  
-  // Get severity icon
+
   const getSeverityIcon = () => {
     switch (toast.severity) {
       case 'success':
@@ -154,185 +153,117 @@ export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMess
         return InfoIcon;
     }
   };
-  
+
   const SeverityIcon = getSeverityIcon();
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+      {/* Icon section */}
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        flexShrink: 0,
+        mt: 0.25
+      }}>
+        {ActionIcon ? (
+          <Box sx={{ position: 'relative' }}>
+            <EntityIcon sx={{ fontSize: 24, opacity: 0.9 }} />
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: -4,
+                right: -4,
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? theme.palette.background.paper
+                  : 'white',
+                borderRadius: '50%',
+                width: 16,
+                height: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ActionIcon sx={{ fontSize: 12, color: theme.palette[toast.severity].main }} />
+            </Box>
+          </Box>
+        ) : (
+          <SeverityIcon sx={{ fontSize: 24 }} />
+        )}
+      </Box>
+
+      {/* Content section */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        {toast.entityType && (
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              opacity: 0.9,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              fontSize: '0.65rem',
+              mb: 0.25
+            }}
+          >
+            {formatEntityType(toast.entityType)}
+          </Typography>
+        )}
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 500,
+            wordBreak: 'break-word'
+          }}
+        >
+          {toast.message}
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
+/**
+ * Custom Toast Component
+ */
+export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMessage; onClose: () => void; demo?: boolean }) {
+  const theme = useTheme();
 
   // Set up auto-hide timer
   React.useEffect(() => {
     if (!toast.duration) return
-    
+
     const timer = setTimeout(() => {
       onClose();
     }, toast.duration);
     return () => clearTimeout(timer);
   }, [toast.duration, onClose]);
 
-  // For demo mode, just return the Alert without Snackbar wrapper
+  const alertSx = {
+    width: '100%',
+    maxWidth: 500,
+    backgroundColor: theme.palette.mode === 'dark'
+      ? alpha(theme.palette[toast.severity].main, 0.9)
+      : theme.palette[toast.severity].main,
+    '& .MuiAlert-icon': {
+      display: 'none'
+    },
+    ...(!demo && { boxShadow: 3 }),
+  };
+
+  // For demo mode, just return the Alert without Slide wrapper
   if (demo) {
     return (
-      <Alert
-        onClose={onClose}
-        severity={toast.severity}
-        variant="filled"
-        sx={{ 
-          width: '100%', 
-          maxWidth: 500,
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette[toast.severity].main, 0.9)
-            : theme.palette[toast.severity].main,
-          '& .MuiAlert-icon': {
-            display: 'none' // We'll use custom icon layout
-          }
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-          {/* Icon section */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            flexShrink: 0,
-            mt: 0.25
-          }}>
-            {ActionIcon ? (
-              <Box sx={{ position: 'relative' }}>
-                <EntityIcon sx={{ fontSize: 24, opacity: 0.9 }} />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: -4,
-                    right: -4,
-                    backgroundColor: theme.palette.mode === 'dark'
-                      ? theme.palette.background.paper
-                      : 'white',
-                    borderRadius: '50%',
-                    width: 16,
-                    height: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ActionIcon sx={{ fontSize: 12, color: theme.palette[toast.severity].main }} />
-                </Box>
-              </Box>
-            ) : (
-              <SeverityIcon sx={{ fontSize: 24 }} />
-            )}
-          </Box>
-          
-          {/* Content section */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            {toast.entityType && (
-              <Typography
-                variant="caption"
-                sx={{
-                  display: 'block',
-                  opacity: 0.9,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                  fontSize: '0.65rem',
-                  mb: 0.25
-                }}
-              >
-                {formatEntityType(toast.entityType)}
-              </Typography>
-            )}
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 500,
-                wordBreak: 'break-word'
-              }}
-            >
-              {toast.message}
-            </Typography>
-          </Box>
-        </Box>
+      <Alert onClose={onClose} severity={toast.severity} variant="filled" sx={alertSx}>
+        <ToastAlertContent toast={toast} />
       </Alert>
     );
   }
 
   return (
     <Slide direction="down" in={true} mountOnEnter unmountOnExit>
-      <Alert
-        onClose={onClose}
-        severity={toast.severity}
-        variant="filled"
-        sx={{ 
-          width: '100%', 
-          maxWidth: 500,
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette[toast.severity].main, 0.9)
-            : theme.palette[toast.severity].main,
-          '& .MuiAlert-icon': {
-            display: 'none' // We'll use custom icon layout
-          },
-          boxShadow: 3,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-          {/* Icon section */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            flexShrink: 0,
-            mt: 0.25
-          }}>
-            {ActionIcon ? (
-              <Box sx={{ position: 'relative' }}>
-                <EntityIcon sx={{ fontSize: 24, opacity: 0.9 }} />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: -4,
-                    right: -4,
-                    backgroundColor: theme.palette.mode === 'dark'
-                      ? theme.palette.background.paper
-                      : 'white',
-                    borderRadius: '50%',
-                    width: 16,
-                    height: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ActionIcon sx={{ fontSize: 12, color: theme.palette[toast.severity].main }} />
-                </Box>
-              </Box>
-            ) : (
-              <SeverityIcon sx={{ fontSize: 24 }} />
-            )}
-          </Box>
-          
-          {/* Content section */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            {toast.entityType && (
-              <Typography
-                variant="caption"
-                sx={{
-                  display: 'block',
-                  opacity: 0.9,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                  fontSize: '0.65rem',
-                  mb: 0.25
-                }}
-              >
-                {formatEntityType(toast.entityType)}
-              </Typography>
-            )}
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 500,
-                wordBreak: 'break-word'
-              }}
-            >
-              {toast.message}
-            </Typography>
-          </Box>
-        </Box>
+      <Alert onClose={onClose} severity={toast.severity} variant="filled" sx={alertSx}>
+        <ToastAlertContent toast={toast} />
       </Alert>
     </Slide>
   );
