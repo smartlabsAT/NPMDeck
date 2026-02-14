@@ -2,56 +2,56 @@
 
 All notable changes to NPMDeck will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.3] - 2025-09-18
+## [0.3.1] - 2026-02-14
 
 ### Added
-- Production-ready package management with pnpm
-- Logger utility integration for better debugging
-- Comprehensive quality assurance workflow
+- Dashboard with system overview and statistics
+- Proxy Hosts management (CRUD, enable/disable, bulk actions)
+- Redirection Hosts management (CRUD, enable/disable, bulk actions)
+- 404 Hosts management (CRUD, enable/disable, bulk actions)
+- Streams management (CRUD, enable/disable, bulk actions)
+- SSL Certificate management (CRUD, renew, Let's Encrypt integration)
+- Access Lists management (CRUD, authorization and client rules)
+- User management (CRUD, permissions, password change)
+- Settings page with configuration options
+- Audit Log with clickable object references
+- Import/Export functionality for all entity types
+- Global search across all entities
+- Dark/Light mode with theme customization
+- Token stack / multi-account support with automatic token refresh
+- Permission system with role-based access control
+- Mobile responsive layout
+- Docker image with docker-compose integration
+- Cross-reference connections between Proxy Hosts and Redirection Hosts
 
-### Changed
-- **Package Updates (Phase 1 - Safe Updates):**
-  - `react-syntax-highlighter`: 15.6.1 → 15.6.6 (syntax highlighting improvements)
-  - `@mui/utils`: 7.2.0 → 7.3.2 (Material-UI utility functions)
-  - `@mui/x-date-pickers`: 8.9.2 → 8.11.2 (date picker components)
-  - `@tanstack/react-query`: 5.84.1 → 5.87.4 (data fetching & caching)
-  - `axios`: 1.11.0 → 1.12.2 (HTTP client improvements)
-  - `@types/node`: 24.1.0 → 24.4.0 (Node.js TypeScript definitions)
-  - `@typescript-eslint/eslint-plugin`: 8.38.0 → 8.43.0 (ESLint TypeScript rules)
-  - `@typescript-eslint/parser`: 8.38.0 → 8.43.0 (TypeScript ESLint parser)
+### Code Quality (Epic #41)
+- Extracted shared utility functions and custom hooks (#42)
+- Created centralized constants for hardcoded values (#43)
+- Established BaseEntity type hierarchy (#44)
+- Eliminated all `any` types in API layer (#45)
+- Eliminated all `any` types in DataTable components (#46)
+- Eliminated all `any` types in hooks (#47)
+- Consolidated duplicate type definitions (#48)
+- Unified API layer patterns with standardized CRUD operations (#49)
+- Added missing return type annotations (#50)
+- Replaced all `console.error` calls with project logger (#51)
+- Added memoization with `useMemo`/`useCallback` across components (#52)
+- Extracted oversized components into focused sub-components (#53)
+- Created `useEntityCrud` hook for page-level CRUD deduplication (#54)
+- Removed dead code and unused files (#55)
+- Added accessibility improvements: aria-labels, keyboard navigation, screen reader support (#56)
+- Improved error handling: ErrorBoundaries, `Promise.allSettled` for bulk operations, user feedback (#57)
+- Final validation: zero lint warnings, zero type errors, production build passing (#58)
 
-### Fixed
-- Replaced console statements with proper logger utilities in DataTableBulkActions component
-- Updated ESLint configuration to properly handle logger exclusions
-
-### Quality Assurance
-- ✅ All lint checks passing (0 errors)
-- ✅ TypeScript compilation successful
-- ✅ Production build verified (10.29s)
-- ✅ API integration tested with NPM API
-- ✅ No regressions detected in existing functionality
-
-## [0.1.2] - Previous Release
-
-### Added
-- Responsive table design with mobile card layout
-- Mobile-friendly navigation with responsive breakpoints
-- Responsive design for all major components:
-  - AccessLists with mobile add button
-  - AuditLog with mobile-friendly table
-  - Certificates with mobile add button
-  - DeadHosts with mobile add button
-
-### Changed
-- DataTable component now disables selection in card view
-- Extended responsive settings with numeric breakpoints in types
-
-### Removed
-- Unused isMobileTable variable from AuditLog component
-
----
-
-**Note**: Version 0.1.3 focuses on package maintenance and stability improvements. Major framework updates (React 19, MUI v7, Vite 7, ESLint 9) are planned for Phase 2 updates in future releases.
+### Technical Stack
+- React 18 with TypeScript (strict mode)
+- Material-UI (MUI) v7
+- Vite build tool
+- React Router v6
+- Zustand for auth state management
+- React Context API for theme, toast, and search
+- Emotion (CSS-in-JS)
+- ESLint with TypeScript and React plugins

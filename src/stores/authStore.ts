@@ -111,7 +111,7 @@ const getTokenExpiry = (token: string): Date | null => {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: localStorage.getItem(STORAGE_KEYS.TOKEN),
-  tokenExpiresAt: localStorage.getItem(STORAGE_KEYS.TOKEN) ? getTokenExpiry(localStorage.getItem(STORAGE_KEYS.TOKEN)!) : null,
+  tokenExpiresAt: localStorage.getItem(STORAGE_KEYS.TOKEN) ? getTokenExpiry(localStorage.getItem(STORAGE_KEYS.TOKEN) ?? '') : null,
   isAuthenticated: !!localStorage.getItem(STORAGE_KEYS.TOKEN),
   isLoading: false,
   error: null,

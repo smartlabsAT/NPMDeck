@@ -164,7 +164,7 @@ const AccessListDetailsDialog = ({
             </Typography>
             {hasAuthUsers ? (
               <List dense>
-                {accessList.items!.map((item, index) => (
+                {accessList.items?.map((item, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
                       <PersonIcon fontSize="small" />
@@ -218,7 +218,7 @@ const AccessListDetailsDialog = ({
             </Typography>
             {hasAccessRules ? (
               <List dense>
-                {accessList.clients!.map((client, index) => (
+                {accessList.clients?.map((client, index) => (
                   <ListItem key={index}>
                     <ListItemIcon>
                       {client.directive === 'allow' ? (

@@ -270,7 +270,7 @@ const ProxyHostAccessPanel = ({
                 </Typography>
               </Box>
               <List>
-                {accessList.items!.map((item: any, index: number) => (
+                {accessList.items?.map((item, index) => (
                   <ListItem key={item.id || index} sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
                     <ListItemIcon>
                       <PersonIcon fontSize="small" />
@@ -346,7 +346,7 @@ const ProxyHostAccessPanel = ({
                 </Typography>
               </Box>
               <List>
-                {accessList.clients!.map((client: any, index: number) => (
+                {accessList.clients?.map((client, index) => (
                   <ListItem key={client.id || index} sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
                     <ListItemIcon>
                       {client.directive === 'allow' ? (

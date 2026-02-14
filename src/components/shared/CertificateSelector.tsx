@@ -18,6 +18,15 @@ import {
 } from '@mui/icons-material'
 import { Certificate } from '../../api/certificates'
 
+interface NewCertificateOption {
+  id: 'new'
+  nice_name: string
+  provider: string
+  domain_names?: string[]
+}
+
+type CertificateOption = Certificate | NewCertificateOption
+
 interface CertificateSelectorProps {
   value: Certificate | null
   onChange: (certificate: Certificate | null) => void
@@ -84,11 +93,11 @@ export default function CertificateSelector({
   }
   
   // Prepare options list
-  const options = React.useMemo(() => {
+  const options: CertificateOption[] = React.useMemo(() => {
     if (includeNewOption) {
       return [
         ...certificates,
-        { id: 'new', nice_name: 'Request a new SSL Certificate', provider: 'letsencrypt' } as any
+        { id: 'new', nice_name: 'Request a new SSL Certificate', provider: 'letsencrypt' } as NewCertificateOption
       ]
     }
     return certificates
@@ -96,16 +105,16 @@ export default function CertificateSelector({
   
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <Autocomplete
+      <Autocomplete<CertificateOption>
         fullWidth={fullWidth}
         value={value}
-        onChange={(_, newValue: any) => {
+        onChange={(_, newValue: CertificateOption | null) => {
           if (newValue && newValue.id === 'new') {
             if (onNewOptionSelect) {
               onNewOptionSelect()
             }
           } else {
-            onChange(newValue)
+            onChange(newValue as Certificate | null)
           }
         }}
         options={options}
@@ -126,7 +135,7 @@ export default function CertificateSelector({
           }
           return `Certificate #${option.id}`
         }}
-        renderOption={(props, option: any) => {
+        renderOption={(props, option: CertificateOption) => {
           // Special rendering for "new" option
           if (option.id === 'new') {
             return (
@@ -141,7 +150,8 @@ export default function CertificateSelector({
             )
           }
           
-          const status = getCertificateStatus(option)
+          const cert = option as Certificate
+          const status = getCertificateStatus(cert)
           const StatusIcon = status.icon
           
           return (

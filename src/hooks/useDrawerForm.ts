@@ -417,7 +417,7 @@ export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
       helperText: hasError ? formState.errors[key] : undefined,
       disabled: formState.loading,
     };
-  }, [fields, formState.data, formState.errors, formState.touched, formState.loading, setFieldValue, setFieldTouched, validateField]);
+  }, [fields, formState.data, formState.errors, formState.touched, formState.loading, setFieldValue, setFieldTouched]);
 
 
   /**

@@ -213,6 +213,7 @@ const UserDrawer = ({ open, onClose, user, onSave }: UserDrawerProps) => {
         },
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- form.resetForm is stable; adding form object would cause infinite re-renders
   }, [open, user, form.resetForm])
 
   const tabs: DrawerTab[] = [

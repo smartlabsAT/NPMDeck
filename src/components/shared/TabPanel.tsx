@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react'
-import { Box, Fade, Slide, Grow, Collapse } from '@mui/material'
+import { Box, Fade, Slide, Grow, Collapse, type SxProps, type Theme } from '@mui/material'
 import { TransitionProps } from '@mui/material/transitions'
 
 /**
@@ -31,7 +31,7 @@ export interface TabPanelProps {
   /** Whether to keep the panel mounted when hidden */
   keepMounted?: boolean
   /** Custom styling */
-  sx?: any
+  sx?: SxProps<Theme>
   /** Padding inside the panel */
   padding?: number | string
   /** Whether panel is loading */
@@ -39,21 +39,21 @@ export interface TabPanelProps {
   /** Loading placeholder */
   loadingComponent?: ReactNode
   /** Custom transition component */
-  TransitionComponent?: React.ComponentType<TransitionProps & { children: React.ReactElement<any, any> }>
+  TransitionComponent?: React.ComponentType<TransitionProps & { children: React.ReactElement }>
   /** Additional props for the transition component */
-  transitionProps?: any
+  transitionProps?: Partial<TransitionProps>
   /** Role for accessibility */
   role?: string
   /** ARIA labelledby for accessibility */
   'aria-labelledby'?: string
   /** Additional ARIA props */
-  ariaProps?: Record<string, any>
+  ariaProps?: Record<string, string | boolean | number | undefined>
 }
 
 /**
  * Transition props type shared by all transition wrapper components
  */
-type TransitionWrapperProps = TransitionProps & { children: React.ReactElement<any, any>; ref?: React.Ref<unknown> }
+type TransitionWrapperProps = TransitionProps & { children: React.ReactElement; ref?: React.Ref<unknown> }
 
 /**
  * Slide transition component factory
@@ -89,7 +89,7 @@ function FadeTransition({ ref, ...props }: TransitionWrapperProps) {
  * No-op transition component (renders children directly)
  */
 function NoTransition({ ref, children }: TransitionWrapperProps) {
-  return React.cloneElement(children, { ref })
+  return React.cloneElement(children, { ref } as React.Attributes & { ref?: React.Ref<unknown> })
 }
 
 /**

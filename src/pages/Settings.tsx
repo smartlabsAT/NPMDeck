@@ -26,6 +26,7 @@ import {
   Tooltip,
   Stack,
   useTheme,
+  alpha,
 } from '@mui/material'
 import {
   Language as DefaultSiteIcon,
@@ -352,12 +353,15 @@ const DEFAULT_HTML = {
 </html>`
 }
 
+/** Palette color key used to resolve the actual color from the MUI theme */
+type PaletteColorKey = 'success' | 'warning' | 'error' | 'info'
+
 interface DefaultSiteOption {
   value: string
   label: string
   description: string
   icon: React.ReactNode
-  color: string
+  paletteKey: PaletteColorKey
 }
 
 const DEFAULT_SITE_OPTIONS: DefaultSiteOption[] = [
@@ -366,28 +370,28 @@ const DEFAULT_SITE_OPTIONS: DefaultSiteOption[] = [
     label: 'Congratulations Page',
     description: 'Default Nginx Proxy Manager welcome page',
     icon: <CongratulationsIcon />,
-    color: '#4caf50'
+    paletteKey: 'success'
   },
   {
     value: '404',
     label: '404 Not Found',
     description: 'Standard 404 error page',
     icon: <Error404Icon />,
-    color: '#ff9800'
+    paletteKey: 'warning'
   },
   {
     value: '444',
     label: 'No Response',
     description: 'Close connection without response',
     icon: <NoResponseIcon />,
-    color: '#f44336'
+    paletteKey: 'error'
   },
   {
     value: 'html',
     label: 'Custom HTML',
     description: 'Your own custom HTML content',
     icon: <CodeIcon />,
-    color: '#2196f3'
+    paletteKey: 'info'
   }
 ]
 
@@ -447,47 +451,50 @@ const Settings = () => {
 
   // Memoize the default site cards to prevent re-renders
   const defaultSiteCards = useMemo(() => (
-    DEFAULT_SITE_OPTIONS.map((option) => (
-      <Card
-        key={option.value}
-        variant={defaultSiteType === option.value ? 'elevation' : 'outlined'}
-        elevation={defaultSiteType === option.value ? 3 : 0}
-        sx={{
-          cursor: 'pointer',
-          transition: 'border-color 0.2s, box-shadow 0.2s',
-          border: defaultSiteType === option.value ? `2px solid ${option.color}` : '2px solid transparent',
-          '&:hover': {
-            boxShadow: theme.shadows[4],
-          }
-        }}
-        onClick={() => setDefaultSiteType(option.value)}
-      >
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Box
-              sx={{
-                p: 1,
-                borderRadius: 2,
-                backgroundColor: `${option.color}20`,
-                color: option.color,
-                mr: 2
-              }}
-            >
-              {React.cloneElement(option.icon as React.ReactElement<any>, { fontSize: 'large' })}
+    DEFAULT_SITE_OPTIONS.map((option) => {
+      const color = theme.palette[option.paletteKey].main
+      return (
+        <Card
+          key={option.value}
+          variant={defaultSiteType === option.value ? 'elevation' : 'outlined'}
+          elevation={defaultSiteType === option.value ? 3 : 0}
+          sx={{
+            cursor: 'pointer',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+            border: defaultSiteType === option.value ? `2px solid ${color}` : '2px solid transparent',
+            '&:hover': {
+              boxShadow: theme.shadows[4],
+            }
+          }}
+          onClick={() => setDefaultSiteType(option.value)}
+        >
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box
+                sx={{
+                  p: 1,
+                  borderRadius: 2,
+                  backgroundColor: alpha(color, 0.125),
+                  color,
+                  mr: 2
+                }}
+              >
+                {React.cloneElement(option.icon as React.ReactElement<Record<string, unknown>>, { fontSize: 'large' })}
+              </Box>
+              <Typography variant="h6" component="div">
+                {option.label}
+              </Typography>
             </Box>
-            <Typography variant="h6" component="div">
-              {option.label}
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
+              {option.description}
             </Typography>
-          </Box>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            {option.description}
-          </Typography>
-        </CardContent>
-      </Card>
-    ))
-  ), [defaultSiteType, theme.shadows])
+          </CardContent>
+        </Card>
+      )
+    })
+  ), [defaultSiteType, theme.shadows, theme.palette])
 
   useEffect(() => {
     fetchSettings()
@@ -731,7 +738,7 @@ const Settings = () => {
               <Paper
                 variant="outlined"
                 sx={{
-                  backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fafafa',
+                  backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.default : theme.palette.background.paper,
                   borderRadius: 1,
                   overflow: 'hidden',
                   width: '100%',
@@ -749,7 +756,7 @@ const Settings = () => {
                     color: theme.palette.mode === 'dark' ? '#98c379' : '#50a14f',
                   },
                   '& .token.punctuation': {
-                    color: theme.palette.mode === 'dark' ? '#abb2bf' : '#383a42',
+                    color: theme.palette.text.primary,
                   },
                   '& .token.doctype': {
                     color: theme.palette.mode === 'dark' ? '#c678dd' : '#a626a4',
@@ -782,7 +789,7 @@ const Settings = () => {
                     fontSize: isMobile ? 12 : 14,
                     minHeight: isMobile ? 300 : 400,
                     width: '100%',
-                    color: theme.palette.mode === 'dark' ? '#abb2bf' : '#383a42',
+                    color: theme.palette.text.primary,
                     backgroundColor: 'transparent',
                     overflowX: 'auto'
                   }}
@@ -858,7 +865,7 @@ const Settings = () => {
                           borderColor: 'divider'
                         }}>
                           {RESOURCE_ICONS[entityKey] ? (
-                            React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement<any>, {
+                            React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement<Record<string, unknown>>, {
                               fontSize: 'small'
                             })
                           ) : (
@@ -870,7 +877,7 @@ const Settings = () => {
                             {ENTITY_DISPLAY_NAMES[entityKey]}
                           </Typography>
                         </Box>
-                        
+
                         {/* View Details Setting */}
                         <Box sx={{ mb: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
@@ -1023,7 +1030,7 @@ const Settings = () => {
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               {RESOURCE_ICONS[entityKey] ? (
-                                React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement<any>, {
+                                React.cloneElement(RESOURCE_ICONS[entityKey] as React.ReactElement<Record<string, unknown>>, {
                                   fontSize: 'small'
                                 })
                               ) : (

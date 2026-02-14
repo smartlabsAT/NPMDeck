@@ -22,6 +22,8 @@ export function useDataTable<T extends object>(
   const [groupingEnabled, setGroupingEnabled] = useState(groupConfig?.defaultEnabled ?? false)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 
+  const filterFunction = options?.filterFunction
+
   // Filter data
   const filteredData = useMemo(() => {
     let result = [...data]
@@ -65,9 +67,9 @@ export function useDataTable<T extends object>(
     }
 
     // Apply filters
-    if (options?.filterFunction) {
+    if (filterFunction) {
       // Use custom filter function if provided
-      result = result.filter((item) => options.filterFunction!(item, filters))
+      result = result.filter((item) => filterFunction(item, filters))
     } else {
       // Use default filter logic
       Object.entries(filters).forEach(([filterId, filterValue]) => {
@@ -146,7 +148,7 @@ export function useDataTable<T extends object>(
     }
 
     return result
-  }, [data, searchQuery, filters, columns, options?.filterFunction])
+  }, [data, searchQuery, filters, columns, filterFunction])
 
   // Sort data
   const sortedData = useMemo(() => {
@@ -182,7 +184,7 @@ export function useDataTable<T extends object>(
       if (!groupMap.has(groupId)) {
         groupMap.set(groupId, [])
       }
-      groupMap.get(groupId)!.push(item)
+      groupMap.get(groupId)?.push(item)
     })
 
     // Convert to DataGroup array

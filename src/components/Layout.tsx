@@ -70,7 +70,7 @@ const Layout = () => {
       <Box
         sx={{
           height: LAYOUT.TOOLBAR_HEIGHT,
-          background: `linear-gradient(45deg, ${NAVIGATION_COLORS.primary} 30%, #4dd4c5 90%)`,
+          background: `linear-gradient(45deg, ${NAVIGATION_COLORS.primary} 30%, ${NAVIGATION_COLORS.primaryLight} 90%)`,
           color: 'white',
           display: 'flex',
           alignItems: 'center',

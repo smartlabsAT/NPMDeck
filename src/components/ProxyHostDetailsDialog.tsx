@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Typography,
   Box,
@@ -60,6 +60,45 @@ const ProxyHostDetailsDialog = ({
   const [loadingAccessList, setLoadingAccessList] = useState(false)
   const [accessListError, setAccessListError] = useState<string | null>(null)
 
+  const loadConnections = useCallback(async () => {
+    if (!host) return
+
+    setLoadingConnections(true)
+    setConnectionsError(null)
+    try {
+      const redirections = await redirectionHostsApi.getAll()
+
+      // Filter redirections that point to any of this host's domains
+      const linkedRedirects = redirections.filter(redirect => {
+        const targetDomain = redirect.forward_domain_name.toLowerCase()
+        return host.domain_names.some(domain => domain.toLowerCase() === targetDomain)
+      })
+
+      setLinkedRedirections(linkedRedirects)
+    } catch (error) {
+      logger.error('Failed to load connections:', error)
+      setConnectionsError('Failed to load connected redirections.')
+    } finally {
+      setLoadingConnections(false)
+    }
+  }, [host])
+
+  const loadAccessListDetails = useCallback(async () => {
+    if (!host?.access_list?.id) return
+
+    try {
+      setLoadingAccessList(true)
+      setAccessListError(null)
+      const data = await accessListsApi.getById(host.access_list.id, ['items', 'clients', 'owner'])
+      setFullAccessList(data)
+    } catch (error) {
+      logger.error('Failed to load access list details:', error)
+      setAccessListError('Failed to load access list details.')
+    } finally {
+      setLoadingAccessList(false)
+    }
+  }, [host?.access_list?.id])
+
   // Parse tab from URL
   useEffect(() => {
     if (open && host) {
@@ -92,53 +131,14 @@ const ProxyHostDetailsDialog = ({
     if (open && host) {
       loadConnections()
     }
-  }, [open, host])
+  }, [open, host, loadConnections])
 
   // Load access list details when access tab is active
   useEffect(() => {
     if (activeTab === 4 && open && host?.access_list?.id) {
       loadAccessListDetails()
     }
-  }, [activeTab, open, host?.access_list?.id])
-
-  const loadConnections = async () => {
-    if (!host) return
-
-    setLoadingConnections(true)
-    setConnectionsError(null)
-    try {
-      const redirections = await redirectionHostsApi.getAll()
-
-      // Filter redirections that point to any of this host's domains
-      const linkedRedirects = redirections.filter(redirect => {
-        const targetDomain = redirect.forward_domain_name.toLowerCase()
-        return host.domain_names.some(domain => domain.toLowerCase() === targetDomain)
-      })
-
-      setLinkedRedirections(linkedRedirects)
-    } catch (error) {
-      logger.error('Failed to load connections:', error)
-      setConnectionsError('Failed to load connected redirections.')
-    } finally {
-      setLoadingConnections(false)
-    }
-  }
-
-  const loadAccessListDetails = async () => {
-    if (!host?.access_list?.id) return
-
-    try {
-      setLoadingAccessList(true)
-      setAccessListError(null)
-      const data = await accessListsApi.getById(host.access_list.id, ['items', 'clients', 'owner'])
-      setFullAccessList(data)
-    } catch (error) {
-      logger.error('Failed to load access list details:', error)
-      setAccessListError('Failed to load access list details.')
-    } finally {
-      setLoadingAccessList(false)
-    }
-  }
+  }, [activeTab, open, host?.access_list?.id, loadAccessListDetails])
 
   if (!host) return null
 
@@ -151,17 +151,17 @@ const ProxyHostDetailsDialog = ({
 
   const handleNavigateToAccess = () => {
     setActiveTab(4)
-    navigate(`/hosts/proxy/${host!.id}/view/access`, { replace: true })
+    navigate(`/hosts/proxy/${host?.id}/view/access`, { replace: true })
   }
 
   const handleNavigateToCertificate = () => {
     onClose()
-    navigate(`/security/certificates/${host!.certificate_id}/view`)
+    navigate(`/security/certificates/${host?.certificate_id}/view`)
   }
 
   const handleNavigateToFullAccessList = () => {
     onClose()
-    navigate(`/security/access-lists/${host!.access_list!.id}/view`)
+    navigate(`/security/access-lists/${host?.access_list?.id}/view`)
   }
 
   const handleNavigateToRedirection = (redirectionId: number) => {

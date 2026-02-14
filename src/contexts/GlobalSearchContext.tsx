@@ -25,6 +25,7 @@ interface GlobalSearchContextType {
 
 const GlobalSearchContext = createContext<GlobalSearchContextType | undefined>(undefined)
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useGlobalSearch = () => {
   const context = useContext(GlobalSearchContext)
   if (!context) {
@@ -73,13 +74,13 @@ export const GlobalSearchProvider = ({ children }: GlobalSearchProviderProps) =>
 
     setSearchState(prev => ({ ...prev, isLoading: true }))
 
-    const loadResource = async (
+    const loadResource = async <T,>(
       type: ResourceType,
-      loader: () => Promise<any>,
+      loader: () => Promise<T[]>,
       canLoad: boolean
-    ) => {
+    ): Promise<T[]> => {
       if (!canLoad || type === 'action') return []
-      
+
       setSearchState(prev => ({
         ...prev,
         loadingProgress: { ...prev.loadingProgress, [type]: true }
@@ -99,7 +100,15 @@ export const GlobalSearchProvider = ({ children }: GlobalSearchProviderProps) =>
       }
     }
 
-    const results = await Promise.allSettled([
+    const [
+      proxyHostsResult,
+      redirectionHostsResult,
+      deadHostsResult,
+      streamsResult,
+      accessListsResult,
+      certificatesResult,
+      usersResult,
+    ] = await Promise.allSettled([
       loadResource('proxy_hosts', () => proxyHostsApi.getAll(), canView('proxy_hosts')),
       loadResource('redirection_hosts', () => redirectionHostsApi.getAll(), canView('redirection_hosts')),
       loadResource('dead_hosts', () => deadHostsApi.getAll(), canView('dead_hosts')),
@@ -109,8 +118,13 @@ export const GlobalSearchProvider = ({ children }: GlobalSearchProviderProps) =>
       loadResource('users', () => usersApi.getAll(), isAdmin),
     ])
 
-    const [proxyHosts, redirectionHosts, deadHosts, streams, accessLists, certificates, users] = 
-      results.map(r => r.status === 'fulfilled' ? r.value : [])
+    const proxyHosts = proxyHostsResult.status === 'fulfilled' ? proxyHostsResult.value : []
+    const redirectionHosts = redirectionHostsResult.status === 'fulfilled' ? redirectionHostsResult.value : []
+    const deadHosts = deadHostsResult.status === 'fulfilled' ? deadHostsResult.value : []
+    const streams = streamsResult.status === 'fulfilled' ? streamsResult.value : []
+    const accessLists = accessListsResult.status === 'fulfilled' ? accessListsResult.value : []
+    const certificates = certificatesResult.status === 'fulfilled' ? certificatesResult.value : []
+    const users = usersResult.status === 'fulfilled' ? usersResult.value : []
 
     setSearchState({
       isLoading: false,

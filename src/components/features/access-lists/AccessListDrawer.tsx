@@ -28,6 +28,7 @@ import BaseDrawer from '../../base/BaseDrawer'
 import TabPanel from '../../shared/TabPanel'
 import FormSection from '../../shared/FormSection'
 import ArrayFieldManager from '../../shared/ArrayFieldManager'
+import type { ArrayItemProps } from '../../shared/ArrayItemComponent'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
@@ -58,7 +59,11 @@ interface AccessListFormData {
 }
 
 // Memoized components to prevent re-renders and focus loss
-const AuthItemComponent = React.memo(({ value, onChange, _onDelete, _index, accessList }: any) => (
+interface AuthItemComponentProps extends ArrayItemProps<AuthItem> {
+  accessList?: AccessList | null
+}
+
+const AuthItemComponent = React.memo(({ value, onChange, accessList }: AuthItemComponentProps) => (
   <Paper
     variant="outlined"
     sx={{
@@ -147,7 +152,7 @@ const validateIpCidr = (address: string): string | null => {
     return null
 }
 
-const AccessRuleComponent = React.memo(({ value, onChange, onDelete, onMoveUp, onMoveDown, _index }: any) => {
+const AccessRuleComponent = React.memo(({ value, onChange, onDelete, onMoveUp, onMoveDown }: ArrayItemProps<AccessRule>) => {
   const error = validateIpCidr(value.address)
   
   return (
@@ -230,7 +235,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
   
   // Create memoized component with accessList in closure
   const AuthItemWithAccessList = React.useCallback(
-    (props: any) => <AuthItemComponent {...props} accessList={accessList} />,
+    (props: ArrayItemProps<AuthItem>) => <AuthItemComponent {...props} accessList={accessList} />,
     [accessList]
   )
 
@@ -326,6 +331,8 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     },
   })
 
+  const errorsWithGeneral = errors as Partial<Record<keyof AccessListFormData | 'general', string>>
+
   const tabs = [
     { id: 'details', label: 'Details', icon: <InfoIcon />, hasError: Boolean(errors.name) },
     { id: 'authorization', label: 'Authorization', icon: <LockIcon />, hasError: Boolean(errors.authItems) },
@@ -340,7 +347,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
 
   const _handleAccessRuleChange = (index: number, field: 'address' | 'directive', value: string) => {
     const updated = [...data.accessRules]
-    updated[index][field] = value as any
+    updated[index][field] = value as AccessRule['directive']
     setFieldValue('accessRules', updated)
   }
 
@@ -384,9 +391,9 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     >
       {/* Details Tab */}
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
-        {(errors as any).general && (
+        {errorsWithGeneral.general && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {(errors as any).general}
+            {errorsWithGeneral.general}
           </Alert>
         )}
         <FormSection

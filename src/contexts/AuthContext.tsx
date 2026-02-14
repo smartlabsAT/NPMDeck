@@ -10,8 +10,8 @@ const AuthStoreContext = createContext<StoreApi<AuthStore> | null>(null)
 
 // Provider component
 export const AuthStoreProvider = ({ children }: { children: ReactNode }) => {
-  // Get the store API from zustand
-  const storeApi = (useAuthStore as any).api
+  // Get the store API from zustand - UseBoundStore extends StoreApi, so the hook itself is the API
+  const storeApi = useAuthStore as unknown as StoreApi<AuthStore>
   
   // Initialize the global store API on mount
   useEffect(() => {
@@ -31,6 +31,7 @@ export const AuthStoreProvider = ({ children }: { children: ReactNode }) => {
 }
 
 // Hook to access the store API outside of React components
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuthStoreApi = () => {
   const context = useContext(AuthStoreContext)
   if (!context) {
@@ -43,10 +44,12 @@ export const useAuthStoreApi = () => {
 // This will be initialized by the provider
 let authStoreApi: StoreApi<AuthStore> | null = null
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const setAuthStoreApi = (api: StoreApi<AuthStore>) => {
   authStoreApi = api
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getAuthStoreApi = (): StoreApi<AuthStore> => {
   if (!authStoreApi) {
     throw new Error('Auth store API not initialized. Make sure AuthStoreProvider is mounted.')

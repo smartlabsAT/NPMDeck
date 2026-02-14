@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useCallback } from 'react'
 import {
   Box,
   IconButton,
@@ -45,17 +45,17 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
   const { redirectionsByTarget, onToggleEnabled, onEdit, onDelete, onViewConnections, onViewAccess, navigate } = params
 
   /** Get redirection hosts that point to any of the proxy host's domains */
-  const getLinkedRedirections = (host: ProxyHost): RedirectionHost[] => {
+  const getLinkedRedirections = useCallback((host: ProxyHost): RedirectionHost[] => {
     const redirections: RedirectionHost[] = []
     host.domain_names.forEach(domain => {
       const domainRedirections = redirectionsByTarget.get(domain.toLowerCase()) || []
       redirections.push(...domainRedirections)
     })
-    // Remove duplicates
-    return Array.from(new Set(redirections.map(r => r.id))).map(id =>
-      redirections.find(r => r.id === id)!
-    )
-  }
+    // Remove duplicates by id, filtering out any undefined results
+    return Array.from(new Set(redirections.map(r => r.id)))
+      .map(id => redirections.find(r => r.id === id))
+      .filter((r): r is RedirectionHost => r !== undefined)
+  }, [redirectionsByTarget])
 
   const columns = useMemo<ResponsiveTableColumn<ProxyHost>[]>(() => [
     {
@@ -319,7 +319,7 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
         </Box>
       )
     }
-  ], [redirectionsByTarget, onToggleEnabled, onEdit, onDelete, onViewConnections, onViewAccess, navigate])
+  ], [getLinkedRedirections, onToggleEnabled, onEdit, onDelete, onViewConnections, onViewAccess, navigate])
 
   return columns
 }

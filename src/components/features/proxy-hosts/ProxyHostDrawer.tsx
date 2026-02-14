@@ -182,6 +182,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
         advancedConfig: host?.advanced_config || '',
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- loadSelectorData is stable and only needs to run when drawer opens
   }, [open, host, resetForm])
 
   // Set selected certificate after certificates load
@@ -301,7 +302,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
 // Details Tab Component
 interface DetailsTabProps {
   data: ProxyHostFormData
-  setFieldValue: (field: keyof ProxyHostFormData, value: any) => void
+  setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
   errors: Record<string, string>
   accessLists: AccessList[]
   _loadingData: boolean
@@ -424,7 +425,7 @@ DetailsTab.displayName = 'DetailsTab'
 // SSL Tab Component
 interface SSLTabProps {
   data: ProxyHostFormData
-  setFieldValue: (field: keyof ProxyHostFormData, value: any) => void
+  setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
   errors: Record<string, string>
   certificates: Certificate[]
   _loadingData: boolean
@@ -519,7 +520,7 @@ SSLTab.displayName = 'SSLTab'
 // Advanced Tab Component
 interface AdvancedTabProps {
   data: ProxyHostFormData
-  setFieldValue: (field: keyof ProxyHostFormData, value: any) => void
+  setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
   errors: Record<string, string>
 }
 

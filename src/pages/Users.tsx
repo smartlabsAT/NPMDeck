@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -90,15 +90,15 @@ const Users = () => {
     }
   }
 
-  const handleRowClick = (user: User) => {
+  const handleRowClick = useCallback((user: User) => {
     setSelectedUser(user)
     setDrawerOpen(true)
     navigate(`/users/${user.id}`)
-  }
+  }, [navigate])
 
-  const handleEdit = (user: User) => {
+  const handleEdit = useCallback((user: User) => {
     handleRowClick(user)
-  }
+  }, [handleRowClick])
 
   const handleAdd = () => {
     setSelectedUser(null)
@@ -137,10 +137,10 @@ const Users = () => {
     setUsersToDelete([])
   }
 
-  const handleBulkDisable = async (users: User[]) => {
+  const handleBulkDisable = useCallback(async (users: User[]) => {
     const eligibleUsers = users.filter(u => !u.is_disabled && u.id !== currentUser?.id)
     if (eligibleUsers.length === 0) return
-    
+
     let successCount = 0
 
     for (const user of eligibleUsers) {
@@ -151,17 +151,17 @@ const Users = () => {
         showError('user', 'disable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
-    
+
     if (successCount > 0) {
       showSuccess('user', 'disabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
       await loadUsers()
     }
-  }
+  }, [currentUser?.id, showError, showSuccess])
 
-  const handleBulkEnable = async (users: User[]) => {
+  const handleBulkEnable = useCallback(async (users: User[]) => {
     const eligibleUsers = users.filter(u => u.is_disabled && u.id !== currentUser?.id)
     if (eligibleUsers.length === 0) return
-    
+
     let successCount = 0
 
     for (const user of eligibleUsers) {
@@ -172,21 +172,21 @@ const Users = () => {
         showError('user', 'enable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
-    
+
     if (successCount > 0) {
       showSuccess('user', 'enabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
       await loadUsers()
     }
-  }
+  }, [currentUser?.id, showError, showSuccess])
 
 
-  const handleLoginAs = async (user: User) => {
+  const handleLoginAs = useCallback(async (user: User) => {
     if (currentUser?.id === user.id) return
-    
+
     try {
       // Push current account to stack before switching
       pushCurrentToStack()
-      
+
       const response = await usersApi.loginAs(user.id)
       // Store the new token and reload
       localStorage.setItem(STORAGE_KEYS.TOKEN, response.token)
@@ -195,7 +195,7 @@ const Users = () => {
     } catch (err: unknown) {
       setError(getErrorMessage(err))
     }
-  }
+  }, [currentUser?.id, pushCurrentToStack])
 
   const getRoleDisplay = (roles: string[]) => {
     if (!roles || roles.length === 0) {
@@ -366,7 +366,7 @@ const Users = () => {
         </Box>
       ),
     },
-  ], [currentUser])
+  ], [currentUser, handleEdit, handleLoginAs])
 
   // Filter definitions
   const filters: Filter[] = useMemo(() => [
@@ -430,7 +430,7 @@ const Users = () => {
       disabled: (users) => users.every(u => u.id === currentUser?.id),
       confirmMessage: 'Delete {count} users? This action cannot be undone.',
     },
-  ], [currentUser])
+  ], [currentUser, handleBulkDisable, handleBulkEnable])
 
   return (
     <Container maxWidth={false}>

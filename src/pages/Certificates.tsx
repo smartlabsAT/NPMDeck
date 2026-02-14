@@ -64,9 +64,22 @@ const Certificates = () => {
   const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
+  const loadCertificates = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await certificatesApi.getAll(['owner', 'proxy_hosts', 'redirection_hosts', 'dead_hosts'])
+      setCertificates(data)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     loadCertificates()
-  }, [])
+  }, [loadCertificates])
 
   // Save grouping preference when DataTable changes it
   useEffect(() => {
@@ -114,20 +127,6 @@ const Certificates = () => {
     }
   }, [id, provider, location.pathname, navigate, showError])
 
-
-  const loadCertificates = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await certificatesApi.getAll(['owner', 'proxy_hosts', 'redirection_hosts', 'dead_hosts'])
-      setCertificates(data)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
   // Apply visibility filtering
   const visibleCertificates = useFilteredData(certificates)
 
@@ -170,7 +169,7 @@ const Certificates = () => {
         return newSet
       })
     }
-  }, [showSuccess, showError])
+  }, [showSuccess, showError, loadCertificates])
 
 
   const handleView = useCallback((cert: Certificate) => {

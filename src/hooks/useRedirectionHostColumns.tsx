@@ -43,7 +43,7 @@ interface UseRedirectionHostColumnsParams {
  * Extracts the column configuration including render functions, sorting, and responsive priorities.
  */
 const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): ResponsiveTableColumn<RedirectionHost>[] => {
-  const { proxyHostsByDomain, onToggleEnabled, onEdit, onDelete, onViewProxyHost, navigate } = params
+  const { proxyHostsByDomain, onToggleEnabled, onEdit, onDelete, onViewProxyHost } = params
 
   const columns = useMemo<ResponsiveTableColumn<RedirectionHost>[]>(() => [
     {
@@ -269,7 +269,7 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
         </Box>
       )
     }
-  ], [proxyHostsByDomain, onToggleEnabled, onEdit, onDelete, onViewProxyHost, navigate])
+  ], [proxyHostsByDomain, onToggleEnabled, onEdit, onDelete, onViewProxyHost])
 
   return columns
 }

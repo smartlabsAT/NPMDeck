@@ -196,6 +196,7 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         })
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- form.resetForm is stable; adding form would cause infinite re-renders
   }, [open, host])
 
   const loadCertificates = async () => {

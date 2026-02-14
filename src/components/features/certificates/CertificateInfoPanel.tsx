@@ -119,7 +119,7 @@ const CertificateInfoPanel = ({
                 <IconButton
                   size="small"
                   aria-label="Copy to clipboard"
-                  onClick={() => onCopyToClipboard(certificate.meta.certificate_id!, 'LE Certificate ID')}
+                  onClick={() => onCopyToClipboard(certificate.meta.certificate_id ?? '', 'LE Certificate ID')}
                 >
                   <CopyIcon fontSize="small" />
                 </IconButton>
