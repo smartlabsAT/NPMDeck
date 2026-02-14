@@ -1,13 +1,14 @@
 import { useCallback } from 'react'
 import { useTheme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
+import { LAYOUT } from '../constants/layout'
 
 // Module-level constant — stable reference across renders
 const BREAKPOINT_VALUES = {
   xs: 0,
   sm: 600,
   md: 850,  // Adjusted to account for container margins (~50px total)
-  lg: 1250,  // Adjusted to account for container margins
+  lg: LAYOUT.COMPACT_BREAKPOINT,  // Adjusted to account for container margins
   xl: 1920,
 } as const
 
@@ -52,8 +53,8 @@ export function useResponsive(): UseResponsiveReturn {
   
   // Specific breakpoints for tables
   const isMobileTable = useMediaQuery('(max-width:900px)') // < 900px (use cards)
-  const isCompactTable = useMediaQuery('(min-width:901px) and (max-width:1250px)') // 901px - 1250px (hide some columns)
-  const isFullTable = useMediaQuery('(min-width:1251px)') // >= 1251px (all columns)
+  const isCompactTable = useMediaQuery(`(min-width:901px) and (max-width:${LAYOUT.COMPACT_BREAKPOINT}px)`) // 901px - compact breakpoint (hide some columns)
+  const isFullTable = useMediaQuery(`(min-width:${LAYOUT.COMPACT_BREAKPOINT + 1}px)`) // > compact breakpoint (all columns)
   
   // Extra small screens for very mobile-friendly layouts
   const isExtraSmall = useMediaQuery('(max-width:480px)') // < 480px (very compact cards)

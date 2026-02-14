@@ -20,6 +20,7 @@ import {
 import { Certificate } from '../../../api/certificates'
 import { getDaysUntilExpiry, formatDate } from '../../../utils/dateUtils'
 import OwnerDisplay from '../../shared/OwnerDisplay'
+import { CERTIFICATE_EXPIRY } from '../../../constants/certificates'
 
 interface CertificateInfoPanelProps {
   certificate: Certificate
@@ -36,7 +37,7 @@ const CertificateInfoPanel = ({
 }: CertificateInfoPanelProps) => {
   const daysUntilExpiry = getDaysUntilExpiry(certificate.expires_on)
   const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0
-  const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= 30
+  const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= CERTIFICATE_EXPIRY.WARNING_DAYS
 
   return (
     <Grid container spacing={3}>

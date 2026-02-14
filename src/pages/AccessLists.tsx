@@ -37,6 +37,7 @@ import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { LAYOUT } from '../constants/layout'
 
 export default function AccessLists() {
   const { isAdmin } = usePermissions()
@@ -371,7 +372,7 @@ export default function AccessLists() {
           rowsPerPageOptions={[10, 25, 50, 100]}
           responsive={true}
           cardBreakpoint={900}
-          compactBreakpoint={1250}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
         {/* Mobile Add Button - shown at bottom */}

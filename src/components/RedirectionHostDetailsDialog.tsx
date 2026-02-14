@@ -30,6 +30,7 @@ import { getStatusColor, getStatusText } from '../utils/statusUtils'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
 import AdaptiveContainer from './AdaptiveContainer'
 import { NAVIGATION_COLORS } from '../constants/navigation'
+import { CERTIFICATE_EXPIRY } from '../constants/certificates'
 
 interface RedirectionHostDetailsDialogProps {
   open: boolean
@@ -50,8 +51,8 @@ export default function RedirectionHostDetailsDialog({
     if (!host.certificate?.expires_on) return null
     const days = getDaysUntilExpiry(host.certificate.expires_on)
     if (!days || days < 0) return { color: 'error' as const, text: 'Expired' }
-    if (days <= 7) return { color: 'error' as const, text: `Expires in ${days} days` }
-    if (days <= 30) return { color: 'warning' as const, text: `Expires in ${days} days` }
+    if (days <= CERTIFICATE_EXPIRY.CRITICAL_DAYS) return { color: 'error' as const, text: `Expires in ${days} days` }
+    if (days <= CERTIFICATE_EXPIRY.WARNING_DAYS) return { color: 'warning' as const, text: `Expires in ${days} days` }
     return { color: 'success' as const, text: `Valid for ${days} days` }
   }
 

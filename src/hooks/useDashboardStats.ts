@@ -13,6 +13,7 @@ import type { AccessList } from '../api/accessLists'
 import { usePermissions } from './usePermissions'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
 import logger from '../utils/logger'
+import { CERTIFICATE_EXPIRY } from '../constants/certificates'
 
 export interface DashboardStats {
   proxyHosts: {
@@ -121,7 +122,7 @@ export const useDashboardStats = (): DashboardStats => {
           
           if (days < 0) {
             expiredCount++
-          } else if (days <= 30) {
+          } else if (days <= CERTIFICATE_EXPIRY.WARNING_DAYS) {
             expiringSoonCount++
             expiringCerts.push(cert)
           } else {
