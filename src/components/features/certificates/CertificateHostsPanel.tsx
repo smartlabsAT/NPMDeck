@@ -59,9 +59,10 @@ const CertificateHostsPanel = ({
                 <ListItem
                   key={host.id}
                   secondaryAction={
-                    <IconButton 
-                      edge="end" 
-                      size="small" 
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      aria-label="View proxy host"
                       onClick={() => onNavigateToHost('proxy', host.id)}
                     >
                       <OpenInNewIcon fontSize="small" />
@@ -88,9 +89,10 @@ const CertificateHostsPanel = ({
                 <ListItem
                   key={host.id}
                   secondaryAction={
-                    <IconButton 
-                      edge="end" 
-                      size="small" 
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      aria-label="View redirection host"
                       onClick={() => onNavigateToHost('redirection', host.id)}
                     >
                       <OpenInNewIcon fontSize="small" />
@@ -117,9 +119,10 @@ const CertificateHostsPanel = ({
                 <ListItem
                   key={host.id}
                   secondaryAction={
-                    <IconButton 
-                      edge="end" 
-                      size="small" 
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      aria-label="View 404 host"
                       onClick={() => onNavigateToHost('404', host.id)}
                     >
                       <OpenInNewIcon fontSize="small" />

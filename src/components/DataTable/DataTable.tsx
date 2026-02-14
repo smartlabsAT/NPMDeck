@@ -183,14 +183,14 @@ export function DataTable<T extends object>({
                 <IconButton
                   size="small"
                   onClick={() => handleToggleAllGroups(true)}
-                  title="Expand All"
+                  aria-label="Expand All"
                 >
                   <ExpandAllIcon />
                 </IconButton>
                 <IconButton
                   size="small"
                   onClick={() => handleToggleAllGroups(false)}
-                  title="Collapse All"
+                  aria-label="Collapse All"
                 >
                   <CollapseAllIcon />
                 </IconButton>

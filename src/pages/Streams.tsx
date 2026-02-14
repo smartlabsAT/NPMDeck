@@ -140,6 +140,7 @@ export default function Streams() {
           <Tooltip title="Open in new tab">
             <IconButton
               size="small"
+              aria-label="Open stream endpoint in new tab"
               onClick={(e) => {
                 e.stopPropagation()
                 // Determine the protocol - use http by default

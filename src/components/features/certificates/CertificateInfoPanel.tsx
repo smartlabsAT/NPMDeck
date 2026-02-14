@@ -97,8 +97,9 @@ const CertificateInfoPanel = ({
               <Typography variant="body2" fontFamily="monospace">
                 #{certificate.id}
               </Typography>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
+                aria-label="Copy to clipboard"
                 onClick={() => onCopyToClipboard(certificate.id.toString(), 'Certificate ID')}
               >
                 <CopyIcon fontSize="small" />
@@ -115,8 +116,9 @@ const CertificateInfoPanel = ({
                 <Typography variant="body2" fontFamily="monospace">
                   {certificate.meta.certificate_id}
                 </Typography>
-                <IconButton 
-                  size="small" 
+                <IconButton
+                  size="small"
+                  aria-label="Copy to clipboard"
                   onClick={() => onCopyToClipboard(certificate.meta.certificate_id!, 'LE Certificate ID')}
                 >
                   <CopyIcon fontSize="small" />

@@ -142,6 +142,7 @@ const SearchBar = () => {
 
   return (
     <Autocomplete
+      aria-label="Search proxy hosts, certificates, and more"
       open={open}
       onOpen={() => {
         if (!preventReopen) {

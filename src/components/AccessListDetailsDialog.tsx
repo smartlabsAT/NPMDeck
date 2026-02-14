@@ -173,8 +173,9 @@ const AccessListDetailsDialog = ({
                       primary={item.username}
                       secondary="Protected with password"
                     />
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
+                      aria-label="Copy to clipboard"
                       onClick={() => copyToClipboard(item.username, `User ${index + 1}`)}
                     >
                       <CopyIcon fontSize="small" />

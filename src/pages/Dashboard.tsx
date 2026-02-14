@@ -57,8 +57,11 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
   
   
   return (
-    <Card 
-      sx={{ 
+    <Card
+      role="link"
+      tabIndex={0}
+      aria-label={`Navigate to ${title}`}
+      sx={{
         height: '100%',
         cursor: 'pointer',
         transition: 'background-color 0.2s',
@@ -67,6 +70,12 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
         }
       }}
       onClick={() => navigate(path)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          navigate(path)
+        }
+      }}
     >
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         {loading ? (

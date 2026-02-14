@@ -81,6 +81,7 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
               </Typography>
               <IconButton
                 size="small"
+                aria-label="Open source domain in new tab"
                 sx={{
                   p: 0.25,
                   '&:hover': {
@@ -126,6 +127,7 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
               </Typography>
               <IconButton
                 size="small"
+                aria-label="Open destination in new tab"
                 sx={{
                   p: 0.25,
                   '&:hover': {
@@ -142,7 +144,17 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
             </Box>
             {linkedProxy && (
               <Box
+                role="link"
+                tabIndex={0}
+                aria-label="View linked proxy host"
                 onClick={(e) => onViewProxyHost(linkedProxy, e)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onViewProxyHost(linkedProxy, e as unknown as React.MouseEvent)
+                  }
+                }}
                 sx={{
                   display: "flex",
                   alignItems: "center",

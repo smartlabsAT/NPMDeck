@@ -11,13 +11,16 @@ const Logo = ({ width = 210, color = 'currentColor' }: LogoProps) => {
   const actualHeight = width / aspectRatio
   
   return (
-    <svg 
-      width={width} 
-      height={actualHeight} 
-      viewBox="0 0 210 83" 
-      version="1.1" 
+    <svg
+      width={width}
+      height={actualHeight}
+      viewBox="0 0 210 83"
+      version="1.1"
       xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="NPMDeck Logo"
     >
+      <title>NPMDeck Logo</title>
       <g id="Page-1" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
         <polygon 
           id="Path" 
