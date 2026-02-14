@@ -55,8 +55,6 @@ export interface ArrayFieldManagerProps<T> {
   sx?: SxProps<Theme>
   /** Whether the field has an error */
   error?: boolean
-  /** Predefined suggestions for new items */
-  suggestions?: T[]
   /** Whether to allow duplicate items */
   allowDuplicates?: boolean
   /** Custom empty state component */

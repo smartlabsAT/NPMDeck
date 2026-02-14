@@ -339,18 +339,6 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
     { id: 'access', label: 'Access', icon: <SecurityIcon />, hasError: Boolean(errors.accessRules) },
   ]
 
-  const _handleAuthItemChange = (index: number, field: 'username' | 'password', value: string) => {
-    const updated = [...data.authItems]
-    updated[index][field] = value
-    setFieldValue('authItems', updated)
-  }
-
-  const _handleAccessRuleChange = (index: number, field: 'address' | 'directive', value: string) => {
-    const updated = [...data.accessRules]
-    updated[index][field] = value as AccessRule['directive']
-    setFieldValue('accessRules', updated)
-  }
-
   // Reset form when accessList changes
   React.useEffect(() => {
     if (open) {
