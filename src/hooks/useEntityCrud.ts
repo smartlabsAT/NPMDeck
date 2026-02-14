@@ -6,21 +6,21 @@ import { useFilteredData } from './useFilteredData'
 import { useToast } from '../contexts/ToastContext'
 import type { ToastEntityType } from '../types/entityTypes'
 import type { CoreResource } from '../types/entityTypes'
-import type { ToggleableEntity } from '../types/base'
+import type { OwnedEntity } from '../types/base'
 import logger from '../utils/logger'
 
 interface EntityApi<T> {
   getAll: (expand?: string[]) => Promise<T[]>
   delete: (id: number) => Promise<void>
-  enable: (id: number) => Promise<void>
-  disable: (id: number) => Promise<void>
+  enable?: (id: number) => Promise<void>
+  disable?: (id: number) => Promise<void>
 }
 
 interface AdditionalLoader<TExtra> {
   load: () => Promise<TExtra>
 }
 
-export interface EntityCrudConfig<T extends ToggleableEntity, TExtra = undefined> {
+export interface EntityCrudConfig<T extends OwnedEntity, TExtra = undefined> {
   api: EntityApi<T>
   expand: string[]
   basePath: string
@@ -31,7 +31,7 @@ export interface EntityCrudConfig<T extends ToggleableEntity, TExtra = undefined
   additionalLoader?: AdditionalLoader<TExtra>
 }
 
-export interface EntityCrudReturn<T extends ToggleableEntity, TExtra = undefined> {
+export interface EntityCrudReturn<T extends OwnedEntity, TExtra = undefined> {
   items: T[]
   optimisticItems: T[]
   visibleItems: T[]
@@ -57,7 +57,7 @@ export interface EntityCrudReturn<T extends ToggleableEntity, TExtra = undefined
   canManage: boolean
 }
 
-export function useEntityCrud<T extends ToggleableEntity, TExtra = undefined>(
+export function useEntityCrud<T extends OwnedEntity, TExtra = undefined>(
   config: EntityCrudConfig<T, TExtra>
 ): EntityCrudReturn<T, TExtra> {
   const { api, expand, basePath, entityType, resource, getDisplayName, entityLabel, additionalLoader } = config
@@ -162,23 +162,27 @@ export function useEntityCrud<T extends ToggleableEntity, TExtra = undefined>(
   }, [id, items, location.pathname, navigate, loading, canManage, basePath, entityLabel])
 
   const handleToggleEnabled = useCallback((item: T) => {
+    const { enable, disable } = api
+    if (!enable || !disable) return
+
+    const enabled = (item as T & { enabled: boolean }).enabled
     startTransition(async () => {
-      setOptimisticItem({ id: item.id, enabled: !item.enabled })
+      setOptimisticItem({ id: item.id, enabled: !enabled })
 
       try {
         const displayName = getDisplayName(item)
 
-        if (item.enabled) {
-          await api.disable(item.id)
+        if (enabled) {
+          await disable(item.id)
           showSuccess(entityType, 'disabled', displayName, item.id)
         } else {
-          await api.enable(item.id)
+          await enable(item.id)
           showSuccess(entityType, 'enabled', displayName, item.id)
         }
         await loadItems()
       } catch (err: unknown) {
         const displayName = getDisplayName(item)
-        showError(entityType, item.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', displayName, item.id)
+        showError(entityType, enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', displayName, item.id)
         setError(getErrorMessage(err))
         await loadItems()
       }

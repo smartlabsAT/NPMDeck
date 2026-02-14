@@ -25,10 +25,9 @@ import {
   MoreVert as ActionsIcon,
 } from '@mui/icons-material'
 import { certificatesApi, Certificate } from '../api/certificates'
-import { getErrorMessage } from '../types/common'
 import { CertificateWithHosts } from '../types/common'
-import { useFilteredData } from '../hooks/useFilteredData'
 import { useResponsive } from '../hooks/useResponsive'
+import { useEntityCrud } from '../hooks/useEntityCrud'
 import ConfirmDialog from '../components/ConfirmDialog'
 import CertificateDrawer from '../components/features/certificates/CertificateDrawer'
 import CertificateDetailsDialog from '../components/CertificateDetailsDialog'
@@ -44,112 +43,61 @@ import { extractBaseDomain } from '../utils/domainUtils'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
 import { STORAGE_KEYS } from '../constants/storage'
 
+const getCertDisplayName = (cert: Certificate): string =>
+  cert.nice_name || cert.domain_names[0] || 'Unnamed Certificate'
+
 const Certificates = () => {
-  const { id, provider } = useParams<{ id?: string; provider?: string }>()
+  const { provider } = useParams<{ provider?: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const [certificates, setCertificates] = useState<Certificate[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [certToDelete, setCertToDelete] = useState<Certificate | null>(null)
-  const [renewingCerts, setRenewingCerts] = useState<Set<number>>(new Set())
-  const [addMenuAnchor, setAddMenuAnchor] = useState<null | HTMLElement>(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editingCert, setEditingCert] = useState<Certificate | null>(null)
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
-  const [viewingCert, setViewingCert] = useState<Certificate | null>(null)
-  const [initialProvider, setInitialProvider] = useState<'letsencrypt' | 'other'>('letsencrypt')
-  
   const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
-  const loadCertificates = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await certificatesApi.getAll(['owner', 'proxy_hosts', 'redirection_hosts', 'dead_hosts'])
-      setCertificates(data)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  // Standard CRUD via shared hook
+  const {
+    visibleItems,
+    loading,
+    error,
+    drawerOpen,
+    editingItem,
+    deleteDialogOpen,
+    itemToDelete,
+    detailsDialogOpen,
+    viewingItem,
+    handleView,
+    handleDelete,
+    handleConfirmDelete,
+    closeDrawer,
+    closeDetailsDialog,
+    closeDeleteDialog,
+    loadItems,
+  } = useEntityCrud<Certificate>({
+    api: certificatesApi,
+    expand: ['owner', 'proxy_hosts', 'redirection_hosts', 'dead_hosts'],
+    basePath: '/security/certificates',
+    entityType: 'certificate',
+    resource: 'certificates',
+    getDisplayName: getCertDisplayName,
+    entityLabel: 'certificates',
+  })
 
+  // Certificate-specific state
+  const [renewingCerts, setRenewingCerts] = useState<Set<number>>(new Set())
+  const [addMenuAnchor, setAddMenuAnchor] = useState<null | HTMLElement>(null)
+  const [initialProvider, setInitialProvider] = useState<'letsencrypt' | 'other'>('letsencrypt')
+
+  // Set initial provider when navigating to /new/:provider
   useEffect(() => {
-    loadCertificates()
-  }, [loadCertificates])
-
-  // Save grouping preference when DataTable changes it
-  useEffect(() => {
-    const handleStorageChange = () => {
-      // The DataTable will handle the storage internally through the groupConfig
-    }
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-
-  // Handle URL parameters for different actions
-  useEffect(() => {
-    const loadCertificateForAction = async (certId: number) => {
-      try {
-        const cert = await certificatesApi.getById(certId, ['owner', 'proxy_hosts', 'redirection_hosts', 'dead_hosts'])
-        if (location.pathname.includes('/view')) {
-          setViewingCert(cert)
-          setDetailsDialogOpen(true)
-        }
-      } catch (err) {
-        showError('certificate', 'load', err instanceof Error ? err.message : 'Unknown error')
-        navigate('/security/certificates')
-      }
-    }
-
     if (location.pathname.includes('/new')) {
-      // New certificate
-      setEditingCert(null)
-      setDrawerOpen(true)
-      // Check if provider is specified in URL
       if (provider === 'letsencrypt' || provider === 'other') {
         setInitialProvider(provider)
       } else {
         setInitialProvider('letsencrypt')
       }
-    } else if (id) {
-      // Load specific certificate for edit/view
-      loadCertificateForAction(parseInt(id))
-    } else {
-      // No specific action in URL, close all dialogs
-      setDrawerOpen(false)
-      setDetailsDialogOpen(false)
-      setEditingCert(null)
-      setViewingCert(null)
     }
-  }, [id, provider, location.pathname, navigate, showError])
+  }, [location.pathname, provider])
 
-  // Apply visibility filtering
-  const visibleCertificates = useFilteredData(certificates)
-
-  const handleDelete = useCallback((cert: Certificate) => {
-    setCertToDelete(cert)
-    setDeleteDialogOpen(true)
-  }, [])
-
-  const handleConfirmDelete = useCallback(async () => {
-    if (!certToDelete) return
-
-    try {
-      await certificatesApi.delete(certToDelete.id)
-      showSuccess('certificate', 'deleted', certToDelete.nice_name || certToDelete.domain_names[0], certToDelete.id)
-      await loadCertificates()
-      setDeleteDialogOpen(false)
-      setCertToDelete(null)
-    } catch (err: unknown) {
-      showError('certificate', 'delete', err instanceof Error ? err.message : 'Unknown error', certToDelete.nice_name || certToDelete.domain_names[0], certToDelete.id)
-      setError(getErrorMessage(err))
-    }
-  }, [certToDelete, showSuccess, showError, loadCertificates])
-
+  // Certificate-specific handlers
   const handleRenew = useCallback(async (cert: Certificate) => {
     if (cert.provider !== 'letsencrypt') return
 
@@ -157,11 +105,10 @@ const Certificates = () => {
 
     try {
       await certificatesApi.renew(cert.id)
-      showSuccess('certificate', 'renewed', cert.nice_name || cert.domain_names[0], cert.id)
-      await loadCertificates()
+      showSuccess('certificate', 'renewed', getCertDisplayName(cert), cert.id)
+      await loadItems()
     } catch (err: unknown) {
-      showError('certificate', 'renew', err instanceof Error ? err.message : 'Unknown error', cert.nice_name || cert.domain_names[0], cert.id)
-      setError(getErrorMessage(err))
+      showError('certificate', 'renew', err instanceof Error ? err.message : 'Unknown error', getCertDisplayName(cert), cert.id)
     } finally {
       setRenewingCerts(prev => {
         const newSet = new Set(prev)
@@ -169,12 +116,7 @@ const Certificates = () => {
         return newSet
       })
     }
-  }, [showSuccess, showError, loadCertificates])
-
-
-  const handleView = useCallback((cert: Certificate) => {
-    navigate(`/security/certificates/${cert.id}/view`)
-  }, [navigate])
+  }, [showSuccess, showError, loadItems])
 
   const handleAddLetsEncrypt = useCallback(() => {
     setAddMenuAnchor(null)
@@ -186,15 +128,13 @@ const Certificates = () => {
     navigate('/security/certificates/new/other')
   }, [navigate])
 
-
-
   const getExpiryChip = (cert: Certificate) => {
     const daysUntilExpiry = getDaysUntilExpiry(cert.expires_on)
-    
+
     if (daysUntilExpiry === null) {
       return null
     }
-    
+
     if (daysUntilExpiry < 0) {
       return <Chip label="Expired" color="error" size="small" icon={<WarningIcon />} />
     } else if (daysUntilExpiry <= 7) {
@@ -206,15 +146,14 @@ const Certificates = () => {
     }
   }
 
-  const getProviderChip = (provider: string) => {
-    if (provider === 'letsencrypt') {
+  const getProviderChip = (certProvider: string) => {
+    if (certProvider === 'letsencrypt') {
       return <Chip label="Let's Encrypt" color="primary" size="small" icon={<LockIcon />} />
     }
     return <Chip label="Custom" color="default" size="small" />
   }
 
   const getUsageCount = (cert: Certificate) => {
-    // Count total usage across proxy hosts, redirection hosts, and dead hosts
     const proxyCount = (cert as CertificateWithHosts).proxy_hosts?.length || 0
     const redirectionCount = (cert as CertificateWithHosts).redirection_hosts?.length || 0
     const deadCount = (cert as CertificateWithHosts).dead_hosts?.length || 0
@@ -229,7 +168,7 @@ const Certificates = () => {
       icon: <CertificateIcon fontSize="small" />,
       accessor: (item) => item.nice_name || item.domain_names[0] || '',
       sortable: true,
-      priority: 'P1' as ColumnPriority, // Essential - always visible
+      priority: 'P1' as ColumnPriority,
       showInCard: true,
       render: (value, item) => (
         <Box
@@ -241,7 +180,7 @@ const Certificates = () => {
           <Typography variant="body2" sx={{
             fontWeight: "medium"
           }}>
-            {item.nice_name || item.domain_names[0] || 'Unnamed Certificate'}
+            {getCertDisplayName(item)}
           </Typography>
         </Box>
       )
@@ -252,9 +191,9 @@ const Certificates = () => {
       icon: <ProviderIcon fontSize="small" />,
       accessor: (item) => item.provider,
       sortable: true,
-      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
+      priority: 'P2' as ColumnPriority,
       showInCard: true,
-      mobileLabel: '', // Empty string to hide label - provider chips are self-explanatory
+      mobileLabel: '',
       render: (value, item) => getProviderChip(item.provider)
     },
     {
@@ -263,7 +202,7 @@ const Certificates = () => {
       icon: <ExpiresIcon fontSize="small" />,
       accessor: (item) => item.expires_on ? new Date(item.expires_on).getTime() : 0,
       sortable: true,
-      priority: 'P1' as ColumnPriority, // Essential - always visible (expiry is important)
+      priority: 'P1' as ColumnPriority,
       showInCard: true,
       render: (value, item) => getExpiryChip(item)
     },
@@ -273,7 +212,7 @@ const Certificates = () => {
       icon: <HostsIcon fontSize="small" />,
       accessor: (item) => getUsageCount(item),
       sortable: true,
-      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
+      priority: 'P3' as ColumnPriority,
       showInCard: false,
       render: (value) => (
         <Typography variant="body2" sx={{
@@ -290,7 +229,7 @@ const Certificates = () => {
       accessor: (item) => item.id,
       sortable: false,
       align: 'right',
-      priority: 'P1' as ColumnPriority, // Essential - always visible
+      priority: 'P1' as ColumnPriority,
       showInCard: true,
       render: (value, item) => (
         <Box
@@ -395,7 +334,7 @@ const Certificates = () => {
     }
   ], [])
 
-  // Bulk actions
+  // Bulk actions (delete only - certificates don't support enable/disable)
   const bulkActions = useMemo<BulkAction<Certificate>[]>(() => [
     {
       id: 'delete',
@@ -414,10 +353,10 @@ const Certificates = () => {
         } else {
           showWarning(`${succeeded} certificates deleted successfully, ${failed} failed`, 'certificate')
         }
-        await loadCertificates()
+        await loadItems()
       }
     }
-  ], [showSuccess, showError, showWarning, loadCertificates])
+  ], [showSuccess, showError, showWarning, loadItems])
 
   return (
     <Container maxWidth={false}>
@@ -469,7 +408,7 @@ const Certificates = () => {
 
         {/* DataTable */}
         <DataTable
-          data={visibleCertificates}
+          data={visibleItems}
           columns={columns}
           keyExtractor={(item) => item.id.toString()}
           onRowClick={handleView}
@@ -492,7 +431,7 @@ const Certificates = () => {
           cardBreakpoint={900}
           compactBreakpoint={1250}
         />
-        
+
         {/* Mobile Add Button with Menu - shown at bottom */}
         {isMobileTable && (
           <Box
@@ -531,34 +470,28 @@ const Certificates = () => {
       </Box>
       <ConfirmDialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={closeDeleteDialog}
         onConfirm={handleConfirmDelete}
         title="Delete Certificate?"
         titleIcon={React.createElement(NAVIGATION_CONFIG.certificates.icon, { sx: { color: NAVIGATION_CONFIG.certificates.color } })}
-        message={`Are you sure you want to delete the certificate "${certToDelete?.nice_name || certToDelete?.domain_names[0]}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete the certificate "${itemToDelete ? getCertDisplayName(itemToDelete) : ''}"? This action cannot be undone.`}
         confirmText="Delete"
         confirmColor="error"
       />
       <CertificateDrawer
         open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false)
-          navigate('/security/certificates')
-        }}
-        certificate={editingCert}
+        onClose={closeDrawer}
+        certificate={editingItem}
         onSave={() => {
-          loadCertificates()
-          navigate('/security/certificates')
+          closeDrawer()
+          loadItems()
         }}
         initialProvider={initialProvider}
       />
       <CertificateDetailsDialog
         open={detailsDialogOpen}
-        onClose={() => {
-          setDetailsDialogOpen(false)
-          navigate('/security/certificates')
-        }}
-        certificate={viewingCert}
+        onClose={closeDetailsDialog}
+        certificate={viewingItem}
       />
     </Container>
   );
