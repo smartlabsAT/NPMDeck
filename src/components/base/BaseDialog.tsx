@@ -92,7 +92,7 @@ export interface BaseDialogProps {
   /** Whether secondary action is disabled */
   disableCancel?: boolean
   /** Animation transition component */
-  TransitionComponent?: React.ComponentType<TransitionProps & { children: React.ReactElement<any, any> }>
+  TransitionComponent?: React.ComponentType<TransitionProps & { children: React.ReactElement }>
   /** Whether to animate content */
   animateContent?: boolean
   /** Custom header icon */
@@ -104,7 +104,7 @@ export interface BaseDialogProps {
 /**
  * Slide up transition for dialogs
  */
-function SlideTransition({ ref, ...props }: TransitionProps & { children: React.ReactElement<any, any>; ref?: React.Ref<unknown> }) {
+function SlideTransition({ ref, ...props }: TransitionProps & { children: React.ReactElement; ref?: React.Ref<unknown> }) {
   return <Slide direction="up" ref={ref} {...props} />
 }
 

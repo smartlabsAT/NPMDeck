@@ -196,19 +196,24 @@ export default function RedirectionHostDetailsDialog({
                     primary="SSL Certificate"
                     secondary={
                       host.certificate ? (
-                        <Box>
-                          <Typography variant="body2">
-                            {host.certificate.nice_name}
-                          </Typography>
-                          {getCertificateStatus() && (
-                            <Chip
-                              size="small"
-                              label={getCertificateStatus()!.text}
-                              color={getCertificateStatus()!.color}
-                              sx={{ mt: 0.5 }}
-                            />
-                          )}
-                        </Box>
+                        (() => {
+                          const certStatus = getCertificateStatus()
+                          return (
+                            <Box>
+                              <Typography variant="body2">
+                                {host.certificate.nice_name}
+                              </Typography>
+                              {certStatus && (
+                                <Chip
+                                  size="small"
+                                  label={certStatus.text}
+                                  color={certStatus.color}
+                                  sx={{ mt: 0.5 }}
+                                />
+                              )}
+                            </Box>
+                          )
+                        })()
                       ) : 'None'
                     }
                   />

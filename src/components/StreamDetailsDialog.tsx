@@ -83,8 +83,8 @@ const StreamDetailsDialog = ({
         }
       >
           {/* Status Alert */}
-          <Alert 
-            severity={getStatusColor(stream) as any}
+          <Alert
+            severity={({ default: 'info' as const, error: 'error' as const, success: 'success' as const })[getStatusColor(stream)]}
             icon={getStatusIcon(stream)}
             sx={{ mb: 3 }}
           >

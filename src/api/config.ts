@@ -20,7 +20,7 @@ const processQueue = (error: unknown, token: string | null = null): void => {
     if (error) {
       prom.reject(error)
     } else {
-      prom.resolve(token!)
+      prom.resolve(token as string)
     }
   })
   

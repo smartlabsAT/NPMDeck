@@ -292,9 +292,9 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
 // Details Tab Component
 interface DetailsTabProps {
   data: StreamFormData
-  setFieldValue: (field: keyof StreamFormData, value: any) => void
+  setFieldValue: (field: keyof StreamFormData, value: StreamFormData[keyof StreamFormData]) => void
   errors: Partial<Record<keyof StreamFormData, string>>
-  getFieldProps: (field: keyof StreamFormData) => any
+  getFieldProps: (field: keyof StreamFormData) => Record<string, unknown>
 }
 
 function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabProps) {
@@ -378,7 +378,7 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
 // SSL Tab Component
 interface SSLTabProps {
   data: StreamFormData
-  setFieldValue: (field: keyof StreamFormData, value: any) => void
+  setFieldValue: (field: keyof StreamFormData, value: StreamFormData[keyof StreamFormData]) => void
   certificates: Certificate[]
   loadingCertificates: boolean
   onCertificateChange: (cert: Certificate | null) => void

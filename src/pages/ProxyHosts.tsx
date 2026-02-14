@@ -40,7 +40,7 @@ const buildRedirectionTargetMap = async (): Promise<RedirectionsByTarget> => {
     if (!targetMap.has(target)) {
       targetMap.set(target, [])
     }
-    targetMap.get(target)!.push(redirect)
+    targetMap.get(target)?.push(redirect)
   })
   return targetMap
 }

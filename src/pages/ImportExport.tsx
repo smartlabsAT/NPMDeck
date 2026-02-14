@@ -21,18 +21,21 @@ import {
 } from '@mui/icons-material'
 import ImportDialog from '../components/ImportDialog'
 import ExportDialog from '../components/ExportDialog'
-import { proxyHostsApi } from '../api/proxyHosts'
-import { redirectionHostsApi } from '../api/redirectionHosts'
-import { deadHostsApi } from '../api/deadHosts'
-import { streamsApi } from '../api/streams'
-import { certificatesApi } from '../api/certificates'
-import { accessListsApi } from '../api/accessLists'
+import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
+import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
+import { deadHostsApi, DeadHost } from '../api/deadHosts'
+import { streamsApi, Stream } from '../api/streams'
+import { certificatesApi, Certificate } from '../api/certificates'
+import { accessListsApi, AccessList } from '../api/accessLists'
 import logger from '../utils/logger'
+
+/** Exportable entity type matching the ImportExportService signature */
+type ExportableEntity = ProxyHost | RedirectionHost | DeadHost | Stream | Certificate | AccessList
 
 export default function ImportExport() {
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
-  const [exportItems, setExportItems] = useState<any[]>([])
+  const [exportItems, setExportItems] = useState<ExportableEntity[]>([])
   const [exportItemType, setExportItemType] = useState('')
   const [exportTypeName, setExportTypeName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -71,7 +74,9 @@ export default function ImportExport() {
         access_lists: getValue(results[5]),
       }
 
-      setExportItems([allItems])
+      // Bundle export: wrapping the combined data object as a single-element array
+      // The ExportDialog handles 'bundle' type with this structure at runtime
+      setExportItems([allItems as unknown as ExportableEntity])
       setExportItemType('bundle')
       setExportTypeName('All Configurations')
       setExportDialogOpen(true)
@@ -85,7 +90,7 @@ export default function ImportExport() {
   const handleExportByType = async (type: string) => {
     setLoading(true)
     try {
-      let items: any[] = []
+      let items: ExportableEntity[] = []
       let itemType = ''
       let typeName = ''
 

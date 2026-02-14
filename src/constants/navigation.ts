@@ -131,6 +131,7 @@ export type NavigationConfig = typeof NAVIGATION_CONFIG
 
 export const NAVIGATION_COLORS = {
   primary: '#2bcbba',
+  primaryLight: '#4dd4c5',
   success: '#5eba00',
   warning: '#f1c40f',
   danger: '#cd201f',

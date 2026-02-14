@@ -10,6 +10,8 @@ import {
   Fade,
   useTheme,
   alpha,
+  type SxProps,
+  type Theme,
 } from '@mui/material'
 import {
   ExpandMore as ExpandMoreIcon,
@@ -56,7 +58,7 @@ export interface FormSectionProps {
   /** Whether the section content is loading */
   loading?: boolean
   /** Custom styling */
-  sx?: any
+  sx?: SxProps<Theme>
   /** Additional content for the header (badges, chips, etc.) */
   headerContent?: ReactNode
   /** Whether to animate the collapse/expand */

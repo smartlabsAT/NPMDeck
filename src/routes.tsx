@@ -6,7 +6,7 @@ import PermissionRoute from './components/PermissionRoute'
 import LayoutWithSearch from './components/LayoutWithSearch'
 import PageErrorBoundary from './components/PageErrorBoundary'
 
-// Loading component
+// eslint-disable-next-line react-refresh/only-export-components -- PageLoader is a helper component used only within routes configuration
 const PageLoader = () => (
   <Box
     sx={{
@@ -20,7 +20,7 @@ const PageLoader = () => (
 )
 
 // Wrap lazy components in ErrorBoundary + Suspense to catch chunk load failures
-const withSuspense = (Component: React.LazyExoticComponent<any>) => (
+const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) => (
   <PageErrorBoundary>
     <Suspense fallback={<PageLoader />}>
       <Component />
@@ -29,19 +29,31 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => (
 )
 
 // Lazy load pages
+// eslint-disable-next-line react-refresh/only-export-components
 const Login = lazy(() => import('./pages/Login'))
+// eslint-disable-next-line react-refresh/only-export-components
 const Dashboard = lazy(() => import('./pages/Dashboard'))
+// eslint-disable-next-line react-refresh/only-export-components
 const ProxyHosts = lazy(() => import('./pages/ProxyHosts'))
+// eslint-disable-next-line react-refresh/only-export-components
 const RedirectionHosts = lazy(() => import('./pages/RedirectionHosts'))
+// eslint-disable-next-line react-refresh/only-export-components
 const Streams = lazy(() => import('./pages/Streams'))
+// eslint-disable-next-line react-refresh/only-export-components
 const DeadHosts = lazy(() => import('./pages/DeadHosts'))
+// eslint-disable-next-line react-refresh/only-export-components
 const AccessLists = lazy(() => import('./pages/AccessLists'))
+// eslint-disable-next-line react-refresh/only-export-components
 const Certificates = lazy(() => import('./pages/Certificates'))
+// eslint-disable-next-line react-refresh/only-export-components
 const Users = lazy(() => import('./pages/Users'))
+// eslint-disable-next-line react-refresh/only-export-components
 const AuditLog = lazy(() => import('./pages/AuditLog'))
+// eslint-disable-next-line react-refresh/only-export-components
 const Settings = lazy(() => import('./pages/Settings'))
-// const ImportExport = lazy(() => import('./pages/ImportExport'))
+// eslint-disable-next-line react-refresh/only-export-components
 const NotFound = lazy(() => import('./pages/NotFound'))
+// eslint-disable-next-line react-refresh/only-export-components
 const Forbidden = lazy(() => import('./pages/Forbidden'))
 
 export const routes = [
@@ -357,14 +369,6 @@ export const routes = [
           </ProtectedRoute>
         ),
       },
-      /* {
-        path: 'tools/import-export',
-        element: (
-          <ProtectedRoute requiredRole="admin">
-            {withSuspense(ImportExport)}
-          </ProtectedRoute>
-        ),
-      }, */
       {
         path: '*',
         element: withSuspense(NotFound),

@@ -161,14 +161,14 @@ const AuditLog = () => {
     }
   }
 
-  const handleChipClick = (entry: AuditLogEntry) => {
+  const handleChipClick = useCallback((entry: AuditLogEntry) => {
     const link = getObjectLink(entry)
     if (link !== '#') {
       navigate(link)
     }
-  }
+  }, [navigate])
 
-  const getObjectDisplayName = (entry: AuditLogEntry) => {
+  const getObjectDisplayName = useCallback((entry: AuditLogEntry) => {
     const items: string[] = []
     
     switch (entry.object_type) {
@@ -236,7 +236,7 @@ const AuditLog = () => {
         onClick={() => handleChipClick(entry)}
       />
     ))
-  }
+  }, [handleChipClick])
 
   // Table column definitions with responsive priorities
   const columns: ResponsiveTableColumn<AuditLogEntry>[] = useMemo(() => [
@@ -387,7 +387,7 @@ const AuditLog = () => {
         </Tooltip>
       ),
     },
-  ], [])
+  ], [getObjectDisplayName])
 
   // Filter definitions
   const filters: Filter[] = useMemo(() => [

@@ -127,6 +127,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
         advancedConfig: host.advanced_config || '',
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Reset only when host.id changes, not on every host object reference change
   }, [host?.id, open, resetForm])
 
   // Load certificates when drawer opens
@@ -233,7 +234,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
 // General Tab Component
 interface GeneralTabProps {
   data: DeadHostFormData
-  setFieldValue: (field: keyof DeadHostFormData, value: any) => void
+  setFieldValue: (field: keyof DeadHostFormData, value: DeadHostFormData[keyof DeadHostFormData]) => void
   errors: Partial<Record<keyof DeadHostFormData, string>>
   certificates: Certificate[]
   loadingCertificates: boolean
@@ -341,8 +342,8 @@ function GeneralTab({
 // Advanced Tab Component
 interface AdvancedTabProps {
   data: DeadHostFormData
-  setFieldValue: (field: keyof DeadHostFormData, value: any) => void
-  getFieldProps: (field: keyof DeadHostFormData) => any
+  setFieldValue: (field: keyof DeadHostFormData, value: DeadHostFormData[keyof DeadHostFormData]) => void
+  getFieldProps: (field: keyof DeadHostFormData) => Record<string, unknown>
 }
 
 function AdvancedTab({ data, setFieldValue, getFieldProps: _getFieldProps }: AdvancedTabProps) {
