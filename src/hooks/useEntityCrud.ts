@@ -6,7 +6,7 @@ import { useFilteredData } from './useFilteredData'
 import { useToast } from '../contexts/ToastContext'
 import type { ToastEntityType } from '../types/entityTypes'
 import type { CoreResource } from '../types/entityTypes'
-import type { OwnedEntity } from '../types/base'
+import type { BaseEntity } from '../types/base'
 import logger from '../utils/logger'
 
 interface EntityApi<T> {
@@ -20,18 +20,21 @@ interface AdditionalLoader<TExtra> {
   load: () => Promise<TExtra>
 }
 
-export interface EntityCrudConfig<T extends OwnedEntity, TExtra = undefined> {
+export interface EntityCrudConfig<T extends BaseEntity, TExtra = undefined> {
   api: EntityApi<T>
   expand: string[]
   basePath: string
   entityType: ToastEntityType
-  resource: CoreResource
+  resource?: CoreResource
   getDisplayName: (item: T) => string
   entityLabel: string
   additionalLoader?: AdditionalLoader<TExtra>
+  // When true, any bare /:id URL opens the drawer (no /edit or /view suffix needed).
+  // Useful for pages like Users that only have a drawer, no separate details dialog.
+  drawerOnly?: boolean
 }
 
-export interface EntityCrudReturn<T extends OwnedEntity, TExtra = undefined> {
+export interface EntityCrudReturn<T extends BaseEntity, TExtra = undefined> {
   items: T[]
   optimisticItems: T[]
   visibleItems: T[]
@@ -57,10 +60,10 @@ export interface EntityCrudReturn<T extends OwnedEntity, TExtra = undefined> {
   canManage: boolean
 }
 
-export function useEntityCrud<T extends OwnedEntity, TExtra = undefined>(
+export function useEntityCrud<T extends BaseEntity, TExtra = undefined>(
   config: EntityCrudConfig<T, TExtra>
 ): EntityCrudReturn<T, TExtra> {
-  const { api, expand, basePath, entityType, resource, getDisplayName, entityLabel, additionalLoader } = config
+  const { api, expand, basePath, entityType, resource, getDisplayName, entityLabel, additionalLoader, drawerOnly } = config
 
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
@@ -90,7 +93,8 @@ export function useEntityCrud<T extends OwnedEntity, TExtra = undefined>(
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [viewingItem, setViewingItem] = useState<T | null>(null)
 
-  const canManage = canManageResource(resource)
+  // When no resource is provided (e.g. admin-only pages), assume full management rights
+  const canManage = resource ? canManageResource(resource) : true
 
   const loadItems = useCallback(async () => {
     try {
@@ -145,6 +149,12 @@ export function useEntityCrud<T extends OwnedEntity, TExtra = undefined>(
           setDetailsDialogOpen(true)
           setDrawerOpen(false)
           setEditingItem(null)
+        } else if (drawerOnly && canManage) {
+          // drawerOnly mode: bare /:id opens the drawer (e.g. Users page)
+          setEditingItem(item)
+          setDrawerOpen(true)
+          setDetailsDialogOpen(false)
+          setViewingItem(null)
         }
       } else if (items.length > 0) {
         // Item not found after loading (but other items exist)
@@ -159,7 +169,7 @@ export function useEntityCrud<T extends OwnedEntity, TExtra = undefined>(
       setDetailsDialogOpen(false)
       setViewingItem(null)
     }
-  }, [id, items, location.pathname, navigate, loading, canManage, basePath, entityLabel])
+  }, [id, items, location.pathname, navigate, loading, canManage, basePath, entityLabel, drawerOnly])
 
   const handleToggleEnabled = useCallback((item: T) => {
     const { enable, disable } = api
@@ -191,12 +201,12 @@ export function useEntityCrud<T extends OwnedEntity, TExtra = undefined>(
   }, [api, entityType, getDisplayName, showSuccess, showError, loadItems])
 
   const handleEdit = useCallback((item: T) => {
-    navigate(`${basePath}/${item.id}/edit`)
-  }, [navigate, basePath])
+    navigate(drawerOnly ? `${basePath}/${item.id}` : `${basePath}/${item.id}/edit`)
+  }, [navigate, basePath, drawerOnly])
 
   const handleView = useCallback((item: T) => {
-    navigate(`${basePath}/${item.id}/view`)
-  }, [navigate, basePath])
+    navigate(drawerOnly ? `${basePath}/${item.id}` : `${basePath}/${item.id}/view`)
+  }, [navigate, basePath, drawerOnly])
 
   const handleAdd = useCallback(() => {
     setEditingItem(null)

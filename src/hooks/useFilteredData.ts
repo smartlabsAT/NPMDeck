@@ -6,7 +6,7 @@ interface HasOwnerId {
   owner?: { id: number }
 }
 
-export function useFilteredData<T extends HasOwnerId>(
+export function useFilteredData<T>(
   data: T[]
 ): T[] {
   const { user, shouldFilterByUser } = useAuthStore()
@@ -18,8 +18,11 @@ export function useFilteredData<T extends HasOwnerId>(
     }
 
     // Filter data to only show items owned by current user
+    // Entities without owner fields (e.g. User) won't match and will be filtered out,
+    // but those pages are admin-only so shouldFilterByUser() returns false above.
     return data.filter(item => {
-      const ownerId = item.owner?.id || item.owner_user_id
+      const owned = item as HasOwnerId
+      const ownerId = owned.owner?.id || owned.owner_user_id
       return ownerId === user.id
     })
   }, [data, user, shouldFilterByUser])
@@ -33,7 +36,7 @@ export interface FilteredInfo {
 }
 
 // Hook for displaying filtered count info
-export function useFilteredInfo<T extends HasOwnerId>(
+export function useFilteredInfo<T>(
   data: T[],
   filteredData: T[]
 ): FilteredInfo {
