@@ -21,8 +21,6 @@ import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { AccessList, accessListsApi } from '../api/accessLists'
 import logger from '../utils/logger'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
-// import ExportDialog from './ExportDialog'
-import { usePermissions } from '../hooks/usePermissions'
 import AdaptiveContainer from './AdaptiveContainer'
 import TabPanel from './shared/TabPanel'
 import ProxyHostInfoPanel from './features/proxy-hosts/ProxyHostInfoPanel'
@@ -48,7 +46,6 @@ const ProxyHostDetailsDialog = ({
 }: ProxyHostDetailsDialogProps) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { } = usePermissions() // eslint-disable-line no-empty-pattern
   const [activeTab, setActiveTab] = useState(0)
   const { copiedText, copyToClipboard } = useCopyToClipboard()
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -58,7 +55,6 @@ const ProxyHostDetailsDialog = ({
   })
   const [linkedRedirections, setLinkedRedirections] = useState<RedirectionHost[]>([])
   const [loadingConnections, setLoadingConnections] = useState(false)
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [fullAccessList, setFullAccessList] = useState<AccessList | null>(null)
   const [loadingAccessList, setLoadingAccessList] = useState(false)
 
@@ -282,29 +278,6 @@ const ProxyHostDetailsDialog = ({
           </TabPanel>
         )}
       </Box>
-      {/* Export Button for Admin */}
-      {/* {isAdmin && (
-        <Box sx={{ mt: 2 }}>
-          <Button
-            onClick={() => setExportDialogOpen(true)}
-            startIcon={<DownloadIcon />}
-            variant="outlined"
-            fullWidth
-          >
-            Export
-          </Button>
-        </Box>
-      )} */}
-      {/* Export Dialog */}
-      {/* {host && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[host]}
-          type="proxy_host"
-          itemName="Proxy Host"
-        />
-      )} */}
     </AdaptiveContainer>
   );
 }
