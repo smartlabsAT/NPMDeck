@@ -115,28 +115,6 @@ const AuditLog = () => {
     }
   }
 
-  const _getObjectTypeColor = (objectType: string): string => {
-    switch (objectType) {
-      case 'proxy-host':
-        return NAVIGATION_COLORS.success
-      case 'redirection-host':
-        return NAVIGATION_COLORS.warning
-      case 'stream':
-      case 'stream-host':
-        return NAVIGATION_COLORS.info
-      case 'dead-host':
-        return NAVIGATION_COLORS.danger
-      case 'access-list':
-        return NAVIGATION_COLORS.primary
-      case 'user':
-        return NAVIGATION_COLORS.secondary
-      case 'certificate':
-        return NAVIGATION_COLORS.info
-      default:
-        return NAVIGATION_COLORS.secondary
-    }
-  }
-
 
   const getObjectLink = (entry: AuditLogEntry): string => {
     switch (entry.object_type) {

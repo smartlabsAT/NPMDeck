@@ -82,7 +82,6 @@ export function DataTable<T extends object>({
     handleChangeRowsPerPage,
     handleSearch,
     handleFilter,
-    handleClearFilters,
     handleSelect,
     handleSelectAll,
     handleClearSelection,
@@ -148,8 +147,6 @@ export function DataTable<T extends object>({
         filters={filters}
         activeFilters={activeFilters}
         onFilter={handleFilter}
-        _onClearFilters={handleClearFilters}
-        _hasActiveFilters={hasActiveFilters}
         searchable={searchable}
         searchPlaceholder={searchPlaceholder}
         isMobile={useCards}

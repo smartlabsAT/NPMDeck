@@ -402,7 +402,6 @@ export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
    * Get field props for easy binding to input components
    */
   const getFieldProps = useCallback((key: keyof T) => {
-    const _fieldConfig = fields[key];
     const hasError = Boolean(formState.errors[key] && formState.touched[key]);
     
     return {
@@ -422,7 +421,7 @@ export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
       helperText: hasError ? formState.errors[key] : undefined,
       disabled: formState.loading,
     };
-  }, [fields, formState.data, formState.errors, formState.touched, formState.loading, setFieldValue, setFieldTouched]);
+  }, [formState.data, formState.errors, formState.touched, formState.loading, setFieldValue, setFieldTouched]);
 
 
   /**

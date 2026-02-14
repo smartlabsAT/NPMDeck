@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react'
 import {
   Box,
   Stack,
-  useTheme,
   Fade,
 } from '@mui/material'
 
@@ -56,14 +55,11 @@ export default function ArrayFieldManager<T = string>({
   allowReorder = false,
   sx,
   error,
-  suggestions: _suggestions = [],
   allowDuplicates = true,
   EmptyComponent,
   AddButtonComponent,
   animationDuration = 200,
 }: ArrayFieldManagerProps<T>) {
-  const _theme = useTheme()
-
   // Use the custom hook for array logic
   const {
     handleAdd,
@@ -105,7 +101,6 @@ export default function ArrayFieldManager<T = string>({
    * Check constraints
    */
   const canAddMore = !maxItems || value.length < maxItems
-  const _hasMinimumItems = value.length >= minItems
 
   /**
    * Memoized item list

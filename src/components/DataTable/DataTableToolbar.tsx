@@ -22,8 +22,6 @@ interface DataTableToolbarProps {
   filters: Filter[]
   activeFilters: Record<string, FilterValue>
   onFilter: (filterId: string, value: FilterValue) => void
-  _onClearFilters: () => void
-  _hasActiveFilters: boolean
   searchable: boolean
   searchPlaceholder: string
   isMobile?: boolean
@@ -35,8 +33,6 @@ export default function DataTableToolbar({
   filters,
   activeFilters,
   onFilter,
-  _onClearFilters,
-  _hasActiveFilters,
   searchable,
   searchPlaceholder,
   isMobile = false,
@@ -45,14 +41,6 @@ export default function DataTableToolbar({
     const value = event.target.value
     onFilter(filterId, value === 'all' ? '' : value)
   }
-
-  const getActiveFilterCount = () => {
-    return Object.values(activeFilters).filter(
-      value => value !== '' && value !== 'all' && value != null
-    ).length
-  }
-
-  const _activeFilterCount = getActiveFilterCount()
 
   if (!searchable && filters.length === 0) {
     return null

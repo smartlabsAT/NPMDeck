@@ -1,5 +1,4 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   TextField,
   FormControlLabel,
@@ -60,7 +59,6 @@ export default function CertificateDrawer({
   initialProvider = 'letsencrypt' 
 }: CertificateDrawerProps) {
 
-  const navigate = useNavigate()
   const { showSuccess, showError } = useToast()
 
   const [testingDomains, setTestingDomains] = React.useState(false)
@@ -383,17 +381,6 @@ export default function CertificateDrawer({
       setTestingDomains(false)
     }
   }
-
-  // Handle provider change and update route
-  const _handleProviderChange = React.useCallback((newProvider: 'letsencrypt' | 'other') => {
-    setFieldValue('provider', newProvider)
-    
-    // Update the route when provider changes
-    if (!isEditMode) {
-      const newPath = `/security/certificates/new/${newProvider === 'letsencrypt' ? 'letsencrypt' : 'other'}`
-      navigate(newPath, { replace: true })
-    }
-  }, [setFieldValue, navigate, isEditMode])
 
   // Determine the current provider - use data if available, otherwise use initial values
   const currentProvider = data?.provider || certificate?.provider || initialProvider
