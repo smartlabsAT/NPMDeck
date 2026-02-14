@@ -43,7 +43,7 @@ import {
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { auditLogApi, AuditLogEntry } from '../api/auditLog'
-import { useResponsive } from '../hooks/useResponsive'
+
 import PageHeader from '../components/PageHeader'
 import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
@@ -55,7 +55,6 @@ import { NAVIGATION_CONFIG, NAVIGATION_COLORS } from '../constants/navigation'
 const AuditLog = () => {
   const navigate = useNavigate()
   const theme = useTheme()
-  const { } = useResponsive() // eslint-disable-line no-empty-pattern
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -219,9 +218,9 @@ const AuditLog = () => {
       )
     }
     
-    return items.map((item, index) => (
-      <Chip 
-        key={index} 
+    return items.map((item) => (
+      <Chip
+        key={item}
         label={item} 
         size="small" 
         sx={{ 

@@ -1,5 +1,15 @@
+import { useCallback } from 'react'
 import { useTheme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
+
+// Module-level constant — stable reference across renders
+const BREAKPOINT_VALUES = {
+  xs: 0,
+  sm: 600,
+  md: 850,  // Adjusted to account for container margins (~50px total)
+  lg: 1250,  // Adjusted to account for container margins
+  xl: 1920,
+} as const
 
 export interface UseResponsiveReturn {
   // Basic responsive states
@@ -55,33 +65,33 @@ export function useResponsive(): UseResponsiveReturn {
   const isSm = useMediaQuery(theme.breakpoints.up('sm'))
   
   // Helper function to get current breakpoint
-  const getCurrentBreakpoint = (): 'xs' | 'sm' | 'md' | 'lg' | 'xl' => {
+  const getCurrentBreakpoint = useCallback((): 'xs' | 'sm' | 'md' | 'lg' | 'xl' => {
     if (isXl) return 'xl'
     if (isLg) return 'lg'
     if (isMd) return 'md'
     if (isSm) return 'sm'
     return 'xs'
-  }
-  
+  }, [isXl, isLg, isMd, isSm])
+
   // Helper to check if screen is smaller than breakpoint
-  const isBelow = (breakpoint: 'sm' | 'md' | 'lg' | 'xl') => {
+  const isBelow = useCallback((breakpoint: 'sm' | 'md' | 'lg' | 'xl'): boolean => {
     switch (breakpoint) {
       case 'sm': return !isSm
       case 'md': return !isMd
       case 'lg': return !isLg
       case 'xl': return !isXl
     }
-  }
-  
+  }, [isSm, isMd, isLg, isXl])
+
   // Helper to check if screen is larger than breakpoint
-  const isAbove = (breakpoint: 'xs' | 'sm' | 'md' | 'lg') => {
+  const isAbove = useCallback((breakpoint: 'xs' | 'sm' | 'md' | 'lg'): boolean => {
     switch (breakpoint) {
       case 'xs': return true
       case 'sm': return isSm
       case 'md': return isMd
       case 'lg': return isLg
     }
-  }
+  }, [isSm, isMd, isLg])
   
   return {
     // Basic responsive states
@@ -101,13 +111,7 @@ export function useResponsive(): UseResponsiveReturn {
     isAbove,
     
     // Raw breakpoint values for custom logic
-    breakpoints: {
-      xs: 0,
-      sm: 600,
-      md: 850,  // Adjusted to account for container margins (~50px total)
-      lg: 1250,  // Adjusted to account for container margins
-      xl: 1920,
-    }
+    breakpoints: BREAKPOINT_VALUES
   }
 }
 

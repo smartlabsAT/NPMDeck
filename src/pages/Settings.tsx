@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -496,25 +496,7 @@ const Settings = () => {
     })
   ), [defaultSiteType, theme.shadows, theme.palette])
 
-  useEffect(() => {
-    fetchSettings()
-  }, [])
-  
-  // Update active tab when URL changes
-  useEffect(() => {
-    if (tab && tabNameToIndex[tab] !== undefined) {
-      const newTabIndex = tabNameToIndex[tab]
-      if (newTabIndex !== activeTab) {
-        setActiveTab(newTabIndex)
-      }
-    } else if (!tab && activeTab !== 0) {
-      setActiveTab(0)
-    }
-    // tabNameToIndex is a constant, so it's safe to exclude from dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, activeTab])
-
-  const fetchSettings = async (showLoader = true) => {
+  const fetchSettings = useCallback(async (showLoader = true) => {
     try {
       if (showLoader) {
         setLoading(true)
@@ -546,7 +528,25 @@ const Settings = () => {
         setLoading(false)
       }
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchSettings()
+  }, [fetchSettings])
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    if (tab && tabNameToIndex[tab] !== undefined) {
+      const newTabIndex = tabNameToIndex[tab]
+      if (newTabIndex !== activeTab) {
+        setActiveTab(newTabIndex)
+      }
+    } else if (!tab && activeTab !== 0) {
+      setActiveTab(0)
+    }
+    // tabNameToIndex is a constant, so it's safe to exclude from dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, activeTab])
 
   const handleSaveDefaultSite = async () => {
     try {

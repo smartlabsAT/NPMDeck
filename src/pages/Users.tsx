@@ -56,9 +56,22 @@ const Users = () => {
   const { isMobileTable } = useResponsive()
   const isAdmin = currentUser?.roles?.includes('admin')
 
+  const loadUsers = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await usersApi.getAll(['permissions'])
+      setUsers(data)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     loadUsers()
-  }, [])
+  }, [loadUsers])
 
   // Handle URL parameter for viewing/editing
   useEffect(() => {
@@ -76,19 +89,6 @@ const Users = () => {
       setSelectedUser(null)
     }
   }, [id, users])
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await usersApi.getAll(['permissions'])
-      setUsers(data)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleRowClick = useCallback((user: User) => {
     setSelectedUser(user)
@@ -156,7 +156,7 @@ const Users = () => {
       showSuccess('user', 'disabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
       await loadUsers()
     }
-  }, [currentUser?.id, showError, showSuccess])
+  }, [currentUser?.id, showError, showSuccess, loadUsers])
 
   const handleBulkEnable = useCallback(async (users: User[]) => {
     const eligibleUsers = users.filter(u => u.is_disabled && u.id !== currentUser?.id)
@@ -177,7 +177,7 @@ const Users = () => {
       showSuccess('user', 'enabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
       await loadUsers()
     }
-  }, [currentUser?.id, showError, showSuccess])
+  }, [currentUser?.id, showError, showSuccess, loadUsers])
 
 
   const handleLoginAs = useCallback(async (user: User) => {

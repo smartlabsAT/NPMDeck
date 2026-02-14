@@ -303,7 +303,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
 interface DetailsTabProps {
   data: ProxyHostFormData
   setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
-  errors: Record<string, string>
+  errors: Partial<Record<keyof ProxyHostFormData, string>>
   accessLists: AccessList[]
   _loadingData: boolean
 }
@@ -426,7 +426,7 @@ DetailsTab.displayName = 'DetailsTab'
 interface SSLTabProps {
   data: ProxyHostFormData
   setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
-  errors: Record<string, string>
+  errors: Partial<Record<keyof ProxyHostFormData, string>>
   certificates: Certificate[]
   _loadingData: boolean
 }
@@ -521,7 +521,7 @@ SSLTab.displayName = 'SSLTab'
 interface AdvancedTabProps {
   data: ProxyHostFormData
   setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
-  errors: Record<string, string>
+  errors: Partial<Record<keyof ProxyHostFormData, string>>
 }
 
 const AdvancedTab = React.memo(({ data, setFieldValue, errors: _errors }: AdvancedTabProps) => {

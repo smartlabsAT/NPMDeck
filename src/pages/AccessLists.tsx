@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
@@ -60,10 +60,23 @@ export default function AccessLists() {
   const [accessListToDelete, setAccessListToDelete] = useState<AccessList | null>(null)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
+  const loadAccessLists = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await accessListsApi.getAll(['owner', 'items', 'clients'])
+      setAccessLists(data)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   // Load access lists
   useEffect(() => {
     loadAccessLists()
-  }, [])
+  }, [loadAccessLists])
 
   // Handle URL-based navigation
   useEffect(() => {
@@ -84,19 +97,6 @@ export default function AccessLists() {
       }
     }
   }, [location.pathname, id, accessLists, canManageAccessLists])
-
-  const loadAccessLists = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await accessListsApi.getAll(['owner', 'items', 'clients'])
-      setAccessLists(data)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleCreateAccessList = () => {
     navigate('/security/access-lists/new')

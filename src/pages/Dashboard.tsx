@@ -286,9 +286,9 @@ const Dashboard = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', sm: 'flex-end' }, mt: { xs: 2, sm: 0 } }}>
-                  {quickActions.map((action, index) => (
+                  {quickActions.map((action) => (
                     <PermissionButton
-                      key={index}
+                      key={action.path}
                       resource={action.resource as Resource}
                       permissionAction="create"
                       variant="outlined"
@@ -327,8 +327,8 @@ const Dashboard = () => {
         </Grid>
 
         {/* Stats Cards */}
-        {statsCards.filter(card => card.show).map((card, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+        {statsCards.filter(card => card.show).map((card) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={card.path}>
             <StatCard 
               {...card} 
               loading={stats.loading}

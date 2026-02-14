@@ -68,9 +68,9 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
       mobileLabel: 'Sources',
       render: (value, item) => (
         <Box>
-          {item.domain_names.map((domain, index) => (
+          {item.domain_names.map((domain) => (
             <Box
-              key={index}
+              key={domain}
               sx={{
                 display: "flex",
                 alignItems: "center",
