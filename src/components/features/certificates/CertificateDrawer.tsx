@@ -237,10 +237,6 @@ export default function CertificateDrawer({
             await certificatesApi.create(payload)
           } else {
             // For custom certificates - validate and upload files
-            // if (!data.certificateFile || !data.certificateKeyFile) {
-            //   throw new Error('Certificate and key files are required')
-            // }
-
             // Only validate and upload if files are provided
             if (data.certificateFile && data.certificateKeyFile) {
               // Validate certificate files

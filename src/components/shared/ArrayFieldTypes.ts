@@ -1,4 +1,3 @@
-// import { ReactNode } from 'react'
 import { SxProps, Theme } from '@mui/material'
 import { ArrayItemProps } from './ArrayItemComponent'
 

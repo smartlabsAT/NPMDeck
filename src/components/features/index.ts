@@ -8,5 +8,3 @@ export { default as SearchResultItem } from './search/SearchResultItem'
 // TODO: Add exports for other refactored components as they are completed
 export { default as StreamDrawer } from './streams/StreamDrawer'
 export { default as DeadHostDrawer } from './dead-hosts/DeadHostDrawer'
-// export { default as RedirectionHostDrawer } from './redirection-hosts/RedirectionHostDrawer'
-// export { default as UserDrawer } from './users/UserDrawer'
