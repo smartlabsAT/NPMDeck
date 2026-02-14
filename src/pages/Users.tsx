@@ -90,22 +90,6 @@ const Users = () => {
     }
   }
 
-  // Format relative time for last login
-  const _formatRelativeTime = (date: string | null | undefined) => {
-    if (!date) return 'Never'
-    
-    const now = new Date()
-    const then = new Date(date)
-    const seconds = Math.floor((now.getTime() - then.getTime()) / 1000)
-    
-    if (seconds < 60) return 'Just now'
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`
-    
-    return then.toLocaleDateString()
-  }
-
   const handleRowClick = (user: User) => {
     setSelectedUser(user)
     setDrawerOpen(true)
@@ -133,14 +117,12 @@ const Users = () => {
     
     setBulkProcessing(true)
     let successCount = 0
-    let _failCount = 0
-    
+
     for (const user of usersToDelete) {
       try {
         await usersApi.delete(user.id)
         successCount++
       } catch (err: unknown) {
-        _failCount++
         showError('user', 'delete', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
@@ -160,14 +142,12 @@ const Users = () => {
     if (eligibleUsers.length === 0) return
     
     let successCount = 0
-    let _failCount = 0
-    
+
     for (const user of eligibleUsers) {
       try {
         await usersApi.update(user.id, { is_disabled: true })
         successCount++
       } catch (err: unknown) {
-        _failCount++
         showError('user', 'disable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
@@ -183,14 +163,12 @@ const Users = () => {
     if (eligibleUsers.length === 0) return
     
     let successCount = 0
-    let _failCount = 0
-    
+
     for (const user of eligibleUsers) {
       try {
         await usersApi.update(user.id, { is_disabled: false })
         successCount++
       } catch (err: unknown) {
-        _failCount++
         showError('user', 'enable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
@@ -343,14 +321,6 @@ const Users = () => {
       showInCard: false,
       render: (date) => new Date(date as string).toLocaleDateString(),
     },
-    // TODO: Enable when last_login is available in API
-    // {
-    //   id: 'last_login',
-    //   label: 'Last Login',
-    //   accessor: (user) => user.last_login,
-    //   sortable: true,
-    //   render: (date) => formatRelativeTime(date),
-    // },
     {
       id: 'actions',
       label: 'Actions',

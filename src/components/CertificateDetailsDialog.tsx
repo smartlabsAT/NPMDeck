@@ -15,8 +15,6 @@ import {
 import { Certificate } from '../api/certificates'
 import { CertificateWithHosts } from '../types/common'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
-// import ExportDialog from './ExportDialog'
-import { usePermissions } from '../hooks/usePermissions'
 import AdaptiveContainer from './AdaptiveContainer'
 import TabPanel from './shared/TabPanel'
 import CertificateInfoPanel from './features/certificates/CertificateInfoPanel'
@@ -39,14 +37,12 @@ const CertificateDetailsDialog = ({
 }: CertificateDetailsDialogProps) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { } = usePermissions() // eslint-disable-line no-empty-pattern
   const [activeTab, setActiveTab] = useState(0)
   const { copiedText, copyToClipboard } = useCopyToClipboard()
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     domains: true,
     hosts: false,
   })
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Parse tab from URL
   useEffect(() => {
@@ -144,16 +140,6 @@ const CertificateDetailsDialog = ({
           />
         </TabPanel>
       </Box>
-      {/* Export Dialog */}
-      {/* {certificate && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[certificate]}
-          type="certificate"
-          itemName="Certificate"
-        />
-      )} */}
     </AdaptiveContainer>
   );
 }

@@ -28,7 +28,6 @@ import { RedirectionHost } from '../api/redirectionHosts'
 import { getHttpStatusLabel } from '../utils/httpUtils'
 import { getStatusColor, getStatusText } from '../utils/statusUtils'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
-// import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 import { NAVIGATION_COLORS } from '../constants/navigation'
 
@@ -45,8 +44,6 @@ export default function RedirectionHostDetailsDialog({
   host,
   onEdit
 }: RedirectionHostDetailsDialogProps) {
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
-
   if (!host) return null
 
   const getCertificateStatus = () => {
@@ -81,12 +78,6 @@ export default function RedirectionHostDetailsDialog({
       fullWidth
       actions={
         <>
-          {/* <Button
-            onClick={() => setExportDialogOpen(true)}
-            startIcon={<DownloadIcon />}
-          >
-            Export
-          </Button> */}
           {onEdit && (
             <Button 
               onClick={() => {
@@ -372,16 +363,6 @@ export default function RedirectionHostDetailsDialog({
           </Grid>
         </Grid>
       </Box>
-      {/* Export Dialog */}
-      {/* {host && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[host]}
-          type="redirection_host"
-          itemName="Redirection Host"
-        />
-      )} */}
     </AdaptiveContainer>
   );
 }

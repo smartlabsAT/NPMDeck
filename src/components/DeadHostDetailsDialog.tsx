@@ -17,7 +17,6 @@ import {
 } from '@mui/icons-material'
 import { DeadHost } from '../api/deadHosts'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
-// import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 import TabPanel from './shared/TabPanel'
 import { NAVIGATION_COLORS } from '../constants/navigation'
@@ -40,7 +39,6 @@ const DeadHostDetailsDialog = ({
   const location = useLocation()
   const [activeTab, setActiveTab] = useState(0)
   const { copiedText, copyToClipboard } = useCopyToClipboard()
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // Parse tab from URL
   useEffect(() => {
@@ -91,12 +89,6 @@ const DeadHostDetailsDialog = ({
       fullWidth
       actions={
         <>
-          {/* <Button
-            onClick={() => setExportDialogOpen(true)}
-            startIcon={<DownloadIcon />}
-          >
-            Export
-          </Button> */}
           {onEdit && (
             <Button 
               onClick={() => {
@@ -170,16 +162,6 @@ const DeadHostDetailsDialog = ({
           )}
         </TabPanel>
       </Box>
-      {/* Export Dialog */}
-      {/* {host && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[host]}
-          type="dead_host"
-          itemName="404 Host"
-        />
-      )} */}
     </AdaptiveContainer>
   );
 }

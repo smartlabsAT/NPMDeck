@@ -21,15 +21,12 @@ import {
   VpnKey as CertificateIcon,
   Folder as ProviderIcon,
   Event as ExpiresIcon,
-  // Dns as DomainIcon,
   Apps as HostsIcon,
   MoreVert as ActionsIcon,
 } from '@mui/icons-material'
 import { certificatesApi, Certificate } from '../api/certificates'
 import { getErrorMessage } from '../types/common'
 import { CertificateWithHosts } from '../types/common'
-import { useAuthStore } from '../stores/authStore'
-import { usePermissions } from '../hooks/usePermissions'
 import { useFilteredData } from '../hooks/useFilteredData'
 import { useResponsive } from '../hooks/useResponsive'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -64,8 +61,6 @@ const Certificates = () => {
   const [viewingCert, setViewingCert] = useState<Certificate | null>(null)
   const [initialProvider, setInitialProvider] = useState<'letsencrypt' | 'other'>('letsencrypt')
   
-  const { } = useAuthStore() // eslint-disable-line no-empty-pattern
-  const { } = usePermissions() // eslint-disable-line no-empty-pattern
   const { showSuccess, showError } = useToast()
   const { isMobileTable } = useResponsive()
 

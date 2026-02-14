@@ -25,7 +25,6 @@ import {
 import { AccessList } from '../api/accessLists'
 import { formatDate } from '../utils/dateUtils'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
-// import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 import { NAVIGATION_COLORS } from '../constants/navigation'
 
@@ -43,7 +42,6 @@ const AccessListDetailsDialog = ({
   onEdit,
 }: AccessListDetailsDialogProps) => {
   const { copiedText, copyToClipboard } = useCopyToClipboard()
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   if (!accessList) return null
 
@@ -74,12 +72,6 @@ const AccessListDetailsDialog = ({
         fullWidth
         actions={
           <>
-            {/* <Button
-              onClick={() => setExportDialogOpen(true)}
-              startIcon={<DownloadIcon />}
-            >
-              Export
-            </Button> */}
             {onEdit && (
               <Button 
                 onClick={() => {
@@ -314,16 +306,6 @@ const AccessListDetailsDialog = ({
             </Grid>
           </Box>
       </AdaptiveContainer>
-      {/* Export Dialog */}
-      {/* {accessList && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[accessList]}
-          type="access_list"
-          itemName="Access List"
-        />
-      )} */}
     </>
   );
 }

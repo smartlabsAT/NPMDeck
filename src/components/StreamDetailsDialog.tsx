@@ -20,7 +20,6 @@ import { Stream } from '../api/streams'
 import { getStatusIcon, getStatusText, getStatusColor } from '../utils/statusUtils'
 import { formatDate } from '../utils/dateUtils'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
-// import ExportDialog from './ExportDialog'
 import AdaptiveContainer from './AdaptiveContainer'
 import OwnerDisplay from './shared/OwnerDisplay'
 import { NAVIGATION_COLORS } from '../constants/navigation'
@@ -39,7 +38,6 @@ const StreamDetailsDialog = ({
   onEdit,
 }: StreamDetailsDialogProps) => {
   const { copiedText, copyToClipboard } = useCopyToClipboard()
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   if (!stream) return null
 
@@ -67,12 +65,6 @@ const StreamDetailsDialog = ({
         fullWidth
         actions={
           <>
-            {/* <Button
-              onClick={() => setExportDialogOpen(true)}
-              startIcon={<DownloadIcon />}
-            >
-              Export
-            </Button> */}
             {onEdit && (
               <Button 
                 onClick={() => {
@@ -349,16 +341,6 @@ const StreamDetailsDialog = ({
             </Grid>
           </Box>
       </AdaptiveContainer>
-      {/* Export Dialog */}
-      {/* {stream && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[stream]}
-          type="stream"
-          itemName="Stream"
-        />
-      )} */}
     </>
   );
 }
