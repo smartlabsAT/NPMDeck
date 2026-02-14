@@ -166,25 +166,30 @@ export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
   const initialDataRef = useRef(initialData);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isSubmittingRef = useRef(false);
+  // Ref for current form data — used in validateField to avoid unstable callback references.
+  // Without this, validateField would depend on formState.data, causing setFieldValue to be
+  // recreated on every state change and breaking any useEffect that has setFieldValue as a dependency.
+  const formDataRef = useRef(formState.data);
+  formDataRef.current = formState.data;
 
   /**
    * Validate a single field
    */
   const validateField = useCallback((key: keyof T, value: T[keyof T], data?: T): string | null => {
     const fieldConfig = fields[key];
-    
+
     // Required validation
     if (fieldConfig?.required && (value === '' || value == null)) {
       return fieldConfig.requiredMessage || `${String(key)} is required`;
     }
-    
+
     // Custom validation
     if (fieldConfig?.validate) {
-      return fieldConfig.validate(value, data || formState.data);
+      return fieldConfig.validate(value, data || formDataRef.current);
     }
-    
+
     return null;
-  }, [fields, formState.data]);
+  }, [fields]);
 
   /**
    * Validate all fields

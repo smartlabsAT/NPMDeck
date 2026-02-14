@@ -350,10 +350,11 @@ export default function CertificateDrawer({
 
   // Update provider when initialProvider changes (e.g., switching between Let's Encrypt and Custom)
   React.useEffect(() => {
-    if (!certificate && open) {
+    if (!certificate && open && data.provider !== initialProvider) {
       setFieldValue('provider', initialProvider)
     }
-  }, [initialProvider, certificate, open, setFieldValue])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- data.provider is checked for guard only; setFieldValue is stable via ref-based validateField
+  }, [initialProvider, certificate, open])
 
   // Clear custom error when drawer closes
   React.useEffect(() => {
