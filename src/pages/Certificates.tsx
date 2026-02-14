@@ -37,8 +37,9 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
-import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
+import { Filter, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { createStandardBulkActions } from '../utils/bulkActionFactory'
 import { extractBaseDomain } from '../utils/domainUtils'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
 import { STORAGE_KEYS } from '../constants/storage'
@@ -334,29 +335,20 @@ const Certificates = () => {
     }
   ], [])
 
-  // Bulk actions (delete only - certificates don't support enable/disable)
-  const bulkActions = useMemo<BulkAction<Certificate>[]>(() => [
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: <DeleteIcon />,
-      color: 'error',
-      confirmMessage: 'Are you sure you want to delete the selected certificates?',
-      action: async (items) => {
-        const results = await Promise.allSettled(items.map(item => certificatesApi.delete(item.id)))
-        const succeeded = results.filter(r => r.status === 'fulfilled').length
-        const failed = results.filter(r => r.status === 'rejected').length
-        if (failed === 0) {
-          showSuccess('certificate', 'deleted', `${succeeded} certificates`)
-        } else if (succeeded === 0) {
-          showError('certificate', 'delete', `All ${failed} operations failed`)
-        } else {
-          showWarning(`${succeeded} certificates deleted successfully, ${failed} failed`, 'certificate')
-        }
-        await loadItems()
-      }
-    }
-  ], [showSuccess, showError, showWarning, loadItems])
+  // Bulk actions via factory (delete only - certificates don't support enable/disable)
+  const bulkActions = useMemo(
+    () => createStandardBulkActions<Certificate>({
+      api: certificatesApi,
+      entityType: 'certificate',
+      entityLabel: 'certificates',
+      showSuccess,
+      showError,
+      showWarning,
+      loadItems,
+      actions: ['delete'],
+    }),
+    [showSuccess, showError, showWarning, loadItems]
+  )
 
   return (
     <Container maxWidth={false}>

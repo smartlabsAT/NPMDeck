@@ -6,11 +6,13 @@ import {
 } from '@mui/icons-material'
 import type { BulkAction } from '../components/DataTable/types'
 import type { ToastEntityType } from '../types/entityTypes'
-import type { ToggleableEntity } from '../types/base'
+import type { BaseEntity } from '../types/base'
+
+type BulkActionType = 'enable' | 'disable' | 'delete'
 
 interface BulkActionApi {
-  enable: (id: number) => Promise<void>
-  disable: (id: number) => Promise<void>
+  enable?: (id: number) => Promise<void>
+  disable?: (id: number) => Promise<void>
   delete: (id: number) => Promise<void>
 }
 
@@ -22,6 +24,7 @@ interface StandardBulkActionsConfig {
   showError: (entityType: ToastEntityType, action: string, error?: string, entityName?: string, entityId?: number | string) => void
   showWarning: (message: string, entityType?: ToastEntityType) => void
   loadItems: () => Promise<void>
+  actions?: BulkActionType[]
 }
 
 /**
@@ -50,39 +53,50 @@ function reportBulkResults(
   }
 }
 
-export function createStandardBulkActions<T extends ToggleableEntity>(
+export function createStandardBulkActions<T extends BaseEntity>(
   config: StandardBulkActionsConfig
 ): BulkAction<T>[] {
   const { api, entityType, entityLabel, showSuccess, showError, showWarning, loadItems } = config
+  const enabledActions = config.actions ?? ['enable', 'disable', 'delete']
 
-  return [
-    {
+  const allActions: BulkAction<T>[] = []
+
+  if (enabledActions.includes('enable') && api.enable) {
+    const enableFn = api.enable
+    allActions.push({
       id: 'enable',
       label: 'Enable',
       icon: <CheckCircleIcon />,
       confirmMessage: `Are you sure you want to enable the selected ${entityLabel}?`,
       action: async (items: T[]) => {
         const results = await Promise.allSettled(
-          items.filter(item => !item.enabled).map(item => api.enable(item.id))
+          items.filter(item => !(item as T & { enabled: boolean }).enabled).map(item => enableFn(item.id))
         )
         reportBulkResults(results, 'enabled', entityType, entityLabel, showSuccess, showError, showWarning)
         await loadItems()
       }
-    },
-    {
+    })
+  }
+
+  if (enabledActions.includes('disable') && api.disable) {
+    const disableFn = api.disable
+    allActions.push({
       id: 'disable',
       label: 'Disable',
       icon: <CancelIcon />,
       confirmMessage: `Are you sure you want to disable the selected ${entityLabel}?`,
       action: async (items: T[]) => {
         const results = await Promise.allSettled(
-          items.filter(item => item.enabled).map(item => api.disable(item.id))
+          items.filter(item => (item as T & { enabled: boolean }).enabled).map(item => disableFn(item.id))
         )
         reportBulkResults(results, 'disabled', entityType, entityLabel, showSuccess, showError, showWarning)
         await loadItems()
       }
-    },
-    {
+    })
+  }
+
+  if (enabledActions.includes('delete')) {
+    allActions.push({
       id: 'delete',
       label: 'Delete',
       icon: <DeleteIcon />,
@@ -95,6 +109,8 @@ export function createStandardBulkActions<T extends ToggleableEntity>(
         reportBulkResults(results, 'deleted', entityType, entityLabel, showSuccess, showError, showWarning)
         await loadItems()
       }
-    }
-  ]
+    })
+  }
+
+  return allActions
 }
