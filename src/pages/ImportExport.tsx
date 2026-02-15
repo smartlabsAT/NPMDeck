@@ -32,10 +32,24 @@ import logger from '../utils/logger'
 /** Exportable entity type matching the ImportExportService signature */
 type ExportableEntity = ProxyHost | RedirectionHost | DeadHost | Stream | Certificate | AccessList
 
+/** Bundle export shape produced by "Export All" */
+interface ExportBundle {
+  [key: string]: unknown
+  proxy_hosts: ProxyHost[]
+  redirection_hosts: RedirectionHost[]
+  dead_hosts: DeadHost[]
+  streams: Stream[]
+  certificates: Certificate[]
+  access_lists: AccessList[]
+}
+
+/** Items that the export dialog can display: individual entities OR a bundle wrapper */
+type ExportItem = ExportableEntity | ExportBundle
+
 export default function ImportExport() {
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
-  const [exportItems, setExportItems] = useState<ExportableEntity[]>([])
+  const [exportItems, setExportItems] = useState<ExportItem[]>([])
   const [exportItemType, setExportItemType] = useState('')
   const [exportTypeName, setExportTypeName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -76,7 +90,7 @@ export default function ImportExport() {
 
       // Bundle export: wrapping the combined data object as a single-element array
       // The ExportDialog handles 'bundle' type with this structure at runtime
-      setExportItems([allItems as unknown as ExportableEntity])
+      setExportItems([allItems])
       setExportItemType('bundle')
       setExportTypeName('All Configurations')
       setExportDialogOpen(true)

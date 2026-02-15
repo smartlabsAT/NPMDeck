@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import type { RedirectionHost } from '../api/redirectionHosts'
 import type { Filter, FilterValue } from '../components/DataTable/types'
+import { filterBySsl, filterByStatus } from '../utils/filterUtils'
 
 interface UseRedirectionHostFiltersReturn {
   filters: Filter[]
@@ -52,23 +53,13 @@ const useRedirectionHostFilters = (): UseRedirectionHostFiltersReturn => {
   ], [])
 
   const filterFunction = useCallback((item: RedirectionHost, activeFilters: Record<string, FilterValue>) => {
-    // HTTP Code filter
+    // HTTP Code filter (RedirectionHost-specific)
     if (activeFilters.http_code && activeFilters.http_code !== 'all') {
       if (item.forward_http_code.toString() !== activeFilters.http_code) return false
     }
 
-    // SSL filter
-    if (activeFilters.ssl && activeFilters.ssl !== 'all') {
-      if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false
-      if (activeFilters.ssl === 'optional' && (!item.certificate_id || item.ssl_forced)) return false
-      if (activeFilters.ssl === 'disabled' && item.certificate_id) return false
-    }
-
-    // Status filter
-    if (activeFilters.status && activeFilters.status !== 'all') {
-      if (activeFilters.status === 'enabled' && !item.enabled) return false
-      if (activeFilters.status === 'disabled' && item.enabled) return false
-    }
+    if (!filterBySsl(item, activeFilters.ssl)) return false
+    if (!filterByStatus(item, activeFilters.status)) return false
 
     return true
   }, [])

@@ -132,8 +132,8 @@ export default function RedirectionHostDetailsDialog({
                 <Typography variant="h6">Source Domains</Typography>
               </Box>
               <List dense>
-                {host.domain_names.map((domain, index) => (
-                  <ListItem key={index}>
+                {host.domain_names.map((domain) => (
+                  <ListItem key={domain}>
                     <ListItemText primary={domain} />
                   </ListItem>
                 ))}

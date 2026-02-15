@@ -4,7 +4,6 @@ import {
   IconButton,
   Typography,
   Chip,
-  Tooltip,
 } from '@mui/material'
 import {
   Edit as EditIcon,
@@ -12,7 +11,6 @@ import {
   PowerSettingsNew as PowerIcon,
   Language as LanguageIcon,
   Lock as LockIcon,
-  LockOpen as LockOpenIcon,
   TrendingFlat as RedirectIcon,
   SwapHoriz as ProxyIcon,
   CallMade as ForwardIcon,
@@ -28,13 +26,14 @@ import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/R
 import PermissionIconButton from '../components/PermissionIconButton'
 import { getStatusIcon } from '../utils/statusUtils'
 import { getHttpStatusLabel } from '../utils/httpUtils'
+import { renderSslStatus, renderDomainLinks } from '../utils/columnRenderers'
 
 interface UseRedirectionHostColumnsParams {
   proxyHostsByDomain: Map<string, ProxyHost>
   onToggleEnabled: (host: RedirectionHost) => void
   onEdit: (host: RedirectionHost) => void
   onDelete: (host: RedirectionHost) => void
-  onViewProxyHost: (proxyHost: ProxyHost, event: React.MouseEvent) => void
+  onViewProxyHost: (proxyHost: ProxyHost, event: React.MouseEvent | React.KeyboardEvent) => void
   navigate: NavigateFunction
 }
 
@@ -66,39 +65,7 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
       priority: 'P1' as ColumnPriority,
       showInCard: true,
       mobileLabel: 'Sources',
-      render: (value, item) => (
-        <Box>
-          {item.domain_names.map((domain) => (
-            <Box
-              key={domain}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5
-              }}>
-              <Typography variant="body2">
-                {domain}
-              </Typography>
-              <IconButton
-                size="small"
-                aria-label="Open source domain in new tab"
-                sx={{
-                  p: 0.25,
-                  '&:hover': {
-                    backgroundColor: 'action.hover'
-                  }
-                }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  window.open(`https://${domain}`, '_blank')
-                }}
-              >
-                <LinkIcon sx={{ fontSize: '0.875rem' }} />
-              </IconButton>
-            </Box>
-          ))}
-        </Box>
-      )
+      render: (_value, item) => renderDomainLinks(item.domain_names)
     },
     {
       id: 'forward_domain',
@@ -136,7 +103,7 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
                 }}
                 onClick={(e) => {
                   e.stopPropagation()
-                  window.open(`${item.forward_scheme}://${item.forward_domain_name}`, '_blank')
+                  window.open(`${item.forward_scheme}://${item.forward_domain_name}`, '_blank', 'noopener,noreferrer')
                 }}
               >
                 <LinkIcon sx={{ fontSize: '0.875rem' }} />
@@ -152,7 +119,7 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault()
                     e.stopPropagation()
-                    onViewProxyHost(linkedProxy, e as unknown as React.MouseEvent)
+                    onViewProxyHost(linkedProxy, e)
                   }
                 }}
                 sx={{
@@ -202,15 +169,7 @@ const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): Res
       align: 'center',
       priority: 'P3' as ColumnPriority,
       showInCard: true,
-      render: (value, item) => {
-        if (!item.certificate_id) {
-          return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
-        }
-        if (item.ssl_forced) {
-          return <Tooltip title="SSL Forced"><LockIcon color="primary" /></Tooltip>
-        }
-        return <Tooltip title="SSL Optional"><LockIcon color="action" /></Tooltip>
-      }
+      render: (_value, item) => renderSslStatus(item)
     },
     {
       id: 'actions',

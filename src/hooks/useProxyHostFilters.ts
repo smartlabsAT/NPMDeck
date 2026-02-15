@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import type { ProxyHost } from '../api/proxyHosts'
 import type { Filter, FilterValue } from '../components/DataTable/types'
+import { filterBySsl, filterByStatus } from '../utils/filterUtils'
 
 interface UseProxyHostFiltersReturn {
   filters: Filter[]
@@ -50,24 +51,15 @@ const useProxyHostFilters = (): UseProxyHostFiltersReturn => {
   ], [])
 
   const filterFunction = useCallback((item: ProxyHost, activeFilters: Record<string, FilterValue>) => {
-    // SSL filter
-    if (activeFilters.ssl && activeFilters.ssl !== 'all') {
-      if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false
-      if (activeFilters.ssl === 'optional' && (!item.certificate_id || item.ssl_forced)) return false
-      if (activeFilters.ssl === 'disabled' && item.certificate_id) return false
-    }
+    if (!filterBySsl(item, activeFilters.ssl)) return false
 
-    // Access filter
+    // Access filter (ProxyHost-specific)
     if (activeFilters.access && activeFilters.access !== 'all') {
       if (activeFilters.access === 'public' && item.access_list) return false
       if (activeFilters.access === 'restricted' && !item.access_list) return false
     }
 
-    // Status filter
-    if (activeFilters.status && activeFilters.status !== 'all') {
-      if (activeFilters.status === 'enabled' && !item.enabled) return false
-      if (activeFilters.status === 'disabled' && item.enabled) return false
-    }
+    if (!filterByStatus(item, activeFilters.status)) return false
 
     return true
   }, [])

@@ -3,7 +3,6 @@ import {
   Box,
   Container,
   Typography,
-  Tooltip,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -36,7 +35,10 @@ import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/R
 import { Filter, FilterValue } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
+import { renderSslStatus } from '../utils/columnRenderers'
+import { filterBySsl, filterByStatus } from '../utils/filterUtils'
 import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 export default function DeadHosts() {
   const { showSuccess, showError, showWarning } = useToast()
@@ -101,6 +103,8 @@ export default function DeadHosts() {
             <Typography
               key={index}
               variant="body2"
+              role="link"
+              aria-label={`Open ${domain} in new tab`}
               sx={{
                 cursor: 'pointer',
                 '&:hover': {
@@ -110,7 +114,7 @@ export default function DeadHosts() {
               }}
               onClick={(e) => {
                 e.stopPropagation()
-                window.open(`https://${domain}`, '_blank')
+                window.open(`https://${domain}`, '_blank', 'noopener,noreferrer')
               }}
             >
               {domain}
@@ -153,15 +157,7 @@ export default function DeadHosts() {
       align: 'center',
       priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
       showInCard: true,
-      render: (value, item) => {
-        if (!item.certificate_id) {
-          return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
-        }
-        if (item.ssl_forced) {
-          return <Tooltip title="SSL Forced"><LockIcon color="primary" /></Tooltip>
-        }
-        return <Tooltip title="SSL Optional"><LockIcon color="action" /></Tooltip>
-      }
+      render: (_value, item) => renderSslStatus(item)
     },
     {
       id: 'actions',
@@ -251,19 +247,8 @@ export default function DeadHosts() {
 
   // Custom filter function for DataTable
   const filterFunction = useCallback((item: DeadHost, activeFilters: Record<string, FilterValue>) => {
-    // SSL filter
-    if (activeFilters.ssl && activeFilters.ssl !== 'all') {
-      if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false
-      if (activeFilters.ssl === 'optional' && (!item.certificate_id || item.ssl_forced)) return false
-      if (activeFilters.ssl === 'disabled' && item.certificate_id) return false
-    }
-
-    // Status filter
-    if (activeFilters.status && activeFilters.status !== 'all') {
-      if (activeFilters.status === 'enabled' && !item.enabled) return false
-      if (activeFilters.status === 'disabled' && item.enabled) return false
-    }
-
+    if (!filterBySsl(item, activeFilters.ssl)) return false
+    if (!filterByStatus(item, activeFilters.status)) return false
     return true
   }, [])
 
@@ -330,9 +315,9 @@ export default function DeadHosts() {
           selectable={true}
           showPagination={true}
           defaultRowsPerPage={10}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           responsive={true}
-          cardBreakpoint={900}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
           compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
@@ -351,7 +336,7 @@ export default function DeadHosts() {
               startIcon={<AddIcon />}
               onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add 404 Host
             </PermissionButton>

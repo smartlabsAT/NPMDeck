@@ -24,6 +24,10 @@ import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
+
+/** Stable empty map reference to avoid re-creating on every render */
+const EMPTY_MAP = new Map() as Map<string, ProxyHost>
 
 /** Builds a domain-to-ProxyHost lookup map from proxy hosts data */
 const buildProxyHostDomainMap = async (): Promise<Map<string, ProxyHost>> => {
@@ -75,7 +79,7 @@ export default function RedirectionHosts() {
     additionalLoader: { load: buildProxyHostDomainMap },
   })
 
-  const handleViewProxyHost = useCallback((proxyHost: ProxyHost, event: React.MouseEvent) => {
+  const handleViewProxyHost = useCallback((proxyHost: ProxyHost, event: React.MouseEvent | React.KeyboardEvent) => {
     event.stopPropagation()
     // Navigate to proxy host overview
     navigate(`/hosts/proxy/${proxyHost.id}/view/overview`)
@@ -83,7 +87,7 @@ export default function RedirectionHosts() {
 
   // Column definitions for DataTable with responsive priorities
   const columns = useRedirectionHostColumns({
-    proxyHostsByDomain: proxyHostsByDomain ?? new Map(),
+    proxyHostsByDomain: proxyHostsByDomain ?? EMPTY_MAP,
     onToggleEnabled: handleToggleEnabled,
     onEdit: handleEdit,
     onDelete: handleDelete,
@@ -163,11 +167,11 @@ export default function RedirectionHosts() {
           selectable={true}
           showPagination={true}
           defaultRowsPerPage={10}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           groupConfig={groupConfig}
           showGroupToggle={true}
           responsive={true}
-          cardBreakpoint={900}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
           compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
@@ -186,7 +190,7 @@ export default function RedirectionHosts() {
               startIcon={<AddIcon />}
               onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add Redirection Host
             </PermissionButton>

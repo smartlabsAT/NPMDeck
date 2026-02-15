@@ -102,8 +102,8 @@ const AppBarUserMenu = ({
                 Switch Account
               </Typography>
             </MenuItem>
-            {tokenStack.map((tokenInfo, index) => (
-              <MenuItem key={index} onClick={() => {
+            {tokenStack.map((tokenInfo) => (
+              <MenuItem key={tokenInfo.user.email} onClick={() => {
                 onMenuClose()
                 onSwitchAccount()
               }}>

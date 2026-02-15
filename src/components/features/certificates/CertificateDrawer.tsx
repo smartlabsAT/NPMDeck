@@ -27,6 +27,7 @@ import DNSProviderSelector from './components/DNSProviderSelector'
 import { useToast } from '../../../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
 import { TIMING } from '../../../constants/timing'
+import { LAYOUT } from '../../../constants/layout'
 
 interface CertificateDrawerProps {
   open: boolean
@@ -399,7 +400,7 @@ export default function CertificateDrawer({
       saveDisabled={!isValid}
       saveText={isEditMode ? 'Save Changes' : 'Create Certificate'}
       confirmClose={isDirty}
-      width={600}
+      width={LAYOUT.DRAWER_PANEL_WIDTH}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {isEditMode && (

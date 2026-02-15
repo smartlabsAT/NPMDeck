@@ -45,6 +45,7 @@ import { getDaysUntilExpiry } from '../utils/dateUtils'
 import { STORAGE_KEYS } from '../constants/storage'
 import { CERTIFICATE_EXPIRY } from '../constants/certificates'
 import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 const getCertDisplayName = (cert: Certificate): string =>
   cert.nice_name || cert.domain_names[0] || 'Unnamed Certificate'
@@ -418,11 +419,11 @@ const Certificates = () => {
           selectable={true}
           showPagination={true}
           defaultRowsPerPage={10}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           groupConfig={groupConfig}
           showGroupToggle={true}
           responsive={true}
-          cardBreakpoint={900}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
           compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
@@ -442,7 +443,7 @@ const Certificates = () => {
               startIcon={<AddIcon />}
               onClick={(e) => setAddMenuAnchor(e.currentTarget)}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add SSL Certificate
             </PermissionButton>

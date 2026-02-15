@@ -20,16 +20,17 @@ import {
   Warning as WarningIcon,
   Info as InfoIcon,
 } from '@mui/icons-material'
+import { FONT_WEIGHT } from '../../constants/layout'
 
 /**
  * Severity levels for form sections
  */
-export type FormSectionSeverity = 'info' | 'warning' | 'error' | 'success'
+type FormSectionSeverity = 'info' | 'warning' | 'error' | 'success'
 
 /**
  * Variant styles for form sections
  */
-export type FormSectionVariant = 'minimal' | 'compact' | 'default'
+type FormSectionVariant = 'minimal' | 'compact' | 'default'
 
 /**
  * Props for the FormSection component
@@ -276,7 +277,7 @@ export default function FormSection({
               variant="subtitle1"
               component="h3"
               sx={{
-                fontWeight: 600,
+                fontWeight: FONT_WEIGHT.SEMI_BOLD,
                 color: colors.text,
                 display: 'flex',
                 alignItems: 'center',
@@ -432,7 +433,7 @@ export default function FormSection({
               component="h3"
               sx={{
                 fontSize: '1.1rem',
-                fontWeight: 600,
+                fontWeight: FONT_WEIGHT.SEMI_BOLD,
                 color: colors.text,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -545,51 +546,3 @@ export default function FormSection({
   );
 }
 
-/**
- * Convenience components for specific section types
- */
-
-/**
- * ErrorFormSection - Pre-configured error section
- */
-export interface ErrorFormSectionProps extends Omit<FormSectionProps, 'severity' | 'error'> {
-  errorCount: number
-}
-
-export function ErrorFormSection(props: ErrorFormSectionProps) {
-  return (
-    <FormSection
-      {...props}
-      severity="error"
-      error={props.errorCount > 0}
-    />
-  )
-}
-
-/**
- * WarningFormSection - Pre-configured warning section
- */
-export type WarningFormSectionProps = Omit<FormSectionProps, 'severity'>
-
-export function WarningFormSection(props: WarningFormSectionProps) {
-  return (
-    <FormSection
-      {...props}
-      severity="warning"
-    />
-  )
-}
-
-/**
- * RequiredFormSection - Pre-configured required section
- */
-export type RequiredFormSectionProps = Omit<FormSectionProps, 'required'>
-
-export function RequiredFormSection(props: RequiredFormSectionProps) {
-  return (
-    <FormSection
-      {...props}
-      required
-    />
-  )
-}

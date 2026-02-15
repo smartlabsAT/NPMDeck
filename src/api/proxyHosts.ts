@@ -1,8 +1,8 @@
 import api from './config'
 import type { HostEntity } from '../types/base'
 import { buildExpandParams } from './utils'
-import { Certificate } from './certificates'
-import { AccessList } from './accessLists'
+import type { Certificate } from './certificates'
+import type { AccessList } from './accessLists'
 
 export interface ProxyHost extends HostEntity {
   forward_host: string
@@ -53,35 +53,35 @@ export interface UpdateProxyHost extends CreateProxyHost {
 export const proxyHostsApi = {
   async getAll(expand?: string[]): Promise<ProxyHost[]> {
     const params = buildExpandParams(expand)
-    const response = await api.get('/nginx/proxy-hosts', { params })
+    const response = await api.get<ProxyHost[]>('/nginx/proxy-hosts', { params })
     return response.data
   },
 
   async getById(id: number, expand?: string[]): Promise<ProxyHost> {
     const params = buildExpandParams(expand)
-    const response = await api.get(`/nginx/proxy-hosts/${id}`, { params })
+    const response = await api.get<ProxyHost>(`/nginx/proxy-hosts/${id}`, { params })
     return response.data
   },
 
   async create(data: CreateProxyHost): Promise<ProxyHost> {
-    const response = await api.post('/nginx/proxy-hosts', data)
+    const response = await api.post<ProxyHost>('/nginx/proxy-hosts', data)
     return response.data
   },
 
   async update(id: number, data: UpdateProxyHost): Promise<ProxyHost> {
-    const response = await api.put(`/nginx/proxy-hosts/${id}`, data)
+    const response = await api.put<ProxyHost>(`/nginx/proxy-hosts/${id}`, data)
     return response.data
   },
 
   async delete(id: number): Promise<void> {
-    await api.delete(`/nginx/proxy-hosts/${id}`)
+    await api.delete<void>(`/nginx/proxy-hosts/${id}`)
   },
 
   async enable(id: number): Promise<void> {
-    await api.post(`/nginx/proxy-hosts/${id}/enable`)
+    await api.post<void>(`/nginx/proxy-hosts/${id}/enable`)
   },
 
   async disable(id: number): Promise<void> {
-    await api.post(`/nginx/proxy-hosts/${id}/disable`)
+    await api.post<void>(`/nginx/proxy-hosts/${id}/disable`)
   },
 }

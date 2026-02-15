@@ -10,6 +10,11 @@ import type { BaseEntity } from '../types/base'
 
 type BulkActionType = 'enable' | 'disable' | 'delete'
 
+/** Type guard to check if an entity has the `enabled` property */
+function hasEnabledProp(item: BaseEntity): item is BaseEntity & { enabled: boolean } {
+  return 'enabled' in item && typeof (item as Record<string, unknown>).enabled === 'boolean'
+}
+
 interface BulkActionApi {
   enable?: (id: number) => Promise<void>
   disable?: (id: number) => Promise<void>
@@ -70,7 +75,7 @@ export function createStandardBulkActions<T extends BaseEntity>(
       confirmMessage: `Are you sure you want to enable the selected ${entityLabel}?`,
       action: async (items: T[]) => {
         const results = await Promise.allSettled(
-          items.filter(item => !(item as T & { enabled: boolean }).enabled).map(item => enableFn(item.id))
+          items.filter(item => hasEnabledProp(item) && !item.enabled).map(item => enableFn(item.id))
         )
         reportBulkResults(results, 'enabled', entityType, entityLabel, showSuccess, showError, showWarning)
         await loadItems()
@@ -87,7 +92,7 @@ export function createStandardBulkActions<T extends BaseEntity>(
       confirmMessage: `Are you sure you want to disable the selected ${entityLabel}?`,
       action: async (items: T[]) => {
         const results = await Promise.allSettled(
-          items.filter(item => (item as T & { enabled: boolean }).enabled).map(item => disableFn(item.id))
+          items.filter(item => hasEnabledProp(item) && item.enabled).map(item => disableFn(item.id))
         )
         reportBulkResults(results, 'disabled', entityType, entityLabel, showSuccess, showError, showWarning)
         await loadItems()

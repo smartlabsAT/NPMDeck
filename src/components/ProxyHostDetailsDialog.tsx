@@ -75,7 +75,7 @@ const ProxyHostDetailsDialog = ({
       })
 
       setLinkedRedirections(linkedRedirects)
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to load connections:', error)
       setConnectionsError('Failed to load connected redirections.')
     } finally {
@@ -91,7 +91,7 @@ const ProxyHostDetailsDialog = ({
       setAccessListError(null)
       const data = await accessListsApi.getById(host.access_list.id, ['items', 'clients', 'owner'])
       setFullAccessList(data)
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to load access list details:', error)
       setAccessListError('Failed to load access list details.')
     } finally {

@@ -24,9 +24,13 @@ import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 /** Type for the redirection lookup map loaded as additional data */
 type RedirectionsByTarget = Map<string, RedirectionHost[]>
+
+/** Stable empty map reference to avoid re-creating on every render */
+const EMPTY_MAP = new Map() as RedirectionsByTarget
 
 const PROXY_HOST_BASE_PATH = '/hosts/proxy'
 const PROXY_HOST_EXPAND = ['owner', 'access_list', 'certificate']
@@ -99,7 +103,7 @@ export default function ProxyHosts() {
 
   // Column definitions for DataTable with responsive priorities
   const columns = useProxyHostColumns({
-    redirectionsByTarget: redirectionsByTarget ?? new Map(),
+    redirectionsByTarget: redirectionsByTarget ?? EMPTY_MAP,
     onToggleEnabled: handleToggleEnabled,
     onEdit: handleEdit,
     onDelete: handleDelete,
@@ -180,11 +184,11 @@ export default function ProxyHosts() {
           selectable={true}
           showPagination={true}
           defaultRowsPerPage={10}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           groupConfig={groupConfig}
           showGroupToggle={true}
           responsive={true}
-          cardBreakpoint={900}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
           compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
@@ -203,7 +207,7 @@ export default function ProxyHosts() {
               startIcon={<AddIcon />}
               onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add Proxy Host
             </PermissionButton>

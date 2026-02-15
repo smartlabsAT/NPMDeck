@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material'
 import { ProxyHost, CreateProxyHost, UpdateProxyHost, proxyHostsApi } from '../../../api/proxyHosts'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import { LAYOUT } from '../../../constants/layout'
 import { AccessList, accessListsApi } from '../../../api/accessLists'
 import { Certificate, certificatesApi } from '../../../api/certificates'
 import BaseDrawer from '../../base/BaseDrawer'
@@ -212,7 +213,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       })
       
       setCertificates(sortedCertificates)
-    } catch (err) {
+    } catch (err: unknown) {
       showError('proxy-host', 'load data', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoadingData(false)
@@ -266,7 +267,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       saveDisabled={false}
       saveText={isEditMode ? 'Save Changes' : 'Create'}
       confirmClose={isDirty}
-      width={600}
+      width={LAYOUT.DRAWER_PANEL_WIDTH}
     >
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab

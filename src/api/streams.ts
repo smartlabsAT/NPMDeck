@@ -39,35 +39,35 @@ export interface UpdateStream extends Partial<CreateStream> {
 export const streamsApi = {
   async getAll(expand?: string[]): Promise<Stream[]> {
     const params = buildExpandParams(expand)
-    const response = await api.get('/nginx/streams', { params })
+    const response = await api.get<Stream[]>('/nginx/streams', { params })
     return response.data
   },
 
   async getById(id: number, expand?: string[]): Promise<Stream> {
     const params = buildExpandParams(expand)
-    const response = await api.get(`/nginx/streams/${id}`, { params })
+    const response = await api.get<Stream>(`/nginx/streams/${id}`, { params })
     return response.data
   },
 
   async create(data: CreateStream): Promise<Stream> {
-    const response = await api.post('/nginx/streams', data)
+    const response = await api.post<Stream>('/nginx/streams', data)
     return response.data
   },
 
   async update(id: number, data: UpdateStream): Promise<Stream> {
-    const response = await api.put(`/nginx/streams/${id}`, data)
+    const response = await api.put<Stream>(`/nginx/streams/${id}`, data)
     return response.data
   },
 
   async delete(id: number): Promise<void> {
-    await api.delete(`/nginx/streams/${id}`)
+    await api.delete<void>(`/nginx/streams/${id}`)
   },
 
   async enable(id: number): Promise<void> {
-    await api.post(`/nginx/streams/${id}/enable`)
+    await api.post<void>(`/nginx/streams/${id}/enable`)
   },
 
   async disable(id: number): Promise<void> {
-    await api.post(`/nginx/streams/${id}/disable`)
+    await api.post<void>(`/nginx/streams/${id}/disable`)
   },
 }

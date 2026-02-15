@@ -41,9 +41,9 @@ const DomainNamesPanel = ({ domainNames, onCopyToClipboard }: DomainNamesPanelPr
         </Box>
         
         <List dense sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
-          {domainNames.map((domain, index) => (
+          {domainNames.map((domain) => (
             <ListItem
-              key={index}
+              key={domain}
               secondaryAction={
                 <IconButton
                   edge="end"

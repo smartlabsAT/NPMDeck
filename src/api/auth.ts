@@ -1,5 +1,5 @@
 import api from './config'
-import { User } from './users'
+import type { User } from './users'
 import { STORAGE_KEYS } from '../constants/storage'
 
 export interface LoginCredentials {
@@ -15,7 +15,7 @@ export interface TokenResponse {
 export const authApi = {
   // Login with email and password
   login: async (credentials: LoginCredentials): Promise<TokenResponse> => {
-    const response = await api.post('/tokens', {
+    const response = await api.post<TokenResponse>('/tokens', {
       ...credentials,
       scope: 'user'
     })
@@ -24,13 +24,13 @@ export const authApi = {
 
   // Get fresh token
   refreshToken: async (): Promise<TokenResponse> => {
-    const response = await api.get('/tokens')
+    const response = await api.get<TokenResponse>('/tokens')
     return response.data
   },
 
   // Get current user info
   getMe: async (): Promise<User> => {
-    const response = await api.get('/users/me', {
+    const response = await api.get<User>('/users/me', {
       params: { expand: 'permissions' }
     })
     return response.data

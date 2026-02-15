@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import type { StoreApi } from 'zustand'
 
@@ -10,13 +10,19 @@ const AuthStoreContext = createContext<StoreApi<AuthStore> | null>(null)
 
 // Provider component
 export const AuthStoreProvider = ({ children }: { children: ReactNode }) => {
-  // Get the store API from zustand - UseBoundStore extends StoreApi, so the hook itself is the API
-  const storeApi = useAuthStore as unknown as StoreApi<AuthStore>
-  
+  // Zustand's UseBoundStore extends StoreApi, so the hook itself exposes getState/setState/subscribe.
+  // Memoized so the object identity is stable across renders.
+  const storeApi = useMemo<StoreApi<AuthStore>>(() => ({
+    getState: useAuthStore.getState,
+    setState: useAuthStore.setState,
+    subscribe: useAuthStore.subscribe,
+    getInitialState: useAuthStore.getInitialState,
+  }), [])
+
   // Initialize the global store API on mount
   useEffect(() => {
     setAuthStoreApi(storeApi)
-    
+
     return () => {
       // Clean up on unmount
       authStoreApi = null

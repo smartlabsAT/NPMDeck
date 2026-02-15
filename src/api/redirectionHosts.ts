@@ -45,34 +45,34 @@ export type UpdateRedirectionHost = Partial<CreateRedirectionHost>
 // API functions
 export const redirectionHostsApi = {
   async getAll(expand?: string[]): Promise<RedirectionHost[]> {
-    const response = await api.get('/nginx/redirection-hosts', { params: buildExpandParams(expand) })
+    const response = await api.get<RedirectionHost[]>('/nginx/redirection-hosts', { params: buildExpandParams(expand) })
     return response.data
   },
 
   async getById(id: number, expand?: string[]): Promise<RedirectionHost> {
-    const response = await api.get(`/nginx/redirection-hosts/${id}`, { params: buildExpandParams(expand) })
+    const response = await api.get<RedirectionHost>(`/nginx/redirection-hosts/${id}`, { params: buildExpandParams(expand) })
     return response.data
   },
 
   async create(data: CreateRedirectionHost): Promise<RedirectionHost> {
-    const response = await api.post('/nginx/redirection-hosts', data)
+    const response = await api.post<RedirectionHost>('/nginx/redirection-hosts', data)
     return response.data
   },
 
   async update(id: number, data: UpdateRedirectionHost): Promise<RedirectionHost> {
-    const response = await api.put(`/nginx/redirection-hosts/${id}`, data)
+    const response = await api.put<RedirectionHost>(`/nginx/redirection-hosts/${id}`, data)
     return response.data
   },
 
   async delete(id: number): Promise<void> {
-    await api.delete(`/nginx/redirection-hosts/${id}`)
+    await api.delete<void>(`/nginx/redirection-hosts/${id}`)
   },
 
   async enable(id: number): Promise<void> {
-    await api.post(`/nginx/redirection-hosts/${id}/enable`)
+    await api.post<void>(`/nginx/redirection-hosts/${id}/enable`)
   },
 
   async disable(id: number): Promise<void> {
-    await api.post(`/nginx/redirection-hosts/${id}/disable`)
+    await api.post<void>(`/nginx/redirection-hosts/${id}/disable`)
   },
 }

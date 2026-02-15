@@ -41,27 +41,27 @@ export type UpdateAccessList = CreateAccessList
 export const accessListsApi = {
   async getAll(expand?: string[]): Promise<AccessList[]> {
     const params = buildExpandParams(expand)
-    const response = await api.get('/nginx/access-lists', { params })
+    const response = await api.get<AccessList[]>('/nginx/access-lists', { params })
     return response.data
   },
 
   async getById(id: number, expand?: string[]): Promise<AccessList> {
     const params = buildExpandParams(expand)
-    const response = await api.get(`/nginx/access-lists/${id}`, { params })
+    const response = await api.get<AccessList>(`/nginx/access-lists/${id}`, { params })
     return response.data
   },
 
   async create(data: CreateAccessList): Promise<AccessList> {
-    const response = await api.post('/nginx/access-lists', data)
+    const response = await api.post<AccessList>('/nginx/access-lists', data)
     return response.data
   },
 
   async update(id: number, data: UpdateAccessList): Promise<AccessList> {
-    const response = await api.put(`/nginx/access-lists/${id}`, data)
+    const response = await api.put<AccessList>(`/nginx/access-lists/${id}`, data)
     return response.data
   },
 
   async delete(id: number): Promise<void> {
-    await api.delete(`/nginx/access-lists/${id}`)
+    await api.delete<void>(`/nginx/access-lists/${id}`)
   },
 }

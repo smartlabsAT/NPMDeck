@@ -226,8 +226,8 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
           <Box>
             {validationErrors.length > 0 && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                {validationErrors.map((error, index) => (
-                  <Typography key={index} variant="body2">{error}</Typography>
+                {validationErrors.map((error) => (
+                  <Typography key={error} variant="body2">{error}</Typography>
                 ))}
               </Alert>
             )}
@@ -298,7 +298,7 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
               />
               <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
                 {(Array.isArray(importData.data) ? importData.data : [importData.data]).map((item, index) => (
-                  <ListItem key={index}>
+                  <ListItem key={(item as { id?: number }).id ?? index}>
                     <ListItemIcon>
                       <Checkbox
                         edge="start"
@@ -379,8 +379,8 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
                 {importResults.errors.length > 0 && (
                   <Alert severity="error">
                     <Typography variant="subtitle2" gutterBottom>Errors:</Typography>
-                    {importResults.errors.map((error, index) => (
-                      <Typography key={index} variant="body2">• {error}</Typography>
+                    {importResults.errors.map((error) => (
+                      <Typography key={error} variant="body2">• {error}</Typography>
                     ))}
                   </Alert>
                 )}
