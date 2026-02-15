@@ -49,46 +49,46 @@ export const usersApi = {
     if (query) {
       params.query = query
     }
-    const response = await api.get('/users', { params })
+    const response = await api.get<User[]>('/users', { params })
     return response.data
   },
 
   // Get a single user
   async getById(id: number, expand?: string[]): Promise<User> {
-    const response = await api.get(`/users/${id}`, { params: buildExpandParams(expand) })
+    const response = await api.get<User>(`/users/${id}`, { params: buildExpandParams(expand) })
     return response.data
   },
 
   // Create a new user
   async create(data: CreateUserPayload): Promise<User> {
-    const response = await api.post('/users', data)
+    const response = await api.post<User>('/users', data)
     return response.data
   },
 
   // Update a user
   async update(id: number, data: UpdateUserPayload): Promise<User> {
-    const response = await api.put(`/users/${id}`, data)
+    const response = await api.put<User>(`/users/${id}`, data)
     return response.data
   },
 
   // Delete a user
   async delete(id: number): Promise<void> {
-    await api.delete(`/users/${id}`)
+    await api.delete<void>(`/users/${id}`)
   },
 
   // Update user password
   async updatePassword(id: number, data: UserPasswordPayload): Promise<void> {
-    await api.put(`/users/${id}/auth`, data)
+    await api.put<void>(`/users/${id}/auth`, data)
   },
 
   // Update user permissions
   async updatePermissions(id: number, permissions: User['permissions']): Promise<void> {
-    await api.put(`/users/${id}/permissions`, permissions)
+    await api.put<void>(`/users/${id}/permissions`, permissions)
   },
 
   // Login as another user (admin only)
   async loginAs(id: number): Promise<LoginAsResponse> {
-    const response = await api.post(`/users/${id}/login`)
+    const response = await api.post<LoginAsResponse>(`/users/${id}/login`)
     return response.data
   },
 }

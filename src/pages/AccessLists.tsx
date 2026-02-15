@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import {
   Box,
   Container,
@@ -38,6 +38,7 @@ import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/R
 import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 export default function AccessLists() {
   const { isAdmin } = usePermissions()
@@ -81,7 +82,7 @@ export default function AccessLists() {
 
   const filterInfo = useFilteredInfo(items, visibleItems)
 
-  const getUsersChip = (accessList: AccessList) => {
+  const getUsersChip = useCallback((accessList: AccessList) => {
     const count = accessList.items?.length || 0
     if (count === 0) return null
     return (
@@ -92,9 +93,9 @@ export default function AccessLists() {
         variant="outlined"
       />
     )
-  }
+  }, [])
 
-  const getRulesChip = (accessList: AccessList) => {
+  const getRulesChip = useCallback((accessList: AccessList) => {
     const count = accessList.clients?.length || 0
     if (count === 0) return null
     return (
@@ -105,10 +106,10 @@ export default function AccessLists() {
         variant="outlined"
       />
     )
-  }
+  }, [])
 
   // Column definitions for DataTable with responsive priorities
-  const columns: ResponsiveTableColumn<AccessList>[] = [
+  const columns = useMemo<ResponsiveTableColumn<AccessList>[]>(() => [
     {
       id: 'name',
       label: 'Name',
@@ -259,10 +260,10 @@ export default function AccessLists() {
         </Box>
       )
     }
-  ]
+  ], [handleView, handleEdit, handleDelete, getUsersChip, getRulesChip])
 
   // Filter definitions
-  const filters: Filter[] = [
+  const filters = useMemo<Filter[]>(() => [
     {
       id: 'hasUsers',
       label: 'Authorization',
@@ -285,10 +286,10 @@ export default function AccessLists() {
         { value: 'no-rules', label: 'No Rules' }
       ]
     }
-  ]
+  ], [])
 
   // Bulk actions
-  const bulkActions: BulkAction<AccessList>[] = [
+  const bulkActions = useMemo<BulkAction<AccessList>[]>(() => [
     {
       id: 'delete',
       label: 'Delete',
@@ -309,7 +310,7 @@ export default function AccessLists() {
         await loadItems()
       }
     }
-  ]
+  ], [showSuccess, showError, showWarning, loadItems])
 
 
   return (
@@ -369,9 +370,9 @@ export default function AccessLists() {
           selectable={isAdmin}
           showPagination={true}
           defaultRowsPerPage={100}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           responsive={true}
-          cardBreakpoint={900}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
           compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
@@ -390,7 +391,7 @@ export default function AccessLists() {
               startIcon={<AddIcon />}
               onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add Access List
             </PermissionButton>

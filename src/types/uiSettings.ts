@@ -5,7 +5,7 @@ export type DrawerPosition = 'left' | 'right'
 export type Operation = 'create' | 'edit' | 'view'
 export type EntityType = EntityResource
 
-export interface EntityPreference {
+interface EntityPreference {
   create?: ContainerType
   edit?: ContainerType
   view?: ContainerType

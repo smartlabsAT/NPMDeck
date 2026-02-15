@@ -297,9 +297,9 @@ const ProxyHostInfoPanel = ({
         
         <Collapse in={expandedSections.domains} timeout="auto" unmountOnExit>
           <List dense sx={{ bgcolor: 'background.paper', borderRadius: 1, mt: 1 }}>
-            {host.domain_names.map((domain, index) => (
+            {host.domain_names.map((domain) => (
               <ListItem
-                key={index}
+                key={domain}
                 secondaryAction={
                   <IconButton
                     edge="end"

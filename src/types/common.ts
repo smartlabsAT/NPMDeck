@@ -7,7 +7,7 @@ export type { Owner }
 /**
  * Shape of the NPM API error response body.
  */
-export interface ApiErrorBody {
+interface ApiErrorBody {
   error?: {
     message: string
     code?: string
@@ -21,23 +21,6 @@ export interface ImportValidationData {
   type?: string
   data?: unknown
   exported_at?: string
-}
-
-// Color types for theme
-export type ColorVariant = 'error' | 'warning' | 'success' | 'info' | 'primary' | 'secondary'
-
-// Certificate status types
-export interface CertificateStatus {
-  color: ColorVariant
-  text: string
-  icon: React.ComponentType
-}
-
-// Generic API response types
-export interface ApiResponse<T = unknown> {
-  data?: T
-  message?: string
-  success?: boolean
 }
 
 // Helper function to safely extract error message

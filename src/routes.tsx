@@ -29,32 +29,21 @@ const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType>)
 )
 
 // Lazy load pages
-// eslint-disable-next-line react-refresh/only-export-components
+/* eslint-disable react-refresh/only-export-components -- Lazy-loaded page components are not directly exported */
 const Login = lazy(() => import('./pages/Login'))
-// eslint-disable-next-line react-refresh/only-export-components
 const Dashboard = lazy(() => import('./pages/Dashboard'))
-// eslint-disable-next-line react-refresh/only-export-components
 const ProxyHosts = lazy(() => import('./pages/ProxyHosts'))
-// eslint-disable-next-line react-refresh/only-export-components
 const RedirectionHosts = lazy(() => import('./pages/RedirectionHosts'))
-// eslint-disable-next-line react-refresh/only-export-components
 const Streams = lazy(() => import('./pages/Streams'))
-// eslint-disable-next-line react-refresh/only-export-components
 const DeadHosts = lazy(() => import('./pages/DeadHosts'))
-// eslint-disable-next-line react-refresh/only-export-components
 const AccessLists = lazy(() => import('./pages/AccessLists'))
-// eslint-disable-next-line react-refresh/only-export-components
 const Certificates = lazy(() => import('./pages/Certificates'))
-// eslint-disable-next-line react-refresh/only-export-components
 const Users = lazy(() => import('./pages/Users'))
-// eslint-disable-next-line react-refresh/only-export-components
 const AuditLog = lazy(() => import('./pages/AuditLog'))
-// eslint-disable-next-line react-refresh/only-export-components
 const Settings = lazy(() => import('./pages/Settings'))
-// eslint-disable-next-line react-refresh/only-export-components
 const NotFound = lazy(() => import('./pages/NotFound'))
-// eslint-disable-next-line react-refresh/only-export-components
 const Forbidden = lazy(() => import('./pages/Forbidden'))
+/* eslint-enable react-refresh/only-export-components */
 
 export const routes = [
   {

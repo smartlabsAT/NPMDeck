@@ -212,8 +212,8 @@ export default function ExportDialog({
                   This will include:
                 </Typography>
                 <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {getSensitiveFields().map((field, index) => (
-                    <li key={index}><Typography variant="body2">{field}</Typography></li>
+                  {getSensitiveFields().map((field) => (
+                    <li key={field}><Typography variant="body2">{field}</Typography></li>
                   ))}
                 </ul>
               </Alert>

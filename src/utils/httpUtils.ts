@@ -4,7 +4,7 @@
  */
 
 /** Map of HTTP redirect status codes to their labels */
-export const HTTP_REDIRECT_STATUS_CODES: Record<number, string> = {
+const HTTP_REDIRECT_STATUS_CODES: Record<number, string> = {
   300: '300 Multiple Choices',
   301: '301 Moved Permanently',
   302: '302 Found',

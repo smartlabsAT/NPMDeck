@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/authStore'
 import { User } from '../api/users'
 import { Resource, PermissionLevel } from '../types/permissions'
 
-export interface UsePermissionsReturn {
+interface UsePermissionsReturn {
   user: User | null
   hasPermission: (resource: Resource, level: PermissionLevel) => boolean
   canView: (resource: Resource) => boolean
@@ -92,14 +92,3 @@ export const usePermissions = (): UsePermissionsReturn => {
   ])
 }
 
-// Type-safe permission check helper
-export const usePermissionCheck = (resource: Resource, level: PermissionLevel = 'view'): boolean => {
-  const { hasPermission } = usePermissions()
-  return hasPermission(resource, level)
-}
-
-// Type-safe action permission check helper
-export const useActionPermission = (resource: Resource, action: 'view' | 'create' | 'edit' | 'delete'): boolean => {
-  const { canAccess } = usePermissions()
-  return canAccess(resource, action)
-}

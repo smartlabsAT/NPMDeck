@@ -22,6 +22,7 @@ import { useToast } from '../../../contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
 import { TIMING } from '../../../constants/timing'
+import { LAYOUT } from '../../../constants/layout'
 
 interface StreamDrawerProps {
   open: boolean
@@ -265,7 +266,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       saveDisabled={false}
       saveText={isEditMode ? 'Save Changes' : 'Create Stream'}
       confirmClose={isDirty}
-      width={600}
+      width={LAYOUT.DRAWER_PANEL_WIDTH}
     >
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab

@@ -68,7 +68,7 @@ export interface DataTableProps<T> {
   defaultSortField?: string
   defaultSortDirection?: 'asc' | 'desc'
   defaultRowsPerPage?: number
-  rowsPerPageOptions?: number[]
+  rowsPerPageOptions?: readonly number[]
   selectable?: boolean
   searchable?: boolean
   showPagination?: boolean

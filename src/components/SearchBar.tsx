@@ -13,6 +13,7 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material'
 import { useGlobalSearch } from '../contexts/GlobalSearchContext'
+import { Z_INDEX } from '../constants/layout'
 import { TIMING } from '../constants/timing'
 import { SearchResult } from '../types/search'
 import SearchResultItem from './features/search/SearchResultItem'
@@ -129,7 +130,7 @@ const SearchBar = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        const input = document.querySelector('#global-search-input') as HTMLInputElement
+        const input = document.querySelector<HTMLInputElement>('#global-search-input')
         input?.focus()
       }
     }
@@ -168,7 +169,7 @@ const SearchBar = () => {
         popper: {
           placement: 'bottom-start',
           sx: {
-            zIndex: 1300,
+            zIndex: Z_INDEX.SEARCH_DROPDOWN,
           },
           modifiers: [
             {

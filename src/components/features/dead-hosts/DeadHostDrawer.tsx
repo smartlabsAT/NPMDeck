@@ -25,6 +25,7 @@ import DomainInput from '../../DomainInput'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import { LAYOUT } from '../../../constants/layout'
 import logger from '../../../utils/logger'
 
 interface DeadHostDrawerProps {
@@ -207,7 +208,7 @@ export default function DeadHostDrawer({ open, onClose, host, onSave }: DeadHost
       saveDisabled={!isValid}
       saveText={isEditMode ? 'Save Changes' : 'Create 404 Host'}
       confirmClose={isDirty}
-      width={600}
+      width={LAYOUT.DRAWER_PANEL_WIDTH}
     >
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <GeneralTab

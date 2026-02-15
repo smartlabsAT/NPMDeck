@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logger from '../utils/logger'
 import { TIMING } from '../constants/timing'
@@ -89,7 +89,7 @@ export const GlobalSearchProvider = ({ children }: GlobalSearchProviderProps) =>
       try {
         const data = await loader()
         return data
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error(`Failed to load ${type}:`, error)
         return []
       } finally {
@@ -151,7 +151,7 @@ export const GlobalSearchProvider = ({ children }: GlobalSearchProviderProps) =>
   }, [searchState.lastFetch, searchState.isLoading, canView, isAdmin])
 
   // Generate quick actions based on permissions
-  const quickActions: SearchAction[] = [
+  const quickActions = useMemo<SearchAction[]>(() => [
     canManage('proxy_hosts') && {
       id: 'action-new-proxy',
       type: 'action' as const,
@@ -201,117 +201,121 @@ export const GlobalSearchProvider = ({ children }: GlobalSearchProviderProps) =>
       metadata: { resourceType: 'users' },
       action: () => navigate('/admin/users/new'),
     },
-  ].filter(Boolean) as SearchAction[]
+  ].filter(Boolean) as SearchAction[], [canManage, isAdmin, navigate])
 
   // Convert resources to search results
-  const searchResults: SearchResult[] = []
-  
-  // Add proxy hosts
-  searchState.data.proxy_hosts.forEach(host => {
-    searchResults.push({
-      id: `proxy-${host.id}`,
-      type: 'proxy_hosts',
-      title: host.domain_names.join(', '),
-      subtitle: `${host.forward_scheme}://${host.forward_host}:${host.forward_port}`,
-      metadata: {
-        status: host.enabled ? (host.meta?.nginx_online ? 'online' : 'offline') : 'disabled',
-        ssl: !!host.certificate_id,
-        owner: host.owner?.name,
-      },
-      resource: host,
-    })
-  })
+  const searchResults = useMemo<SearchResult[]>(() => {
+    const results: SearchResult[] = []
 
-  // Add redirection hosts
-  searchState.data.redirection_hosts.forEach(host => {
-    searchResults.push({
-      id: `redir-${host.id}`,
-      type: 'redirection_hosts',
-      title: host.domain_names.join(', '),
-      subtitle: `→ ${host.forward_scheme}://${host.forward_domain_name}`,
-      metadata: {
-        status: host.enabled ? 'online' : 'disabled',
-        ssl: !!host.certificate_id,
-        owner: host.owner?.name,
-      },
-      resource: host,
+    // Add proxy hosts
+    searchState.data.proxy_hosts.forEach(host => {
+      results.push({
+        id: `proxy-${host.id}`,
+        type: 'proxy_hosts',
+        title: host.domain_names.join(', '),
+        subtitle: `${host.forward_scheme}://${host.forward_host}:${host.forward_port}`,
+        metadata: {
+          status: host.enabled ? (host.meta?.nginx_online ? 'online' : 'offline') : 'disabled',
+          ssl: !!host.certificate_id,
+          owner: host.owner?.name,
+        },
+        resource: host,
+      })
     })
-  })
 
-  // Add dead hosts
-  searchState.data.dead_hosts.forEach(host => {
-    searchResults.push({
-      id: `dead-${host.id}`,
-      type: 'dead_hosts',
-      title: host.domain_names.join(', '),
-      subtitle: '404 Host',
-      metadata: {
-        status: host.enabled ? 'online' : 'disabled',
-        ssl: !!host.certificate_id,
-        owner: host.owner?.name,
-      },
-      resource: host,
+    // Add redirection hosts
+    searchState.data.redirection_hosts.forEach(host => {
+      results.push({
+        id: `redir-${host.id}`,
+        type: 'redirection_hosts',
+        title: host.domain_names.join(', '),
+        subtitle: `→ ${host.forward_scheme}://${host.forward_domain_name}`,
+        metadata: {
+          status: host.enabled ? 'online' : 'disabled',
+          ssl: !!host.certificate_id,
+          owner: host.owner?.name,
+        },
+        resource: host,
+      })
     })
-  })
 
-  // Add streams
-  searchState.data.streams.forEach(stream => {
-    searchResults.push({
-      id: `stream-${stream.id}`,
-      type: 'streams',
-      title: `Port ${stream.incoming_port}`,
-      subtitle: `→ ${stream.forwarding_host}:${stream.forwarding_port}`,
-      metadata: {
-        status: stream.enabled ? (stream.meta?.nginx_online ? 'online' : 'offline') : 'disabled',
-        port: stream.incoming_port,
-        owner: stream.owner?.name,
-      },
-      resource: stream,
+    // Add dead hosts
+    searchState.data.dead_hosts.forEach(host => {
+      results.push({
+        id: `dead-${host.id}`,
+        type: 'dead_hosts',
+        title: host.domain_names.join(', '),
+        subtitle: '404 Host',
+        metadata: {
+          status: host.enabled ? 'online' : 'disabled',
+          ssl: !!host.certificate_id,
+          owner: host.owner?.name,
+        },
+        resource: host,
+      })
     })
-  })
 
-  // Add access lists
-  searchState.data.access_lists.forEach(list => {
-    searchResults.push({
-      id: `access-${list.id}`,
-      type: 'access_lists',
-      title: list.name,
-      subtitle: `${list.items?.length || 0} items`,
-      metadata: {
-        owner: list.owner?.name,
-      },
-      resource: list,
+    // Add streams
+    searchState.data.streams.forEach(stream => {
+      results.push({
+        id: `stream-${stream.id}`,
+        type: 'streams',
+        title: `Port ${stream.incoming_port}`,
+        subtitle: `→ ${stream.forwarding_host}:${stream.forwarding_port}`,
+        metadata: {
+          status: stream.enabled ? (stream.meta?.nginx_online ? 'online' : 'offline') : 'disabled',
+          port: stream.incoming_port,
+          owner: stream.owner?.name,
+        },
+        resource: stream,
+      })
     })
-  })
 
-  // Add certificates
-  searchState.data.certificates.forEach(cert => {
-    searchResults.push({
-      id: `cert-${cert.id}`,
-      type: 'certificates',
-      title: cert.nice_name || cert.domain_names.join(', '),
-      subtitle: `Expires: ${new Date(cert.expires_on).toLocaleDateString()}`,
-      metadata: {
-        status: new Date(cert.expires_on) > new Date() ? 'online' : 'offline',
-        owner: cert.owner?.name,
-      },
-      resource: cert,
+    // Add access lists
+    searchState.data.access_lists.forEach(list => {
+      results.push({
+        id: `access-${list.id}`,
+        type: 'access_lists',
+        title: list.name,
+        subtitle: `${list.items?.length || 0} items`,
+        metadata: {
+          owner: list.owner?.name,
+        },
+        resource: list,
+      })
     })
-  })
 
-  // Add users (admin only)
-  searchState.data.users.forEach(user => {
-    searchResults.push({
-      id: `user-${user.id}`,
-      type: 'users',
-      title: user.name || user.email,
-      subtitle: user.roles.join(', '),
-      metadata: {
-        status: user.is_disabled ? 'disabled' : 'online',
-      },
-      resource: user,
+    // Add certificates
+    searchState.data.certificates.forEach(cert => {
+      results.push({
+        id: `cert-${cert.id}`,
+        type: 'certificates',
+        title: cert.nice_name || cert.domain_names.join(', '),
+        subtitle: `Expires: ${new Date(cert.expires_on).toLocaleDateString()}`,
+        metadata: {
+          status: new Date(cert.expires_on) > new Date() ? 'online' : 'offline',
+          owner: cert.owner?.name,
+        },
+        resource: cert,
+      })
     })
-  })
+
+    // Add users (admin only)
+    searchState.data.users.forEach(user => {
+      results.push({
+        id: `user-${user.id}`,
+        type: 'users',
+        title: user.name || user.email,
+        subtitle: user.roles.join(', '),
+        metadata: {
+          status: user.is_disabled ? 'disabled' : 'online',
+        },
+        resource: user,
+      })
+    })
+
+    return results
+  }, [searchState.data])
 
   return (
     <GlobalSearchContext.Provider

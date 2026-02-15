@@ -20,7 +20,7 @@ interface AdditionalLoader<TExtra> {
   load: () => Promise<TExtra>
 }
 
-export interface EntityCrudConfig<T extends BaseEntity, TExtra = undefined> {
+interface EntityCrudConfig<T extends BaseEntity, TExtra = undefined> {
   api: EntityApi<T>
   expand: string[]
   basePath: string
@@ -34,7 +34,7 @@ export interface EntityCrudConfig<T extends BaseEntity, TExtra = undefined> {
   drawerOnly?: boolean
 }
 
-export interface EntityCrudReturn<T extends BaseEntity, TExtra = undefined> {
+interface EntityCrudReturn<T extends BaseEntity, TExtra = undefined> {
   items: T[]
   optimisticItems: T[]
   visibleItems: T[]

@@ -15,6 +15,7 @@ import {
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material'
 import { ResponsiveTableColumn } from './ResponsiveTypes'
+import { FONT_WEIGHT } from '../../constants/layout'
 
 interface MobileCardProps<T = object> {
   row: T
@@ -100,7 +101,7 @@ export function MobileCard<T extends object>({
                 variant="subtitle1" 
                 component="div" 
                 sx={{ 
-                  fontWeight: 500,
+                  fontWeight: FONT_WEIGHT.MEDIUM,
                   fontSize: '1rem',
                   wordBreak: 'break-word',
                   overflow: 'hidden',

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { TIMING } from '../constants/timing';
+import { Z_INDEX, FONT_WEIGHT } from '../constants/layout';
 import {
   Alert,
   AlertColor,
@@ -34,17 +35,17 @@ import type { ToastEntityType } from '../types/entityTypes';
 /**
  * Entity types for toast messages
  */
-export type EntityType = ToastEntityType;
+type EntityType = ToastEntityType;
 
 /**
  * Action types
  */
-export type ActionType = 'create' | 'update' | 'delete' | 'created' | 'updated' | 'deleted' | 'enable' | 'enabled' | 'disable' | 'disabled';
+type ActionType = 'create' | 'update' | 'delete' | 'created' | 'updated' | 'deleted' | 'enable' | 'enabled' | 'disable' | 'disabled';
 
 /**
  * Toast message configuration
  */
-export interface ToastMessage {
+interface ToastMessage {
   id: string;
   message: string;
   severity: AlertColor;
@@ -212,7 +213,7 @@ function ToastAlertContent({ toast }: { toast: ToastMessage }) {
         <Typography
           variant="body2"
           sx={{
-            fontWeight: 500,
+            fontWeight: FONT_WEIGHT.MEDIUM,
             wordBreak: 'break-word'
           }}
         >
@@ -390,7 +391,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             position: 'fixed',
             top: index * 80 + 64, // Stack toasts with 80px spacing, starting below header
             right: 24,
-            zIndex: 1400 + index,
+            zIndex: Z_INDEX.TOAST + index,
           }}
         >
           <CustomToast 

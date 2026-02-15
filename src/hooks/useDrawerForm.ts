@@ -6,12 +6,12 @@ import logger from '../utils/logger';
 /**
  * Validation function type
  */
-export type ValidationFunction<T> = (value: T, formData?: Record<string, unknown>) => string | null;
+type ValidationFunction<T> = (value: T, formData?: Record<string, unknown>) => string | null;
 
 /**
  * Field configuration for form management
  */
-export interface FieldConfig<T = unknown> {
+interface FieldConfig<T = unknown> {
   /** Initial value for the field */
   initialValue: T;
   /** Validation function */
@@ -29,7 +29,7 @@ export interface FieldConfig<T = unknown> {
 /**
  * Form configuration options
  */
-export interface UseDrawerFormOptions<T> {
+interface UseDrawerFormOptions<T> {
   /** Initial form data */
   initialData: T;
   /** Field configurations */
@@ -60,7 +60,7 @@ export interface UseDrawerFormOptions<T> {
 /**
  * Form state interface
  */
-export interface FormState<T> {
+interface FormState<T> {
   /** Current form data */
   data: T;
   /** Field errors */
@@ -348,7 +348,7 @@ export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
       }
       
       onSuccess?.(formState.data);
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       setFormState((prev) => ({ ...prev, globalError: errorMessage }));
       onError?.(error instanceof Error ? error : new Error(errorMessage));
@@ -385,7 +385,7 @@ export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
         setTimeout(() => {
           setFormState((prev) => ({ ...prev, autoSaveStatus: 'idle' }));
         }, TIMING.AUTOSAVE_RESET);
-      } catch (error) {
+      } catch (error: unknown) {
         setFormState((prev) => ({ ...prev, autoSaveStatus: 'error' }));
         logger.error('Auto-save failed:', error);
       }

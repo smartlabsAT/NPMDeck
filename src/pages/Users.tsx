@@ -38,6 +38,7 @@ import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { STORAGE_KEYS } from '../constants/storage'
 import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 const Users = () => {
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
@@ -304,6 +305,7 @@ const Users = () => {
             size="small"
             onClick={() => handleEdit(user)}
             title="Edit User"
+            aria-label="Edit User"
           >
             <EditIcon />
           </IconButton>
@@ -312,6 +314,7 @@ const Users = () => {
               size="small"
               onClick={() => handleLoginAs(user)}
               title="Sign in as User"
+              aria-label="Sign in as User"
             >
               <LoginIcon />
             </IconButton>
@@ -322,6 +325,7 @@ const Users = () => {
               onClick={() => handleDeleteUser(user)}
               color="error"
               title="Delete User"
+              aria-label="Delete User"
             >
               <DeleteIcon />
             </IconButton>
@@ -440,9 +444,9 @@ const Users = () => {
           defaultSortField="name"
           defaultSortDirection="asc"
           defaultRowsPerPage={100}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           responsive={true}
-          cardBreakpoint={900}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
           compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
@@ -460,7 +464,7 @@ const Users = () => {
               startIcon={<AddIcon />}
               onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add User
             </Button>

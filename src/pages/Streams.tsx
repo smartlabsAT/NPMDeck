@@ -39,6 +39,7 @@ import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
 import { createStandardBulkActions } from '../utils/bulkActionFactory'
 import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 /** Build a display name for a stream (e.g. "8080/TCP" or "53/TCPUDP"). */
 const getStreamDisplayName = (stream: Stream): string =>
@@ -218,6 +219,7 @@ export default function Streams() {
           <Tooltip title="View Details">
             <IconButton
               size="small"
+              aria-label="View stream details"
               onClick={(e) => {
                 e.stopPropagation()
                 handleView(item)
@@ -403,9 +405,9 @@ export default function Streams() {
           selectable={true}
           showPagination={true}
           defaultRowsPerPage={10}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           responsive={true}
-          cardBreakpoint={900}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
           compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
 
@@ -424,7 +426,7 @@ export default function Streams() {
               startIcon={<AddIcon />}
               onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add Stream
             </PermissionButton>

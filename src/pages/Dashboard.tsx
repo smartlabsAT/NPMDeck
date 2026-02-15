@@ -41,6 +41,7 @@ import { Resource } from '../types/permissions'
 import { getDaysUntilExpiry } from '../utils/dateUtils'
 import { NAVIGATION_COLORS } from '../constants/navigation'
 import { CERTIFICATE_EXPIRY } from '../constants/certificates'
+import { FONT_WEIGHT } from '../constants/layout'
 
 interface StatCardProps {
   title: string
@@ -104,7 +105,7 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
               <ArrowIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
             </Box>
             
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+            <Typography variant="h5" sx={{ fontWeight: FONT_WEIGHT.SEMI_BOLD, mb: 0.5 }}>
               {value}
             </Typography>
             
@@ -262,7 +263,7 @@ const Dashboard = () => {
             }}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                  <Typography variant="h6" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                     {getGreeting()}, {user?.name || user?.email}!
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
@@ -314,7 +315,7 @@ const Dashboard = () => {
                           {React.cloneElement(action.icon as React.ReactElement<Record<string, unknown>>, {
                             sx: { fontSize: 16 }
                           })}
-                          <Typography variant="caption" sx={{ fontWeight: 500, letterSpacing: 0.3 }}>
+                          <Typography variant="caption" sx={{ fontWeight: FONT_WEIGHT.MEDIUM, letterSpacing: 0.3 }}>
                             {action.label.replace('New ', '')}
                           </Typography>
                         </Box>
@@ -344,7 +345,7 @@ const Dashboard = () => {
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
                   <WarningIcon sx={{ color: 'warning.main', mr: 1, fontSize: 20 }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                     Expiring Certificates
                   </Typography>
                 </Box>
@@ -411,7 +412,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: FONT_WEIGHT.MEDIUM }}>
                 System Overview
               </Typography>
               
@@ -419,7 +420,7 @@ const Dashboard = () => {
                 <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
                     <CheckIcon sx={{ fontSize: 32, color: 'success.main', mb: 0.5 }} />
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                       Nginx Status
                     </Typography>
                     <Typography variant="caption" sx={{
@@ -432,10 +433,10 @@ const Dashboard = () => {
                 
                 <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                    <Typography variant="h4" sx={{ fontWeight: FONT_WEIGHT.SEMI_BOLD, color: 'primary.main' }}>
                       {stats.certificates.valid}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                       Valid Certificates
                     </Typography>
                     <LinearProgress 
@@ -448,10 +449,10 @@ const Dashboard = () => {
                 
                 <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 600, color: 'success.main' }}>
+                    <Typography variant="h4" sx={{ fontWeight: FONT_WEIGHT.SEMI_BOLD, color: 'success.main' }}>
                       {stats.proxyHosts.active + stats.redirectionHosts.active + stats.deadHosts.active + stats.streams.active}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                       Active Services
                     </Typography>
                     <Typography variant="caption" sx={{

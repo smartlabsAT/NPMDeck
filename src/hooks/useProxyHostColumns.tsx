@@ -12,7 +12,6 @@ import {
   PowerSettingsNew as PowerIcon,
   Language as LanguageIcon,
   Lock as LockIcon,
-  LockOpen as LockOpenIcon,
   TrendingFlat as RedirectIcon,
   ToggleOn as StatusIcon,
   MoreVert as ActionsIcon,
@@ -26,6 +25,7 @@ import type { RedirectionHost } from '../api/redirectionHosts'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import PermissionIconButton from '../components/PermissionIconButton'
 import { getStatusIcon } from '../utils/statusUtils'
+import { renderSslStatus, renderDomainLinks } from '../utils/columnRenderers'
 
 interface UseProxyHostColumnsParams {
   redirectionsByTarget: Map<string, RedirectionHost[]>
@@ -82,35 +82,7 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
         const linkedRedirections = getLinkedRedirections(item)
         return (
           <Box>
-            {item.domain_names.map((domain: string) => (
-              <Box
-                key={domain}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5
-                }}>
-                <Typography variant="body2">
-                  {domain}
-                </Typography>
-                <IconButton
-                  size="small"
-                  aria-label="Open domain in new tab"
-                  sx={{
-                    p: 0.25,
-                    '&:hover': {
-                      backgroundColor: 'action.hover'
-                    }
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    window.open(`https://${domain}`, '_blank')
-                  }}
-                >
-                  <LinkIcon sx={{ fontSize: '0.875rem' }} />
-                </IconButton>
-              </Box>
-            ))}
+            {renderDomainLinks(item.domain_names)}
             {linkedRedirections.length > 0 && (
               <Tooltip
                 title={
@@ -200,7 +172,7 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
             }}
             onClick={(e) => {
               e.stopPropagation()
-              window.open(`${item.forward_scheme}://${item.forward_host}:${item.forward_port}`, '_blank')
+              window.open(`${item.forward_scheme}://${item.forward_host}:${item.forward_port}`, '_blank', 'noopener,noreferrer')
             }}
           >
             <LinkIcon sx={{ fontSize: '0.875rem' }} />
@@ -217,15 +189,7 @@ const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTable
       align: 'center',
       priority: 'P3' as ColumnPriority,
       showInCard: true,
-      render: (_value: unknown, item: ProxyHost) => {
-        if (!item.certificate_id) {
-          return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
-        }
-        if (item.ssl_forced) {
-          return <Tooltip title="SSL Forced"><LockIcon color="primary" /></Tooltip>
-        }
-        return <Tooltip title="SSL Optional"><LockIcon color="action" /></Tooltip>
-      }
+      render: (_value: unknown, item: ProxyHost) => renderSslStatus(item)
     },
     {
       id: 'access',

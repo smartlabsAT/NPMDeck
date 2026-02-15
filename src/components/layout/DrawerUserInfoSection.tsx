@@ -8,12 +8,13 @@ import {
 import {
   ChevronRight,
 } from '@mui/icons-material'
+import { FONT_WEIGHT } from '../../constants/layout'
 
 interface DrawerUserInfoSectionProps {
   userName: string
   userEmail: string
   isAdmin: boolean
-  onMenuOpen: (event: React.MouseEvent<HTMLElement>) => void
+  onMenuOpen: (event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => void
 }
 
 /**
@@ -47,7 +48,7 @@ const DrawerUserInfoSection = ({ userName, userEmail, isAdmin, onMenuOpen }: Dra
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
-            onMenuOpen(e as unknown as React.MouseEvent<HTMLElement>)
+            onMenuOpen(e)
           }
         }}
       >
@@ -61,7 +62,7 @@ const DrawerUserInfoSection = ({ userName, userEmail, isAdmin, onMenuOpen }: Dra
           {userName.charAt(0).toUpperCase()}
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
+          <Typography variant="body2" noWrap sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
             {userName}
           </Typography>
           <Typography variant="caption" noWrap sx={{

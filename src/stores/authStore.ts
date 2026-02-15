@@ -102,7 +102,7 @@ const getTokenExpiry = (token: string): Date | null => {
     }
     
     return new Date(payload.exp * 1000)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Failed to parse JWT token:', error)
     return null
   }
@@ -151,7 +151,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       // Return the login data for checking default admin
       return { token: tokenResponse.token, user }
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = getErrorMessage(error) || 'Login failed'
 
       set({
@@ -303,7 +303,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const newStack = [...state.tokenStack, tokenInfo]
       set({ tokenStack: newStack })
       saveTokenStack(newStack)
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to parse JWT token in pushCurrentToStack:', error)
     }
   },
@@ -372,7 +372,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       get().scheduleExpiryWarning()
       
       logger.log('Token refreshed successfully')
-    } catch (error) {
+    } catch (error: unknown) {
       set({ isRefreshing: false })
       logger.error('Token refresh failed:', error)
       // Don't logout on refresh failure - the interceptor will handle 401s

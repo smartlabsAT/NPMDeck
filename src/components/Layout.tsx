@@ -18,7 +18,7 @@ import ThemeToggle from './ThemeToggle'
 import SearchBar from './SearchBar'
 import Logo from './Logo'
 import { NAVIGATION_COLORS } from '../constants/navigation'
-import { LAYOUT } from '../constants/layout'
+import { LAYOUT, Z_INDEX } from '../constants/layout'
 import DrawerNavigationMenu from './layout/DrawerNavigationMenu'
 import DrawerAdminSection from './layout/DrawerAdminSection'
 import DrawerUserInfoSection from './layout/DrawerUserInfoSection'
@@ -50,7 +50,7 @@ const Layout = () => {
     setMobileOpen(false)
   }, [handleNavigate])
 
-  const handleMenu = useCallback((event: React.MouseEvent<HTMLElement>) => {
+  const handleMenu = useCallback((event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
   }, [])
 
@@ -163,7 +163,7 @@ const Layout = () => {
             top: LAYOUT.TOOLBAR_HEIGHT,
             left: { lg: LAYOUT.DRAWER_WIDTH },
             right: 0,
-            zIndex: 1201
+            zIndex: Z_INDEX.LOADING_BAR
           }}
         />
       )}

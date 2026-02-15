@@ -12,7 +12,7 @@ const BREAKPOINT_VALUES = {
   xl: 1920,
 } as const
 
-export interface UseResponsiveReturn {
+interface UseResponsiveReturn {
   // Basic responsive states
   isMobile: boolean
   isTablet: boolean
@@ -117,7 +117,7 @@ export function useResponsive(): UseResponsiveReturn {
 }
 
 // Type exports for TypeScript
-export type ResponsiveMode = 'mobile' | 'compact' | 'full'
+type ResponsiveMode = 'mobile' | 'compact' | 'full'
 
 // This is a hook that must be used inside a component
 export function useResponsiveMode(): ResponsiveMode {
@@ -128,9 +128,3 @@ export function useResponsiveMode(): ResponsiveMode {
   return 'full'
 }
 
-// Static version for use in getResponsiveMode
-export function getResponsiveMode(): ResponsiveMode {
-  // This function should not be used - use useResponsiveMode instead
-  // Returning default value for type compatibility
-  return 'full'
-}

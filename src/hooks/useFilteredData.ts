@@ -28,7 +28,7 @@ export function useFilteredData<T>(
   }, [data, user, shouldFilterByUser])
 }
 
-export interface FilteredInfo {
+interface FilteredInfo {
   isFiltered: boolean
   hiddenCount: number
   totalCount: number

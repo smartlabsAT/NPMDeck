@@ -16,11 +16,6 @@ export interface UserPermissions {
   certificates?: PermissionLevel
 }
 
-export interface PermissionCheck {
-  resource: Resource
-  level: PermissionLevel
-}
-
 export const PERMISSION_HIERARCHY: Record<PermissionLevel, number> = {
   hidden: 0,
   view: 1,

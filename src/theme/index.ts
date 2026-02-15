@@ -1,4 +1,5 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles'
+import { FONT_WEIGHT } from '../constants/layout'
 
 const commonTheme: ThemeOptions = {
   typography: {
@@ -21,11 +22,11 @@ const commonTheme: ThemeOptions = {
     },
     h5: {
       fontSize: '1.25rem',
-      fontWeight: 500,
+      fontWeight: FONT_WEIGHT.MEDIUM,
     },
     h6: {
       fontSize: '1rem',
-      fontWeight: 500,
+      fontWeight: FONT_WEIGHT.MEDIUM,
     },
   },
   shape: {

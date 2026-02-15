@@ -14,6 +14,7 @@ import {
   ExpandMore,
 } from '@mui/icons-material'
 import type { NavigationMenuItem } from '../../hooks/useNavigationMenu'
+import { FONT_WEIGHT } from '../../constants/layout'
 
 interface DrawerAdminSectionProps {
   adminItems: NavigationMenuItem[]
@@ -33,7 +34,7 @@ const DrawerAdminSection = ({ adminItems, onNavigate }: DrawerAdminSectionProps)
           variant="caption"
           sx={{
             color: "text.secondary",
-            fontWeight: 600,
+            fontWeight: FONT_WEIGHT.SEMI_BOLD,
             textTransform: 'uppercase',
             letterSpacing: 1
           }}>

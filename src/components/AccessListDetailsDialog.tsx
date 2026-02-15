@@ -164,8 +164,8 @@ const AccessListDetailsDialog = ({
             </Typography>
             {hasAuthUsers ? (
               <List dense>
-                {accessList.items?.map((item, index) => (
-                  <ListItem key={index}>
+                {accessList.items?.map((item) => (
+                  <ListItem key={item.id}>
                     <ListItemIcon>
                       <PersonIcon fontSize="small" />
                     </ListItemIcon>
@@ -176,11 +176,11 @@ const AccessListDetailsDialog = ({
                     <IconButton
                       size="small"
                       aria-label="Copy to clipboard"
-                      onClick={() => copyToClipboard(item.username, `User ${index + 1}`)}
+                      onClick={() => copyToClipboard(item.username, item.username)}
                     >
                       <CopyIcon fontSize="small" />
                     </IconButton>
-                    {copiedText === `User ${index + 1}` && (
+                    {copiedText === item.username && (
                       <Typography variant="caption" sx={{
                         color: "success.main"
                       }}>
@@ -218,8 +218,8 @@ const AccessListDetailsDialog = ({
             </Typography>
             {hasAccessRules ? (
               <List dense>
-                {accessList.clients?.map((client, index) => (
-                  <ListItem key={index}>
+                {accessList.clients?.map((client) => (
+                  <ListItem key={client.id}>
                     <ListItemIcon>
                       {client.directive === 'allow' ? (
                         <CheckIcon color="success" fontSize="small" />

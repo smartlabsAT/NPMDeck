@@ -25,7 +25,7 @@ export type SearchResourceType = EntityResource | 'action'
  * Kebab-case entity identifiers used by the NPM API
  * in audit logs and UI display contexts.
  */
-export type ApiEntitySlug = 
+type ApiEntitySlug =
   | 'proxy-host'
   | 'redirection-host'
   | 'dead-host'

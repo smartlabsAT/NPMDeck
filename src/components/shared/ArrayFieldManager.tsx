@@ -75,17 +75,15 @@ export default function ArrayFieldManager<T = string>({
   /**
    * Get default item component based on type
    */
-  const getDefaultItemComponent = useCallback(() => {
+  const getDefaultItemComponent = useCallback((): React.ComponentType<ArrayItemProps<T>> => {
     if (ItemComponent) return ItemComponent
-    
-    // For string arrays, use the default string component
-    if (typeof defaultValue === 'string') {
-      return DefaultStringItemComponent as unknown as React.ComponentType<ArrayItemProps<T>>
-    }
-    
-    // For other types, provide a generic component that handles any type
+
+    // DefaultStringItemComponent accepts ArrayItemProps<string>.
+    // When T = string (the default), this is type-compatible.
+    // For non-string T, callers must always provide a custom ItemComponent.
+    // The double-cast is unavoidable due to generic contravariance on component props.
     return DefaultStringItemComponent as unknown as React.ComponentType<ArrayItemProps<T>>
-  }, [ItemComponent, defaultValue])
+  }, [ItemComponent])
 
   const SelectedItemComponent = getDefaultItemComponent()
 
@@ -109,9 +107,10 @@ export default function ArrayFieldManager<T = string>({
     return value.map((item, index) => {
       const validation = validationResults[index] || { error: false, helperText: undefined }
       
+      const stableKey = typeof item === 'string' ? `${item}-${index}` : index
       return (
         <Fade
-          key={index}
+          key={stableKey}
           in={true}
           timeout={animationDuration}
         >

@@ -15,7 +15,7 @@ import { getDaysUntilExpiry } from '../utils/dateUtils'
 import logger from '../utils/logger'
 import { CERTIFICATE_EXPIRY } from '../constants/certificates'
 
-export interface DashboardStats {
+interface DashboardStats {
   proxyHosts: {
     total: number
     active: number
@@ -155,7 +155,7 @@ export const useDashboardStats = (): DashboardStats => {
           loading: false,
           error: null
         })
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Failed to fetch dashboard stats:', error)
         setStats(prev => ({
           ...prev,

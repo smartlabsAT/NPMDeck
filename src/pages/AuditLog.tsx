@@ -52,6 +52,7 @@ import { useToast } from '../contexts/ToastContext'
 import ActionChip from '../components/shared/ActionChip'
 import { NAVIGATION_CONFIG, NAVIGATION_COLORS } from '../constants/navigation'
 import { LAYOUT } from '../constants/layout'
+import { AUDIT_LOG_ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 const AuditLog = () => {
   const navigate = useNavigate()
@@ -71,7 +72,7 @@ const AuditLog = () => {
         expand: ['user']
       })
       setLogs(data)
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load audit logs'
       setError(errorMessage)
       showError('audit-log', 'load', errorMessage)
@@ -355,6 +356,7 @@ const AuditLog = () => {
         <Tooltip title="View metadata">
           <IconButton
             size="small"
+            aria-label="View audit entry metadata"
             onClick={(e) => {
               e.stopPropagation()
               handleViewMeta(entry)
@@ -435,10 +437,10 @@ const AuditLog = () => {
           defaultSortField="created_on"
           defaultSortDirection="desc"
           defaultRowsPerPage={50}
-          rowsPerPageOptions={[25, 50, 100, 200]}
+          rowsPerPageOptions={AUDIT_LOG_ROWS_PER_PAGE_OPTIONS}
           stickyHeader
           responsive={true}
-          cardBreakpoint={900}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
           compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
       </Box>
