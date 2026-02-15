@@ -48,8 +48,8 @@ jobs:
             exit 1
           else
             echo "✅ No ESLint errors found!"
-            WARNINGS=$(grep -c "warning" lint-output.txt || echo "0")
-            echo "⚠️ ESLint warnings: $WARNINGS (not blocking)"
+            WARNINGS=$(grep -c "warning" lint-output.txt || true)
+            echo "⚠️ ESLint warnings: ${WARNINGS:-0} (not blocking)"
           fi
 
       - name: Generate lint report
