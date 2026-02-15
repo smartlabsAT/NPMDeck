@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useOptimistic } from 'react'
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import React, { useMemo, useCallback } from 'react'
 import {
   Box,
   Container,
@@ -16,7 +15,6 @@ import {
   Power as PowerIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
-  Error as ErrorIcon,
   Sync as ProtocolIcon,
   PlayArrow as IncomingIcon,
   TrendingFlat as ForwardIcon,
@@ -24,11 +22,9 @@ import {
   MoreVert as ActionsIcon,
   OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material'
-import { usePermissions } from '../hooks/usePermissions'
-import { useFilteredData } from '../hooks/useFilteredData'
 import { useResponsive } from '../hooks/useResponsive'
+import { useEntityCrud } from '../hooks/useEntityCrud'
 import { Stream, streamsApi } from '../api/streams'
-import { getErrorMessage } from '../types/common'
 import StreamDrawer from '../components/features/streams/StreamDrawer'
 import StreamDetailsDialog from '../components/StreamDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -38,151 +34,51 @@ import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
-import { Filter, BulkAction } from '../components/DataTable/types'
+import { Filter, FilterValue } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { getStatusIcon } from '../utils/statusUtils'
+import { createStandardBulkActions } from '../utils/bulkActionFactory'
+import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
+
+/** Build a display name for a stream (e.g. "8080/TCP" or "53/TCPUDP"). */
+const getStreamDisplayName = (stream: Stream): string =>
+  `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
 
 export default function Streams() {
-  const navigate = useNavigate()
-  const { id } = useParams()
-  const location = useLocation()
-  
-  const { canManage: canManageStreams } = usePermissions()
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
 
-  // State
-  const [streams, setStreams] = useState<Stream[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [optimisticStreams, setOptimisticStream] = useOptimistic(
-    streams,
-    (state, toggledItem: { id: number; enabled: boolean }) =>
-      state.map(item =>
-        item.id === toggledItem.id ? { ...item, enabled: toggledItem.enabled } : item
-      )
-  )
-  
-  // Dialogs
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedStream, setSelectedStream] = useState<Stream | null>(null)
-  const [detailsOpen, setDetailsOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [streamToDelete, setStreamToDelete] = useState<Stream | null>(null)
-
-  // Load streams
-  useEffect(() => {
-    loadStreams()
-  }, [])
-
-  // Handle URL-based navigation
-  useEffect(() => {
-    if (location.pathname.includes('/new') && canManageStreams('streams')) {
-      setSelectedStream(null)
-      setDrawerOpen(true)
-    } else if (location.pathname.includes('/edit') && id && canManageStreams('streams')) {
-      const stream = streams.find(s => s.id === parseInt(id))
-      if (stream) {
-        setSelectedStream(stream)
-        setDrawerOpen(true)
-      }
-    } else if (location.pathname.includes('/view') && id) {
-      const stream = streams.find(s => s.id === parseInt(id))
-      if (stream) {
-        setSelectedStream(stream)
-        setDetailsOpen(true)
-      }
-    }
-  }, [location.pathname, id, streams, canManageStreams])
-
-  const loadStreams = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await streamsApi.getAll(['owner', 'certificate'])
-      setStreams(data)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCreateStream = () => {
-    navigate('/hosts/streams/new')
-  }
-
-  const handleEditStream = (stream: Stream) => {
-    navigate(`/hosts/streams/${stream.id}/edit`)
-  }
-
-  const handleViewStream = (stream: Stream) => {
-    navigate(`/hosts/streams/${stream.id}/view`)
-  }
-
-  const handleDeleteStream = async () => {
-    if (!streamToDelete) return
-
-    try {
-      await streamsApi.delete(streamToDelete.id)
-      const streamName = `${streamToDelete.incoming_port}/${streamToDelete.tcp_forwarding ? 'TCP' : ''}${streamToDelete.udp_forwarding ? 'UDP' : ''}`
-      showSuccess('stream', 'deleted', streamName, streamToDelete.id)
-      await loadStreams()
-      setDeleteDialogOpen(false)
-      setStreamToDelete(null)
-    } catch (err: unknown) {
-      const streamName = streamToDelete ? `${streamToDelete.incoming_port}/${streamToDelete.tcp_forwarding ? 'TCP' : ''}${streamToDelete.udp_forwarding ? 'UDP' : ''}` : undefined
-      showError('stream', 'delete', err instanceof Error ? err.message : 'Unknown error', streamName, streamToDelete?.id)
-      console.error('Failed to delete stream:', err)
-    }
-  }
-
-  const handleToggleEnabled = async (stream: Stream) => {
-    // Optimistic update - UI changes instantly
-    setOptimisticStream({ id: stream.id, enabled: !stream.enabled })
-
-    try {
-      const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
-
-      if (stream.enabled) {
-        await streamsApi.disable(stream.id)
-        showSuccess('stream', 'disabled', streamName, stream.id)
-      } else {
-        await streamsApi.enable(stream.id)
-        showSuccess('stream', 'enabled', streamName, stream.id)
-      }
-      await loadStreams()
-    } catch (err: unknown) {
-      const streamName = `${stream.incoming_port}/${stream.tcp_forwarding ? 'TCP' : ''}${stream.udp_forwarding ? 'UDP' : ''}`
-      showError('stream', stream.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', streamName, stream.id)
-      setError(getErrorMessage(err))
-      await loadStreams()
-    }
-  }
-
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false)
-    setSelectedStream(null)
-    navigate('/hosts/streams')
-  }
-
-  const handleCloseDetails = () => {
-    setDetailsOpen(false)
-    setSelectedStream(null)
-    navigate('/hosts/streams')
-  }
-
-  // Apply visibility filtering
-  const visibleStreams = useFilteredData(optimisticStreams)
-
-  const getStatusIcon = (stream: Stream) => {
-    if (!stream.enabled) {
-      return <Tooltip title="Disabled"><CancelIcon color="disabled" /></Tooltip>
-    }
-    if (stream.meta.nginx_online === false) {
-      return <Tooltip title="Offline"><ErrorIcon color="error" /></Tooltip>
-    }
-    return <Tooltip title="Online"><CheckIcon color="success" /></Tooltip>
-  }
+  const {
+    visibleItems,
+    loading,
+    error,
+    drawerOpen,
+    editingItem,
+    deleteDialogOpen,
+    itemToDelete,
+    detailsDialogOpen,
+    viewingItem,
+    handleToggleEnabled,
+    handleEdit,
+    handleView,
+    handleAdd,
+    handleDelete,
+    handleConfirmDelete,
+    closeDrawer,
+    closeDetailsDialog,
+    closeDeleteDialog,
+    loadItems,
+    canManage,
+  } = useEntityCrud<Stream>({
+    api: streamsApi,
+    expand: ['owner', 'certificate'],
+    basePath: '/hosts/streams',
+    entityType: 'stream',
+    resource: 'streams',
+    getDisplayName: getStreamDisplayName,
+    entityLabel: 'streams',
+  })
 
   const getProtocolChips = (stream: Stream) => {
     const chips = []
@@ -196,7 +92,7 @@ export default function Streams() {
   }
 
   // Column definitions for DataTable with responsive priorities
-  const columns: ResponsiveTableColumn<Stream>[] = [
+  const columns = useMemo<ResponsiveTableColumn<Stream>[]>(() => [
     {
       id: 'status',
       label: 'Status',
@@ -246,6 +142,7 @@ export default function Streams() {
           <Tooltip title="Open in new tab">
             <IconButton
               size="small"
+              aria-label="Open stream endpoint in new tab"
               onClick={(e) => {
                 e.stopPropagation()
                 // Determine the protocol - use http by default
@@ -322,9 +219,10 @@ export default function Streams() {
           <Tooltip title="View Details">
             <IconButton
               size="small"
+              aria-label="View stream details"
               onClick={(e) => {
                 e.stopPropagation()
-                handleViewStream(item)
+                handleView(item)
               }}
             >
               <ViewIcon />
@@ -350,7 +248,7 @@ export default function Streams() {
             tooltipTitle="Edit"
             onClick={(e) => {
               e.stopPropagation()
-              handleEditStream(item)
+              handleEdit(item)
             }}
           >
             <EditIcon />
@@ -362,8 +260,7 @@ export default function Streams() {
             tooltipTitle="Delete"
             onClick={(e) => {
               e.stopPropagation()
-              setStreamToDelete(item)
-              setDeleteDialogOpen(true)
+              handleDelete(item)
             }}
             color="error"
           >
@@ -372,10 +269,10 @@ export default function Streams() {
         </Box>
       )
     }
-  ]
+  ], [handleView, handleToggleEnabled, handleEdit, handleDelete])
 
   // Filter definitions
-  const filters: Filter[] = [
+  const filters = useMemo<Filter[]>(() => [
     {
       id: 'protocols',
       label: 'Protocols',
@@ -391,7 +288,7 @@ export default function Streams() {
     {
       id: 'ssl',
       label: 'SSL',
-      type: 'select', 
+      type: 'select',
       defaultValue: 'all',
       options: [
         { value: 'all', label: 'All' },
@@ -410,10 +307,10 @@ export default function Streams() {
         { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
       ]
     }
-  ]
+  ], [])
 
   // Custom filter function for DataTable
-  const filterFunction = (item: Stream, activeFilters: Record<string, any>) => {
+  const filterFunction = useCallback((item: Stream, activeFilters: Record<string, FilterValue>) => {
     // Protocol filter
     if (activeFilters.protocols && activeFilters.protocols !== 'all') {
       if (activeFilters.protocols === 'tcp') {
@@ -443,57 +340,18 @@ export default function Streams() {
     }
 
     return true
-  }
+  }, [])
 
-  // Bulk actions
-  const bulkActions: BulkAction<Stream>[] = [
-    {
-      id: 'enable',
-      label: 'Enable',
-      icon: <CheckIcon />,
-      confirmMessage: 'Are you sure you want to enable the selected streams?',
-      action: async (items) => {
-        try {
-          await Promise.all(items.filter(item => !item.enabled).map(item => streamsApi.enable(item.id)))
-          showSuccess('stream', 'enabled', `${items.length} streams`)
-          await loadStreams()
-        } catch (err) {
-          showError('stream', 'enable', err instanceof Error ? err.message : 'Unknown error')
-        }
-      }
-    },
-    {
-      id: 'disable',
-      label: 'Disable',
-      icon: <CancelIcon />,
-      confirmMessage: 'Are you sure you want to disable the selected streams?',
-      action: async (items) => {
-        try {
-          await Promise.all(items.filter(item => item.enabled).map(item => streamsApi.disable(item.id)))
-          showSuccess('stream', 'disabled', `${items.length} streams`)
-          await loadStreams()
-        } catch (err) {
-          showError('stream', 'disable', err instanceof Error ? err.message : 'Unknown error')
-        }
-      }
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: <DeleteIcon />,
-      color: 'error',
-      confirmMessage: 'Are you sure you want to delete the selected streams?',
-      action: async (items) => {
-        try {
-          await Promise.all(items.map(item => streamsApi.delete(item.id)))
-          showSuccess('stream', 'deleted', `${items.length} streams`)
-          await loadStreams()
-        } catch (err) {
-          showError('stream', 'delete', err instanceof Error ? err.message : 'Unknown error')
-        }
-      }
-    }
-  ]
+  // Bulk actions via factory
+  const bulkActions = useMemo(() => createStandardBulkActions<Stream>({
+    api: streamsApi,
+    entityType: 'stream',
+    entityLabel: 'streams',
+    showSuccess,
+    showError,
+    showWarning,
+    loadItems,
+  }), [showSuccess, showError, showWarning, loadItems])
 
   return (
     <Container maxWidth={false}>
@@ -520,7 +378,7 @@ export default function Streams() {
               permissionAction="create"
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={handleCreateStream}
+              onClick={handleAdd}
             >
               Add Stream
             </PermissionButton>
@@ -529,10 +387,10 @@ export default function Streams() {
 
         {/* DataTable */}
         <DataTable
-          data={visibleStreams}
+          data={visibleItems}
           columns={columns}
           keyExtractor={(item) => item.id.toString()}
-          onRowClick={handleViewStream}
+          onRowClick={handleView}
           bulkActions={bulkActions}
           filters={filters}
           filterFunction={filterFunction}
@@ -547,12 +405,12 @@ export default function Streams() {
           selectable={true}
           showPagination={true}
           defaultRowsPerPage={10}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           responsive={true}
-          cardBreakpoint={900}
-          compactBreakpoint={1250}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
-        
+
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
           <Box
@@ -566,9 +424,9 @@ export default function Streams() {
               permissionAction="create"
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={handleCreateStream}
+              onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add Stream
             </PermissionButton>
@@ -576,35 +434,32 @@ export default function Streams() {
         )}
       </Box>
       {/* Drawer for create/edit */}
-      {canManageStreams('streams') && (
+      {canManage && (
         <StreamDrawer
           open={drawerOpen}
-          onClose={handleCloseDrawer}
-          stream={selectedStream}
+          onClose={closeDrawer}
+          stream={editingItem}
           onSave={() => {
-            handleCloseDrawer()
-            loadStreams()
+            closeDrawer()
+            loadItems()
           }}
         />
       )}
       {/* Details dialog */}
       <StreamDetailsDialog
-        open={detailsOpen}
-        onClose={handleCloseDetails}
-        stream={selectedStream}
-        onEdit={canManageStreams('streams') ? handleEditStream : undefined}
+        open={detailsDialogOpen}
+        onClose={closeDetailsDialog}
+        stream={viewingItem}
+        onEdit={canManage ? handleEdit : undefined}
       />
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
-        onClose={() => {
-          setDeleteDialogOpen(false)
-          setStreamToDelete(null)
-        }}
-        onConfirm={handleDeleteStream}
+        onClose={closeDeleteDialog}
+        onConfirm={handleConfirmDelete}
         title="Delete Stream"
         titleIcon={React.createElement(NAVIGATION_CONFIG.streams.icon, { sx: { color: NAVIGATION_CONFIG.streams.color } })}
-        message={`Are you sure you want to delete the stream on port ${streamToDelete?.incoming_port}?`}
+        message={`Are you sure you want to delete the stream on port ${itemToDelete?.incoming_port}?`}
         confirmText="Delete"
         confirmColor="error"
       />

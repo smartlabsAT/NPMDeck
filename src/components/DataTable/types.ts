@@ -1,14 +1,16 @@
 import { ReactNode } from 'react'
 
+export type FilterValue = string | number | boolean | string[] | null | undefined
+
 export interface TableColumn<T> {
   id: string
   label: string
   icon?: ReactNode
-  accessor: (item: T) => any
+  accessor: (item: T) => unknown
   sortable?: boolean
   width?: number | string
   align?: 'left' | 'center' | 'right'
-  render?: (value: any, item: T) => ReactNode
+  render?: (value: unknown, item: T) => ReactNode
   headerRender?: () => ReactNode
 }
 
@@ -17,7 +19,7 @@ export interface Filter {
   label: string
   type: 'select' | 'checkbox' | 'date' | 'text'
   options?: FilterOption[]
-  defaultValue?: any
+  defaultValue?: FilterValue
 }
 
 export interface FilterOption {
@@ -56,7 +58,7 @@ export interface DataTableProps<T> {
   onRowClick?: (item: T) => void
   bulkActions?: BulkAction<T>[]
   filters?: Filter[]
-  filterFunction?: (item: T, activeFilters: Record<string, any>) => boolean
+  filterFunction?: (item: T, activeFilters: Record<string, FilterValue>) => boolean
   searchPlaceholder?: string
   searchFields?: string[]
   loading?: boolean
@@ -66,7 +68,7 @@ export interface DataTableProps<T> {
   defaultSortField?: string
   defaultSortDirection?: 'asc' | 'desc'
   defaultRowsPerPage?: number
-  rowsPerPageOptions?: number[]
+  rowsPerPageOptions?: readonly number[]
   selectable?: boolean
   searchable?: boolean
   showPagination?: boolean
@@ -77,7 +79,7 @@ export interface DataTableProps<T> {
   responsive?: boolean
   cardBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
   compactBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
-  renderCard?: (item: T, columns: any[], options: { isSelected: boolean; onSelect: () => void; onRowClick?: () => void }) => ReactNode
+  renderCard?: (item: T, columns: TableColumn<T>[], options: { isSelected: boolean; onSelect: () => void; onRowClick?: () => void }) => ReactNode
 }
 
 export interface DataTableState {
@@ -86,18 +88,18 @@ export interface DataTableState {
   page: number
   rowsPerPage: number
   searchQuery: string
-  filters: Record<string, any>
+  filters: Record<string, FilterValue>
   selected: (string | number)[]
   groupingEnabled: boolean
   expandedGroups: Set<string>
 }
 
-export interface UseDataTableOptions<T = any> {
+export interface UseDataTableOptions<T = object> {
   defaultSortField?: string
   defaultSortDirection?: 'asc' | 'desc'
   defaultRowsPerPage?: number
-  defaultFilters?: Record<string, any>
-  filterFunction?: (item: T, activeFilters: Record<string, any>) => boolean
+  defaultFilters?: Record<string, FilterValue>
+  filterFunction?: (item: T, activeFilters: Record<string, FilterValue>) => boolean
   searchFields?: string[]
 }
 
@@ -115,7 +117,7 @@ export interface UseDataTableReturn<T> {
   page: number
   rowsPerPage: number
   searchQuery: string
-  filters: Record<string, any>
+  filters: Record<string, FilterValue>
   selected: T[]
   groupingEnabled: boolean
   
@@ -133,7 +135,7 @@ export interface UseDataTableReturn<T> {
   handleChangePage: (event: unknown, newPage: number) => void
   handleChangeRowsPerPage: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleSearch: (query: string) => void
-  handleFilter: (filterId: string, value: any) => void
+  handleFilter: (filterId: string, value: FilterValue) => void
   handleClearFilters: () => void
   handleSelect: (item: T) => void
   handleSelectAll: () => void

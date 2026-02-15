@@ -3,6 +3,8 @@ import { useAuthStore } from '../stores/authStore'
 import { useToast } from '../contexts/ToastContext'
 import { Alert, Button, Slide, LinearProgress } from '@mui/material'
 import { useAuthInterceptors } from '../hooks/useAuthInterceptors'
+import { TIMING } from '../constants/timing'
+import { Z_INDEX } from '../constants/layout'
 
 export const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
   const { loadUser, isAuthenticated, refreshToken, isRefreshing } = useAuthStore()
@@ -24,7 +26,7 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     showToast({
       message: 'Session refreshed successfully',
       severity: 'success',
-      duration: 3000
+      duration: TIMING.TOAST_SUCCESS
     })
   }, [refreshToken, showInfo, showToast])
 
@@ -53,7 +55,7 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
             top: 0,
             left: 0,
             right: 0,
-            zIndex: 2000
+            zIndex: Z_INDEX.TOKEN_REFRESH
           }}
         />
       )}
@@ -73,7 +75,7 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
             position: 'fixed',
             top: 64,
             right: 24,
-            zIndex: 1500,
+            zIndex: Z_INDEX.EXPIRY_WARNING,
             minWidth: 300,
             boxShadow: 3
           }}

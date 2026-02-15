@@ -1,1 +1,8 @@
 export { default as DeadHostDrawer } from './DeadHostDrawer'
+export { default as DeadHostOverviewTab } from './DeadHostOverviewTab'
+export { default as StatusOverviewPanel } from './StatusOverviewPanel'
+export { default as BasicInfoPanel } from './BasicInfoPanel'
+export { default as DomainNamesPanel } from './DomainNamesPanel'
+export { default as ConfigurationPanel } from './ConfigurationPanel'
+export { default as SslCertificatePanel } from './SslCertificatePanel'
+export { default as NginxErrorPanel } from './NginxErrorPanel'

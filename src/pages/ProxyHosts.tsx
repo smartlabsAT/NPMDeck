@@ -1,645 +1,136 @@
-import { getErrorMessage } from '../types/common'
-import React, { useState, useEffect, useOptimistic } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import React, { useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Container,
-  IconButton,
-  Typography,
-  Chip,
-  Tooltip,
 } from '@mui/material'
 import {
   Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  Error as ErrorIcon,
-  PowerSettingsNew as PowerIcon,
-  Language as LanguageIcon,
-  Lock as LockIcon,
-  LockOpen as LockOpenIcon,
-  TrendingFlat as RedirectIcon,
-  ToggleOn as StatusIcon,
-  MoreVert as ActionsIcon,
-  CallMade as ForwardIcon,
-  Security as AccessIcon,
-  OpenInNew as LinkIcon,
 } from '@mui/icons-material'
 import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
-import { usePermissions } from '../hooks/usePermissions'
-import { useFilteredData } from '../hooks/useFilteredData'
 import { useResponsive } from '../hooks/useResponsive'
+import { useEntityCrud } from '../hooks/useEntityCrud'
+import useProxyHostColumns from '../hooks/useProxyHostColumns'
+import useProxyHostFilters from '../hooks/useProxyHostFilters'
+import useDomainGroupConfig from '../hooks/useDomainGroupConfig'
+import { createStandardBulkActions } from '../utils/bulkActionFactory'
 import ProxyHostDrawer from '../components/features/proxy-hosts/ProxyHostDrawer'
 import ProxyHostDetailsDialog from '../components/ProxyHostDetailsDialog'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PermissionButton from '../components/PermissionButton'
 import PageHeader from '../components/PageHeader'
-import PermissionIconButton from '../components/PermissionIconButton'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
-import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
-import { Filter, BulkAction, GroupConfig } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
+/** Type for the redirection lookup map loaded as additional data */
+type RedirectionsByTarget = Map<string, RedirectionHost[]>
 
-// Helper to extract base domain from a full domain
-const extractBaseDomain = (domain: string): string => {
-  // Remove subdomain parts, keep only base domain
-  const parts = domain.split('.')
-  if (parts.length > 2) {
-    // Check for common second-level domains like .co.uk
-    const secondLevel = parts[parts.length - 2]
-    if (['co', 'com', 'net', 'org', 'gov', 'edu'].includes(secondLevel) && parts.length > 3) {
-      return parts.slice(-3).join('.')
+/** Stable empty map reference to avoid re-creating on every render */
+const EMPTY_MAP = new Map() as RedirectionsByTarget
+
+const PROXY_HOST_BASE_PATH = '/hosts/proxy'
+const PROXY_HOST_EXPAND = ['owner', 'access_list', 'certificate']
+const PROXY_HOST_ENTITY_LABEL = 'proxy hosts'
+
+/** Build a lookup map from target domain to redirection hosts */
+const buildRedirectionTargetMap = async (): Promise<RedirectionsByTarget> => {
+  const redirectionData = await redirectionHostsApi.getAll()
+  const targetMap = new Map<string, RedirectionHost[]>()
+  redirectionData.forEach(redirect => {
+    const target = redirect.forward_domain_name.toLowerCase()
+    if (!targetMap.has(target)) {
+      targetMap.set(target, [])
     }
-    return parts.slice(-2).join('.')
-  }
-  return domain
+    targetMap.get(target)?.push(redirect)
+  })
+  return targetMap
 }
 
 export default function ProxyHosts() {
-  const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
-  const location = useLocation()
-  
-  const { canManage: canManageProxyHosts } = usePermissions()
-  const { showSuccess, showError } = useToast()
+  const { showSuccess, showError, showWarning } = useToast()
   const { isMobileTable } = useResponsive()
-  
-  // State
-  const [hosts, setHosts] = useState<ProxyHost[]>([])
-  const [redirectionsByTarget, setRedirectionsByTarget] = useState<Map<string, RedirectionHost[]>>(new Map())
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [optimisticHosts, setOptimisticHost] = useOptimistic(
-    hosts,
-    (state, toggledItem: { id: number; enabled: boolean }) =>
-      state.map(item =>
-        item.id === toggledItem.id ? { ...item, enabled: toggledItem.enabled } : item
-      )
-  )
-  
-  // Dialogs
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editingHost, setEditingHost] = useState<ProxyHost | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [hostToDelete, setHostToDelete] = useState<ProxyHost | null>(null)
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
-  const [viewingHost, setViewingHost] = useState<ProxyHost | null>(null)
 
-  useEffect(() => {
-    loadHosts()
-  }, [])
+  // Entity CRUD hook handles all state, URL routing, dialogs, and data loading
+  const {
+    visibleItems,
+    loading,
+    error,
+    additionalData: redirectionsByTarget,
+    drawerOpen,
+    editingItem,
+    deleteDialogOpen,
+    itemToDelete,
+    detailsDialogOpen,
+    viewingItem,
+    handleToggleEnabled,
+    handleEdit,
+    handleView,
+    handleAdd,
+    handleDelete,
+    handleConfirmDelete,
+    closeDrawer,
+    closeDetailsDialog,
+    closeDeleteDialog,
+    loadItems,
+    canManage,
+  } = useEntityCrud<ProxyHost, RedirectionsByTarget>({
+    api: proxyHostsApi,
+    expand: PROXY_HOST_EXPAND,
+    basePath: PROXY_HOST_BASE_PATH,
+    entityType: 'proxy-host',
+    resource: 'proxy_hosts',
+    getDisplayName: (host) => host.domain_names[0] || `#${host.id}`,
+    entityLabel: PROXY_HOST_ENTITY_LABEL,
+    additionalLoader: {
+      load: buildRedirectionTargetMap,
+    },
+  })
 
-  // Handle URL parameter for editing or viewing
-  useEffect(() => {
-    if (location.pathname.includes('/new') && canManageProxyHosts('proxy_hosts')) {
-      setEditingHost(null)
-      setDrawerOpen(true)
-      setDetailsDialogOpen(false)
-      setViewingHost(null)
-    } else if (id) {
-      // Wait for hosts to load
-      if (loading) {
-        return
-      }
-      
-      const host = hosts.find(h => h.id === parseInt(id))
-      if (host) {
-        if (location.pathname.includes('/edit') && canManageProxyHosts('proxy_hosts')) {
-          setEditingHost(host)
-          setDrawerOpen(true)
-          setDetailsDialogOpen(false)
-          setViewingHost(null)
-        } else if (location.pathname.includes('/view')) {
-          setViewingHost(host)
-          setDetailsDialogOpen(true)
-          setDrawerOpen(false)
-          setEditingHost(null)
-        }
-      } else if (hosts.length > 0) {
-        // Host not found after loading (but other hosts exist)
-        console.error(`Proxy host with id ${id} not found`)
-        navigate('/hosts/proxy')
-      }
-      // If hosts.length === 0, we'll wait for hosts to load
-    } else {
-      // No ID in URL, close dialogs
-      setDrawerOpen(false)
-      setEditingHost(null)
-      setDetailsDialogOpen(false)
-      setViewingHost(null)
-    }
-  }, [id, hosts, location.pathname, navigate, loading, canManageProxyHosts])
+  // Navigate-only callbacks for viewing connections/access tabs
+  // The hook's URL routing effect detects /view in the path and opens the details dialog
+  const onViewConnections = useCallback((host: ProxyHost) => {
+    navigate(`${PROXY_HOST_BASE_PATH}/${host.id}/view/connections`)
+  }, [navigate])
 
-  const loadHosts = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      // Load both proxy hosts and redirection hosts
-      const [proxyData, redirectionData] = await Promise.all([
-        proxyHostsApi.getAll(['owner', 'access_list', 'certificate']),
-        redirectionHostsApi.getAll()
-      ])
-      
-      setHosts(proxyData)
-      
-      // Create lookup map for redirections by target domain
-      const targetMap = new Map<string, RedirectionHost[]>()
-      redirectionData.forEach(redirect => {
-        const target = redirect.forward_domain_name.toLowerCase()
-        if (!targetMap.has(target)) {
-          targetMap.set(target, [])
-        }
-        targetMap.get(target)!.push(redirect)
-      })
-      setRedirectionsByTarget(targetMap)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleToggleEnabled = async (host: ProxyHost) => {
-    // Optimistic update - UI changes instantly
-    setOptimisticHost({ id: host.id, enabled: !host.enabled })
-
-    try {
-      const hostName = host.domain_names[0] || `#${host.id}`
-
-      if (host.enabled) {
-        await proxyHostsApi.disable(host.id)
-        showSuccess('proxy-host', 'disabled', hostName, host.id)
-      } else {
-        await proxyHostsApi.enable(host.id)
-        showSuccess('proxy-host', 'enabled', hostName, host.id)
-      }
-      await loadHosts()
-    } catch (err: unknown) {
-      const hostName = host.domain_names[0] || `#${host.id}`
-      showError('proxy-host', host.enabled ? 'disable' : 'enable', err instanceof Error ? err.message : 'Unknown error', hostName, host.id)
-      setError(getErrorMessage(err))
-      await loadHosts()
-    }
-  }
-
-  const handleEdit = (host: ProxyHost) => {
-    navigate(`/hosts/proxy/${host.id}/edit`)
-  }
-
-  const handleView = (host: ProxyHost) => {
-    navigate(`/hosts/proxy/${host.id}/view`)
-  }
-
-  const handleAdd = () => {
-    setEditingHost(null)
-    navigate('/hosts/proxy/new')
-  }
-
-  const handleDelete = (host: ProxyHost) => {
-    setHostToDelete(host)
-    setDeleteDialogOpen(true)
-  }
-
-  const handleConfirmDelete = async () => {
-    if (!hostToDelete) return
-    
-    try {
-      await proxyHostsApi.delete(hostToDelete.id)
-      showSuccess('proxy-host', 'deleted', hostToDelete.domain_names[0] || `#${hostToDelete.id}`, hostToDelete.id)
-      await loadHosts()
-      setDeleteDialogOpen(false)
-      setHostToDelete(null)
-    } catch (err: unknown) {
-      showError('proxy-host', 'delete', err instanceof Error ? err.message : 'Unknown error', hostToDelete.domain_names[0], hostToDelete.id)
-      console.error('Failed to delete host:', err)
-    }
-  }
-
-
-  // Apply visibility filtering
-  const visibleHosts = useFilteredData(optimisticHosts)
-
-  const getStatusIcon = (host: ProxyHost) => {
-    if (!host.enabled) {
-      return <Tooltip title="Disabled"><CancelIcon color="disabled" /></Tooltip>
-    }
-    if (host.meta.nginx_online === false) {
-      return <Tooltip title={host.meta.nginx_err || 'Offline'}><ErrorIcon color="error" /></Tooltip>
-    }
-    return <Tooltip title="Online"><CheckCircleIcon color="success" /></Tooltip>
-  }
-
-  const getLinkedRedirections = (host: ProxyHost): RedirectionHost[] => {
-    const redirections: RedirectionHost[] = []
-    host.domain_names.forEach(domain => {
-      const domainRedirections = redirectionsByTarget.get(domain.toLowerCase()) || []
-      redirections.push(...domainRedirections)
-    })
-    // Remove duplicates
-    return Array.from(new Set(redirections.map(r => r.id))).map(id => 
-      redirections.find(r => r.id === id)!
-    )
-  }
+  const onViewAccess = useCallback((host: ProxyHost) => {
+    navigate(`${PROXY_HOST_BASE_PATH}/${host.id}/view/access`)
+  }, [navigate])
 
   // Column definitions for DataTable with responsive priorities
-  const columns: ResponsiveTableColumn<ProxyHost>[] = [
-    {
-      id: 'status',
-      label: 'Status',
-      icon: <StatusIcon fontSize="small" />,
-      accessor: (item: ProxyHost) => !item.enabled ? 0 : (item.meta.nginx_online === false ? 1 : 2),
-      sortable: true,
-      align: 'center',
-      priority: 'P1' as ColumnPriority, // Essential - always visible
-      showInCard: true,
-      render: (value: any, item: ProxyHost) => getStatusIcon(item)
-    },
-    {
-      id: 'domain_names',
-      label: 'Domain Names',
-      icon: <LanguageIcon fontSize="small" />,
-      accessor: (item: ProxyHost) => item.domain_names[0] || '',
-      sortable: true,
-      priority: 'P1' as ColumnPriority, // Essential - always visible
-      showInCard: true,
-      mobileLabel: 'Domains',
-      render: (value: any, item: ProxyHost) => {
-        const linkedRedirections = getLinkedRedirections(item)
-        return (
-          <Box>
-            {item.domain_names.map((domain: string, index: number) => (
-              <Box
-                key={index}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5
-                }}>
-                <Typography variant="body2">
-                  {domain}
-                </Typography>
-                <IconButton
-                  size="small"
-                  sx={{ 
-                    p: 0.25,
-                    '&:hover': { 
-                      backgroundColor: 'action.hover'
-                    }
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    window.open(`https://${domain}`, '_blank')
-                  }}
-                >
-                  <LinkIcon sx={{ fontSize: '0.875rem' }} />
-                </IconButton>
-              </Box>
-            ))}
-            {linkedRedirections.length > 0 && (
-              <Tooltip 
-                title={
-                  <Box>
-                    {linkedRedirections.map((redirect, idx) => (
-                      <div key={idx}>
-                        {redirect.domain_names.join(', ')} → {redirect.forward_domain_name}
-                      </div>
-                    ))}
-                  </Box>
-                }
-              >
-                <Box
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (linkedRedirections.length === 1) {
-                      navigate(`/hosts/redirection/${linkedRedirections[0].id}/view`)
-                    } else {
-                      setViewingHost(item)
-                      setDetailsDialogOpen(true)
-                      navigate(`/hosts/proxy/${item.id}/view/connections`)
-                    }
-                  }}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    ml: 3,
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.8 }
-                  }}>
-                  <Typography variant="caption" sx={{
-                    color: "text.secondary"
-                  }}>↳</Typography>
-                  <RedirectIcon fontSize="small" sx={{ fontSize: '0.875rem' }} color="action" />
-                  <Typography variant="caption" color="primary">
-                    {linkedRedirections.length} Redirection{linkedRedirections.length > 1 ? 's' : ''}
-                  </Typography>
-                </Box>
-              </Tooltip>
-            )}
-          </Box>
-        );
-      }
-    },
-    {
-      id: 'forward_host',
-      label: 'Forward Host',
-      icon: <ForwardIcon fontSize="small" />,
-      accessor: (item: ProxyHost) => `${item.forward_scheme}://${item.forward_host}:${item.forward_port}`,
-      sortable: true,
-      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
-      showInCard: true,
-      mobileLabel: '', // Empty string to hide label - the URL is self-explanatory
-      render: (value: any, item: ProxyHost) => (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5
-          }}>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            {item.forward_scheme}://{item.forward_host}:{item.forward_port}
-          </Typography>
-          <IconButton
-            size="small"
-            sx={{ 
-              p: 0.25,
-              '&:hover': { 
-                backgroundColor: 'action.hover'
-              }
-            }}
-            onClick={(e) => {
-              e.stopPropagation()
-              window.open(`${item.forward_scheme}://${item.forward_host}:${item.forward_port}`, '_blank')
-            }}
-          >
-            <LinkIcon sx={{ fontSize: '0.875rem' }} />
-          </IconButton>
-        </Box>
-      )
-    },
-    {
-      id: 'ssl',
-      label: 'SSL',
-      icon: <LockIcon fontSize="small" />,
-      accessor: (item: ProxyHost) => !item.certificate_id ? 0 : (item.ssl_forced ? 2 : 1),
-      sortable: true,
-      align: 'center',
-      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
-      showInCard: true,
-      render: (value: any, item: ProxyHost) => {
-        if (!item.certificate_id) {
-          return <Tooltip title="No SSL"><LockOpenIcon color="disabled" /></Tooltip>
-        }
-        if (item.ssl_forced) {
-          return <Tooltip title="SSL Forced"><LockIcon color="primary" /></Tooltip>
-        }
-        return <Tooltip title="SSL Optional"><LockIcon color="action" /></Tooltip>
-      }
-    },
-    {
-      id: 'access',
-      label: 'Access',
-      icon: <AccessIcon fontSize="small" />,
-      accessor: (item: ProxyHost) => item.access_list?.name || '',
-      sortable: true,
-      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
-      showInCard: false,
-      render: (value: any, item: ProxyHost) => {
-        if (item.access_list) {
-          return (
-            <Chip 
-              label={item.access_list.name} 
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation()
-                setViewingHost(item)
-                setDetailsDialogOpen(true)
-                navigate(`/hosts/proxy/${item.id}/view/access`)
-              }}
-              sx={{ 
-                cursor: 'pointer',
-                '&:hover': {
-                  backgroundColor: 'action.hover'
-                }
-              }}
-            />
-          )
-        }
-        return (
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>Public
-                      </Typography>
-        );
-      }
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      icon: <ActionsIcon fontSize="small" />,
-      accessor: (item: ProxyHost) => item.id,
-      sortable: false,
-      align: 'right',
-      priority: 'P1' as ColumnPriority, // Essential - always visible
-      showInCard: true,
-      render: (value: any, item: ProxyHost) => (
-        <Box
-          sx={{
-            display: "flex",
-            gap: 0.5,
-            justifyContent: "flex-end"
-          }}>
-          <PermissionIconButton
-            resource="proxy_hosts"
-            permissionAction="edit"
-            size="small"
-            tooltipTitle={item.enabled ? 'Disable' : 'Enable'}
-            onClick={(e) => {
-              e.stopPropagation()
-              handleToggleEnabled(item)
-            }}
-            color={item.enabled ? 'default' : 'success'}
-          >
-            <PowerIcon />
-          </PermissionIconButton>
-          <PermissionIconButton
-            resource="proxy_hosts"
-            permissionAction="edit"
-            size="small"
-            tooltipTitle="Edit"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleEdit(item)
-            }}
-          >
-            <EditIcon />
-          </PermissionIconButton>
-          <PermissionIconButton
-            resource="proxy_hosts"
-            permissionAction="delete"
-            size="small"
-            tooltipTitle="Delete"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleDelete(item)
-            }}
-            color="error"
-          >
-            <DeleteIcon />
-          </PermissionIconButton>
-        </Box>
-      )
-    }
-  ]
+  const columns = useProxyHostColumns({
+    redirectionsByTarget: redirectionsByTarget ?? EMPTY_MAP,
+    onToggleEnabled: handleToggleEnabled,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    onViewConnections,
+    onViewAccess,
+    navigate,
+  })
 
-  // Filter definitions
-  const filters: Filter[] = [
-    {
-      id: 'ssl',
-      label: 'SSL',
-      type: 'select',
-      defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'forced', label: 'SSL Forced', icon: <LockIcon fontSize="small" /> },
-        { value: 'optional', label: 'SSL Optional', icon: <LockIcon fontSize="small" /> },
-        { value: 'disabled', label: 'No SSL', icon: <LockOpenIcon fontSize="small" /> }
-      ]
-    },
-    {
-      id: 'access',
-      label: 'Access',
-      type: 'select',
-      defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'public', label: 'Public' },
-        { value: 'restricted', label: 'Restricted', icon: <LockIcon fontSize="small" /> }
-      ]
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      type: 'select',
-      defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'enabled', label: 'Enabled', icon: <CheckCircleIcon fontSize="small" /> },
-        { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
-      ]
-    }
-  ]
+  // Filter definitions and filter function
+  const { filters, filterFunction } = useProxyHostFilters()
 
-  // Custom filter function for DataTable
-  const filterFunction = (item: ProxyHost, activeFilters: Record<string, any>) => {
-    // SSL filter
-    if (activeFilters.ssl && activeFilters.ssl !== 'all') {
-      if (activeFilters.ssl === 'forced' && (!item.certificate_id || !item.ssl_forced)) return false
-      if (activeFilters.ssl === 'optional' && (!item.certificate_id || item.ssl_forced)) return false
-      if (activeFilters.ssl === 'disabled' && item.certificate_id) return false
-    }
-
-    // Access filter
-    if (activeFilters.access && activeFilters.access !== 'all') {
-      if (activeFilters.access === 'public' && item.access_list) return false
-      if (activeFilters.access === 'restricted' && !item.access_list) return false
-    }
-
-    // Status filter
-    if (activeFilters.status && activeFilters.status !== 'all') {
-      if (activeFilters.status === 'enabled' && !item.enabled) return false
-      if (activeFilters.status === 'disabled' && item.enabled) return false
-    }
-
-    return true
-  }
-
-  // Bulk actions
-  const bulkActions: BulkAction<ProxyHost>[] = [
-    {
-      id: 'enable',
-      label: 'Enable',
-      icon: <CheckCircleIcon />,
-      confirmMessage: 'Are you sure you want to enable the selected proxy hosts?',
-      action: async (items) => {
-        try {
-          await Promise.all(items.filter(item => !item.enabled).map(item => proxyHostsApi.enable(item.id)))
-          showSuccess('proxy-host', 'enabled', `${items.length} hosts`)
-          await loadHosts()
-        } catch (err) {
-          showError('proxy-host', 'enable', err instanceof Error ? err.message : 'Unknown error')
-        }
-      }
-    },
-    {
-      id: 'disable',
-      label: 'Disable',
-      icon: <CancelIcon />,
-      confirmMessage: 'Are you sure you want to disable the selected proxy hosts?',
-      action: async (items) => {
-        try {
-          await Promise.all(items.filter(item => item.enabled).map(item => proxyHostsApi.disable(item.id)))
-          showSuccess('proxy-host', 'disabled', `${items.length} hosts`)
-          await loadHosts()
-        } catch (err) {
-          showError('proxy-host', 'disable', err instanceof Error ? err.message : 'Unknown error')
-        }
-      }
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: <DeleteIcon />,
-      color: 'error',
-      confirmMessage: 'Are you sure you want to delete the selected proxy hosts?',
-      action: async (items) => {
-        try {
-          await Promise.all(items.map(item => proxyHostsApi.delete(item.id)))
-          showSuccess('proxy-host', 'deleted', `${items.length} hosts`)
-          await loadHosts()
-        } catch (err) {
-          showError('proxy-host', 'delete', err instanceof Error ? err.message : 'Unknown error')
-        }
-      }
-    }
-  ]
+  // Bulk actions via factory
+  const bulkActions = useMemo(
+    () => createStandardBulkActions<ProxyHost>({
+      api: proxyHostsApi,
+      entityType: 'proxy-host',
+      entityLabel: PROXY_HOST_ENTITY_LABEL,
+      showSuccess,
+      showError,
+      showWarning,
+      loadItems,
+    }),
+    [showSuccess, showError, showWarning, loadItems]
+  )
 
   // Group configuration for domain grouping
-  const groupConfig: GroupConfig<ProxyHost> = {
-    groupBy: (item) => {
-      const mainDomain = item.domain_names[0] || ''
-      return extractBaseDomain(mainDomain)
-    },
-    groupLabel: (_groupId, _items) => `domain`,
-    defaultEnabled: false,
-    groupHeaderRender: (groupId, items, _isExpanded) => (
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1
-        }}>
-        <LanguageIcon fontSize="small" color="primary" />
-        <Typography variant="subtitle2" sx={{
-          fontWeight: "bold"
-        }}>
-          {groupId}
-        </Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          ({items.length})
-        </Typography>
-      </Box>
-    )
-  }
+  const groupConfig = useDomainGroupConfig<ProxyHost>()
 
   return (
     <Container maxWidth={false}>
@@ -675,7 +166,7 @@ export default function ProxyHosts() {
 
         {/* DataTable */}
         <DataTable
-          data={visibleHosts}
+          data={visibleItems}
           columns={columns}
           keyExtractor={(item: ProxyHost) => item.id.toString()}
           onRowClick={handleView}
@@ -693,14 +184,14 @@ export default function ProxyHosts() {
           selectable={true}
           showPagination={true}
           defaultRowsPerPage={10}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           groupConfig={groupConfig}
           showGroupToggle={true}
           responsive={true}
-          cardBreakpoint={900}
-          compactBreakpoint={1250}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
-        
+
         {/* Mobile Add Button - shown at bottom */}
         {isMobileTable && (
           <Box
@@ -716,45 +207,37 @@ export default function ProxyHosts() {
               startIcon={<AddIcon />}
               onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add Proxy Host
             </PermissionButton>
           </Box>
         )}
       </Box>
-      {canManageProxyHosts('proxy_hosts') && (
+      {canManage && (
         <ProxyHostDrawer
           open={drawerOpen}
-          onClose={() => {
-            setDrawerOpen(false)
-            navigate('/hosts/proxy')
-          }}
-          host={editingHost}
+          onClose={closeDrawer}
+          host={editingItem}
           onSave={() => {
-            loadHosts()
-            navigate('/hosts/proxy')
+            loadItems()
+            navigate(PROXY_HOST_BASE_PATH)
           }}
         />
       )}
       <ProxyHostDetailsDialog
         open={detailsDialogOpen}
-        onClose={() => {
-          setDetailsDialogOpen(false)
-          if (id) {
-            navigate('/hosts/proxy')
-          }
-        }}
-        host={viewingHost}
-        onEdit={canManageProxyHosts('proxy_hosts') ? handleEdit : undefined}
+        onClose={closeDetailsDialog}
+        host={viewingItem}
+        onEdit={canManage ? handleEdit : undefined}
       />
       <ConfirmDialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={closeDeleteDialog}
         onConfirm={handleConfirmDelete}
         title="Delete Proxy Host?"
         titleIcon={React.createElement(NAVIGATION_CONFIG.proxyHosts.icon, { sx: { color: NAVIGATION_CONFIG.proxyHosts.color } })}
-        message={`Are you sure you want to delete the proxy host for ${hostToDelete?.domain_names.join(', ')}? This action cannot be undone.`}
+        message={`Are you sure you want to delete the proxy host for ${itemToDelete?.domain_names.join(', ')}? This action cannot be undone.`}
         confirmText="Delete"
         confirmColor="error"
       />

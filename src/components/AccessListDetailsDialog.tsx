@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Button,
   Typography,
@@ -24,8 +23,10 @@ import {
   Security,
 } from '@mui/icons-material'
 import { AccessList } from '../api/accessLists'
-// import ExportDialog from './ExportDialog'
+import { formatDate } from '../utils/dateUtils'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import AdaptiveContainer from './AdaptiveContainer'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface AccessListDetailsDialogProps {
   open: boolean
@@ -40,20 +41,9 @@ const AccessListDetailsDialog = ({
   accessList,
   onEdit,
 }: AccessListDetailsDialogProps) => {
-  const [copiedText, setCopiedText] = useState<string>('')
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
 
   if (!accessList) return null
-
-  const copyToClipboard = (text: string, label?: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedText(label || text)
-    setTimeout(() => setCopiedText(''), 2000)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
-  }
 
   const hasAuthUsers = accessList.items && accessList.items.length > 0
   const hasAccessRules = accessList.clients && accessList.clients.length > 0
@@ -68,7 +58,7 @@ const AccessListDetailsDialog = ({
         title={
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <Security sx={{ color: '#2bcbba' }} />
+              <Security sx={{ color: NAVIGATION_COLORS.primary }} />
               <Typography variant="h6">Access List</Typography>
             </Box>
             <Typography variant="body2" sx={{
@@ -82,12 +72,6 @@ const AccessListDetailsDialog = ({
         fullWidth
         actions={
           <>
-            {/* <Button
-              onClick={() => setExportDialogOpen(true)}
-              startIcon={<DownloadIcon />}
-            >
-              Export
-            </Button> */}
             {onEdit && (
               <Button 
                 onClick={() => {
@@ -180,8 +164,8 @@ const AccessListDetailsDialog = ({
             </Typography>
             {hasAuthUsers ? (
               <List dense>
-                {accessList.items!.map((item, index) => (
-                  <ListItem key={index}>
+                {accessList.items?.map((item) => (
+                  <ListItem key={item.id}>
                     <ListItemIcon>
                       <PersonIcon fontSize="small" />
                     </ListItemIcon>
@@ -189,13 +173,14 @@ const AccessListDetailsDialog = ({
                       primary={item.username}
                       secondary="Protected with password"
                     />
-                    <IconButton 
-                      size="small" 
-                      onClick={() => copyToClipboard(item.username, `User ${index + 1}`)}
+                    <IconButton
+                      size="small"
+                      aria-label="Copy to clipboard"
+                      onClick={() => copyToClipboard(item.username, item.username)}
                     >
                       <CopyIcon fontSize="small" />
                     </IconButton>
-                    {copiedText === `User ${index + 1}` && (
+                    {copiedText === item.username && (
                       <Typography variant="caption" sx={{
                         color: "success.main"
                       }}>
@@ -233,8 +218,8 @@ const AccessListDetailsDialog = ({
             </Typography>
             {hasAccessRules ? (
               <List dense>
-                {accessList.clients!.map((client, index) => (
-                  <ListItem key={index}>
+                {accessList.clients?.map((client) => (
+                  <ListItem key={client.id}>
                     <ListItemIcon>
                       {client.directive === 'allow' ? (
                         <CheckIcon color="success" fontSize="small" />
@@ -322,16 +307,6 @@ const AccessListDetailsDialog = ({
             </Grid>
           </Box>
       </AdaptiveContainer>
-      {/* Export Dialog */}
-      {/* {accessList && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[accessList]}
-          type="access_list"
-          itemName="Access List"
-        />
-      )} */}
     </>
   );
 }

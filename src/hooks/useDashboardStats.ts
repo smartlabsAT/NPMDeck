@@ -1,13 +1,21 @@
 import { useState, useEffect } from 'react'
 import { proxyHostsApi } from '../api/proxyHosts'
+import type { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi } from '../api/redirectionHosts'
+import type { RedirectionHost } from '../api/redirectionHosts'
 import { deadHostsApi } from '../api/deadHosts'
+import type { DeadHost } from '../api/deadHosts'
 import { streamsApi } from '../api/streams'
+import type { Stream } from '../api/streams'
 import { certificatesApi, Certificate } from '../api/certificates'
 import { accessListsApi } from '../api/accessLists'
+import type { AccessList } from '../api/accessLists'
 import { usePermissions } from './usePermissions'
+import { getDaysUntilExpiry } from '../utils/dateUtils'
+import logger from '../utils/logger'
+import { CERTIFICATE_EXPIRY } from '../constants/certificates'
 
-export interface DashboardStats {
+interface DashboardStats {
   proxyHosts: {
     total: number
     active: number
@@ -42,16 +50,7 @@ export interface DashboardStats {
   error: string | null
 }
 
-const getDaysUntilExpiry = (expiresOn: string | null) => {
-  if (!expiresOn) return null
-  const expiryDate = new Date(expiresOn)
-  const today = new Date()
-  const diffTime = expiryDate.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
-}
-
-export const useDashboardStats = () => {
+export const useDashboardStats = (): DashboardStats => {
   const { canView } = usePermissions()
   const [stats, setStats] = useState<DashboardStats>({
     proxyHosts: { total: 0, active: 0, inactive: 0 },
@@ -81,34 +80,34 @@ export const useDashboardStats = () => {
 
         const [proxyHosts, redirectionHosts, deadHosts, streams, certificates, accessLists] = results.map(
           result => result.status === 'fulfilled' ? result.value : []
-        ) as [any[], any[], any[], any[], Certificate[], any[]]
+        ) as [ProxyHost[], RedirectionHost[], DeadHost[], Stream[], Certificate[], AccessList[]]
 
         // Process proxy hosts
         const proxyStats = {
           total: proxyHosts.length,
-          active: proxyHosts.filter((h: any) => h.enabled).length,
-          inactive: proxyHosts.filter((h: any) => !h.enabled).length
+          active: proxyHosts.filter(h => h.enabled).length,
+          inactive: proxyHosts.filter(h => !h.enabled).length
         }
 
         // Process redirection hosts
         const redirectionStats = {
           total: redirectionHosts.length,
-          active: redirectionHosts.filter((h: any) => h.enabled).length,
-          inactive: redirectionHosts.filter((h: any) => !h.enabled).length
+          active: redirectionHosts.filter(h => h.enabled).length,
+          inactive: redirectionHosts.filter(h => !h.enabled).length
         }
 
         // Process dead hosts
         const deadStats = {
           total: deadHosts.length,
-          active: deadHosts.filter((h: any) => h.enabled).length,
-          inactive: deadHosts.filter((h: any) => !h.enabled).length
+          active: deadHosts.filter(h => h.enabled).length,
+          inactive: deadHosts.filter(h => !h.enabled).length
         }
 
         // Process streams
         const streamStats = {
           total: streams.length,
-          active: streams.filter((s: any) => s.enabled).length,
-          inactive: streams.filter((s: any) => !s.enabled).length
+          active: streams.filter(s => s.enabled).length,
+          inactive: streams.filter(s => !s.enabled).length
         }
 
         // Process certificates
@@ -123,7 +122,7 @@ export const useDashboardStats = () => {
           
           if (days < 0) {
             expiredCount++
-          } else if (days <= 30) {
+          } else if (days <= CERTIFICATE_EXPIRY.WARNING_DAYS) {
             expiringSoonCount++
             expiringCerts.push(cert)
           } else {
@@ -156,8 +155,8 @@ export const useDashboardStats = () => {
           loading: false,
           error: null
         })
-      } catch (error) {
-        console.error('Failed to fetch dashboard stats:', error)
+      } catch (error: unknown) {
+        logger.error('Failed to fetch dashboard stats:', error)
         setStats(prev => ({
           ...prev,
           loading: false,

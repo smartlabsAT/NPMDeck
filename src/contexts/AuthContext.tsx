@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import type { StoreApi } from 'zustand'
 
@@ -10,13 +10,19 @@ const AuthStoreContext = createContext<StoreApi<AuthStore> | null>(null)
 
 // Provider component
 export const AuthStoreProvider = ({ children }: { children: ReactNode }) => {
-  // Get the store API from zustand
-  const storeApi = (useAuthStore as any).api
-  
+  // Zustand's UseBoundStore extends StoreApi, so the hook itself exposes getState/setState/subscribe.
+  // Memoized so the object identity is stable across renders.
+  const storeApi = useMemo<StoreApi<AuthStore>>(() => ({
+    getState: useAuthStore.getState,
+    setState: useAuthStore.setState,
+    subscribe: useAuthStore.subscribe,
+    getInitialState: useAuthStore.getInitialState,
+  }), [])
+
   // Initialize the global store API on mount
   useEffect(() => {
     setAuthStoreApi(storeApi)
-    
+
     return () => {
       // Clean up on unmount
       authStoreApi = null
@@ -31,6 +37,7 @@ export const AuthStoreProvider = ({ children }: { children: ReactNode }) => {
 }
 
 // Hook to access the store API outside of React components
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuthStoreApi = () => {
   const context = useContext(AuthStoreContext)
   if (!context) {
@@ -43,10 +50,12 @@ export const useAuthStoreApi = () => {
 // This will be initialized by the provider
 let authStoreApi: StoreApi<AuthStore> | null = null
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const setAuthStoreApi = (api: StoreApi<AuthStore>) => {
   authStoreApi = api
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getAuthStoreApi = (): StoreApi<AuthStore> => {
   if (!authStoreApi) {
     throw new Error('Auth store API not initialized. Make sure AuthStoreProvider is mounted.')

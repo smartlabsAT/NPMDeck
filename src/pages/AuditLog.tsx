@@ -43,19 +43,20 @@ import {
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { auditLogApi, AuditLogEntry } from '../api/auditLog'
-import { useResponsive } from '../hooks/useResponsive'
+
 import PageHeader from '../components/PageHeader'
 import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter } from '../components/DataTable/types'
 import { useToast } from '../contexts/ToastContext'
 import ActionChip from '../components/shared/ActionChip'
-import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { NAVIGATION_CONFIG, NAVIGATION_COLORS } from '../constants/navigation'
+import { LAYOUT } from '../constants/layout'
+import { AUDIT_LOG_ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 const AuditLog = () => {
   const navigate = useNavigate()
   const theme = useTheme()
-  const { } = useResponsive() // eslint-disable-line no-empty-pattern
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -71,7 +72,7 @@ const AuditLog = () => {
         expand: ['user']
       })
       setLogs(data)
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load audit logs'
       setError(errorMessage)
       showError('audit-log', 'load', errorMessage)
@@ -97,44 +98,22 @@ const AuditLog = () => {
   const getObjectIcon = (objectType: string) => {
     switch (objectType) {
       case 'proxy-host':
-        return <ProxyIcon fontSize="small" sx={{ color: '#5eba00' }} />
+        return <ProxyIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.success }} />
       case 'redirection-host':
-        return <RedirectionIcon fontSize="small" sx={{ color: '#f1c40f' }} />
+        return <RedirectionIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.warning }} />
       case 'stream':
       case 'stream-host':
-        return <StreamIcon fontSize="small" sx={{ color: '#467fcf' }} />
+        return <StreamIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.info }} />
       case 'dead-host':
-        return <DeadHostIcon fontSize="small" sx={{ color: '#cd201f' }} />
+        return <DeadHostIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.danger }} />
       case 'access-list':
-        return <AccessListIcon fontSize="small" sx={{ color: '#2bcbba' }} />
+        return <AccessListIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.primary }} />
       case 'user':
         return <PersonIcon fontSize="small" />
       case 'certificate':
-        return <CertificateIcon fontSize="small" sx={{ color: '#467fcf' }} />
+        return <CertificateIcon fontSize="small" sx={{ color: NAVIGATION_COLORS.info }} />
       default:
         return null
-    }
-  }
-
-  const _getObjectTypeColor = (objectType: string): string => {
-    switch (objectType) {
-      case 'proxy-host':
-        return '#5eba00'
-      case 'redirection-host':
-        return '#f1c40f'
-      case 'stream':
-      case 'stream-host':
-        return '#467fcf'
-      case 'dead-host':
-        return '#cd201f'
-      case 'access-list':
-        return '#2bcbba'
-      case 'user':
-        return '#868e96'
-      case 'certificate':
-        return '#467fcf'
-      default:
-        return '#868e96'
     }
   }
 
@@ -161,14 +140,14 @@ const AuditLog = () => {
     }
   }
 
-  const handleChipClick = (entry: AuditLogEntry) => {
+  const handleChipClick = useCallback((entry: AuditLogEntry) => {
     const link = getObjectLink(entry)
     if (link !== '#') {
       navigate(link)
     }
-  }
+  }, [navigate])
 
-  const getObjectDisplayName = (entry: AuditLogEntry) => {
+  const getObjectDisplayName = useCallback((entry: AuditLogEntry) => {
     const items: string[] = []
     
     switch (entry.object_type) {
@@ -219,9 +198,9 @@ const AuditLog = () => {
       )
     }
     
-    return items.map((item, index) => (
-      <Chip 
-        key={index} 
+    return items.map((item) => (
+      <Chip
+        key={item}
         label={item} 
         size="small" 
         sx={{ 
@@ -236,7 +215,7 @@ const AuditLog = () => {
         onClick={() => handleChipClick(entry)}
       />
     ))
-  }
+  }, [handleChipClick])
 
   // Table column definitions with responsive priorities
   const columns: ResponsiveTableColumn<AuditLogEntry>[] = useMemo(() => [
@@ -315,7 +294,7 @@ const AuditLog = () => {
       priority: 'P1' as ColumnPriority, // Essential - always visible
       showInCard: true,
       render: (_, entry) => (
-        <ActionChip action={entry.action as any} />
+        <ActionChip action={entry.action} />
       ),
     },
     {
@@ -355,12 +334,12 @@ const AuditLog = () => {
       render: (date) => (
         <Box>
           <Typography variant="body2">
-            {format(new Date(date), 'MMM d, yyyy')}
+            {format(new Date(date as string), 'MMM d, yyyy')}
           </Typography>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            {format(new Date(date), 'h:mm a')}
+            {format(new Date(date as string), 'h:mm a')}
           </Typography>
         </Box>
       ),
@@ -377,6 +356,7 @@ const AuditLog = () => {
         <Tooltip title="View metadata">
           <IconButton
             size="small"
+            aria-label="View audit entry metadata"
             onClick={(e) => {
               e.stopPropagation()
               handleViewMeta(entry)
@@ -387,7 +367,7 @@ const AuditLog = () => {
         </Tooltip>
       ),
     },
-  ], [])
+  ], [getObjectDisplayName])
 
   // Filter definitions
   const filters: Filter[] = useMemo(() => [
@@ -457,11 +437,11 @@ const AuditLog = () => {
           defaultSortField="created_on"
           defaultSortDirection="desc"
           defaultRowsPerPage={50}
-          rowsPerPageOptions={[25, 50, 100, 200]}
+          rowsPerPageOptions={AUDIT_LOG_ROWS_PER_PAGE_OPTIONS}
           stickyHeader
           responsive={true}
-          cardBreakpoint={900}
-          compactBreakpoint={1250}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
       </Box>
       <Dialog
@@ -477,7 +457,7 @@ const AuditLog = () => {
               alignItems: "center",
               gap: 1
             }}>
-            <AuditIcon sx={{ color: '#495c68' }} />
+            <AuditIcon sx={{ color: NAVIGATION_COLORS.dark }} />
             Audit Log Details
           </Box>
         </DialogTitle>
@@ -509,7 +489,7 @@ const AuditLog = () => {
                     <Typography variant="body2" sx={{
                       color: "text.secondary"
                     }}>Action:</Typography>
-                    <ActionChip action={selectedEntry.action as any} />
+                    <ActionChip action={selectedEntry.action} />
                     
                     <Typography variant="body2" sx={{
                       color: "text.secondary"

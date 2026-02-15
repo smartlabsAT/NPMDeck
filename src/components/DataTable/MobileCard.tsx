@@ -15,8 +15,9 @@ import {
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material'
 import { ResponsiveTableColumn } from './ResponsiveTypes'
+import { FONT_WEIGHT } from '../../constants/layout'
 
-interface MobileCardProps<T = any> {
+interface MobileCardProps<T = object> {
   row: T
   columns: ResponsiveTableColumn<T>[]
   onRowClick?: (row: T) => void
@@ -29,7 +30,7 @@ interface MobileCardProps<T = any> {
  * Generic mobile card component for responsive tables
  * Renders table rows as cards on mobile devices
  */
-export function MobileCard<T extends Record<string, any>>({
+export function MobileCard<T extends object>({
   row,
   columns,
   onRowClick,
@@ -58,12 +59,12 @@ export function MobileCard<T extends Record<string, any>>({
   
   // Get primary display value (usually name or title)
   const primaryColumn = primaryColumns[0]
-  const primaryValue = primaryColumn ? 
-    (primaryColumn.cardDisplay ? 
+  const primaryValue = primaryColumn ?
+    (primaryColumn.cardDisplay ?
       primaryColumn.cardDisplay(primaryColumn.accessor(row), row) :
-      primaryColumn.render ? 
+      primaryColumn.render ?
         primaryColumn.render(primaryColumn.accessor(row), row) :
-        primaryColumn.accessor(row)
+        primaryColumn.accessor(row) as React.ReactNode
     ) : null
   
   return (
@@ -100,7 +101,7 @@ export function MobileCard<T extends Record<string, any>>({
                 variant="subtitle1" 
                 component="div" 
                 sx={{ 
-                  fontWeight: 500,
+                  fontWeight: FONT_WEIGHT.MEDIUM,
                   fontSize: '1rem',
                   wordBreak: 'break-word',
                   overflow: 'hidden',
@@ -119,11 +120,11 @@ export function MobileCard<T extends Record<string, any>>({
               mt: 0.5,
             }}>
               {primaryColumns.slice(1).map((col) => {
-                const value = col.cardDisplay ? 
+                const value = col.cardDisplay ?
                   col.cardDisplay(col.accessor(row), row) :
-                  col.render ? 
+                  col.render ?
                     col.render(col.accessor(row), row) :
-                    col.accessor(row)
+                    col.accessor(row) as React.ReactNode
                 
                 if (!value) return null
                 
@@ -157,11 +158,11 @@ export function MobileCard<T extends Record<string, any>>({
             {secondaryColumns.length > 0 && (
               <Stack spacing={0.5} sx={{ mt: 1 }}>
                 {secondaryColumns.map((col) => {
-                  const value = col.cardDisplay ? 
+                  const value = col.cardDisplay ?
                     col.cardDisplay(col.accessor(row), row) :
-                    col.render ? 
+                    col.render ?
                       col.render(col.accessor(row), row) :
-                      col.accessor(row)
+                      col.accessor(row) as React.ReactNode
                   
                   if (!value) return null
                   
@@ -250,11 +251,11 @@ export function MobileCard<T extends Record<string, any>>({
             <Divider sx={{ my: 1 }} />
             <Stack spacing={0.5}>
               {detailColumns.map((col) => {
-                const value = col.cardDisplay ? 
+                const value = col.cardDisplay ?
                   col.cardDisplay(col.accessor(row), row) :
-                  col.render ? 
+                  col.render ?
                     col.render(col.accessor(row), row) :
-                    col.accessor(row)
+                    col.accessor(row) as React.ReactNode
                 
                 if (!value) return null
                 

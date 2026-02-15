@@ -1,12 +1,8 @@
+import type { CoreResource } from './entityTypes'
+
 export type PermissionLevel = 'hidden' | 'view' | 'manage'
 
-export type Resource = 
-  | 'proxy_hosts' 
-  | 'redirection_hosts' 
-  | 'dead_hosts' 
-  | 'streams' 
-  | 'access_lists' 
-  | 'certificates'
+export type Resource = CoreResource
 
 export type VisibilityScope = 'all' | 'user'
 
@@ -18,11 +14,6 @@ export interface UserPermissions {
   streams?: PermissionLevel
   access_lists?: PermissionLevel
   certificates?: PermissionLevel
-}
-
-export interface PermissionCheck {
-  resource: Resource
-  level: PermissionLevel
 }
 
 export const PERMISSION_HIERARCHY: Record<PermissionLevel, number> = {

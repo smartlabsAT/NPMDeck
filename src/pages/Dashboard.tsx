@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { 
   Typography, 
   Paper, 
@@ -38,6 +38,10 @@ import { useDashboardStats } from '../hooks/useDashboardStats'
 import { usePermissions } from '../hooks/usePermissions'
 import PermissionButton from '../components/PermissionButton'
 import { Resource } from '../types/permissions'
+import { getDaysUntilExpiry } from '../utils/dateUtils'
+import { NAVIGATION_COLORS } from '../constants/navigation'
+import { CERTIFICATE_EXPIRY } from '../constants/certificates'
+import { FONT_WEIGHT } from '../constants/layout'
 
 interface StatCardProps {
   title: string
@@ -55,8 +59,11 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
   
   
   return (
-    <Card 
-      sx={{ 
+    <Card
+      role="link"
+      tabIndex={0}
+      aria-label={`Navigate to ${title}`}
+      sx={{
         height: '100%',
         cursor: 'pointer',
         transition: 'background-color 0.2s',
@@ -65,6 +72,12 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
         }
       }}
       onClick={() => navigate(path)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          navigate(path)
+        }
+      }}
     >
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         {loading ? (
@@ -85,14 +98,14 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
                 backgroundColor: `${color}15`,
                 display: 'inline-flex'
               }}>
-                {React.cloneElement(icon as React.ReactElement<any>, { 
-                  sx: { fontSize: 24, color } 
+                {React.cloneElement(icon as React.ReactElement<Record<string, unknown>>, {
+                  sx: { fontSize: 24, color }
                 })}
               </Box>
               <ArrowIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
             </Box>
             
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+            <Typography variant="h5" sx={{ fontWeight: FONT_WEIGHT.SEMI_BOLD, mb: 0.5 }}>
               {value}
             </Typography>
             
@@ -135,15 +148,6 @@ const StatCard = ({ title, value, icon, color, path, active, inactive, loading }
   );
 }
 
-const getDaysUntilExpiry = (expiresOn: string | null) => {
-  if (!expiresOn) return null
-  const expiryDate = new Date(expiresOn)
-  const today = new Date()
-  const diffTime = expiryDate.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
-}
-
 const getGreeting = () => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Good morning'
@@ -157,14 +161,14 @@ const Dashboard = () => {
   const { canView } = usePermissions()
   const stats = useDashboardStats()
   
-  const statsCards = [
+  const statsCards = useMemo(() => [
     {
       title: 'Proxy Hosts',
       value: stats.proxyHosts.total,
       active: stats.proxyHosts.active,
       inactive: stats.proxyHosts.inactive,
       icon: <ProxyIcon />,
-      color: '#5eba00',
+      color: NAVIGATION_COLORS.success,
       path: '/hosts/proxy',
       show: canView('proxy_hosts')
     },
@@ -174,7 +178,7 @@ const Dashboard = () => {
       active: stats.redirectionHosts.active,
       inactive: stats.redirectionHosts.inactive,
       icon: <RedirectIcon />,
-      color: '#f1c40f',
+      color: NAVIGATION_COLORS.warning,
       path: '/hosts/redirection',
       show: canView('redirection_hosts')
     },
@@ -184,7 +188,7 @@ const Dashboard = () => {
       active: stats.deadHosts.active,
       inactive: stats.deadHosts.inactive,
       icon: <DeadIcon />,
-      color: '#cd201f',
+      color: NAVIGATION_COLORS.danger,
       path: '/hosts/404',
       show: canView('dead_hosts')
     },
@@ -194,7 +198,7 @@ const Dashboard = () => {
       active: stats.streams.active,
       inactive: stats.streams.inactive,
       icon: <StreamIcon />,
-      color: '#467fcf',
+      color: NAVIGATION_COLORS.info,
       path: '/hosts/streams',
       show: canView('streams')
     },
@@ -202,7 +206,7 @@ const Dashboard = () => {
       title: 'SSL Certificates',
       value: stats.certificates.total,
       icon: <CertificateIcon />,
-      color: '#467fcf',
+      color: NAVIGATION_COLORS.info,
       path: '/security/certificates',
       show: canView('certificates')
     },
@@ -210,42 +214,42 @@ const Dashboard = () => {
       title: 'Access Lists',
       value: stats.accessLists.total,
       icon: <AccessListIcon />,
-      color: '#2bcbba',
+      color: NAVIGATION_COLORS.primary,
       path: '/security/access-lists',
       show: canView('access_lists')
     }
-  ]
+  ], [stats, canView])
 
-  const quickActions = [
+  const quickActions = useMemo(() => [
     {
       label: 'New Proxy Host',
       icon: <ProxyIcon />,
       path: '/hosts/proxy/new',
-      color: '#5eba00',
+      color: NAVIGATION_COLORS.success,
       resource: 'proxy_hosts'
     },
     {
       label: 'New Certificate',
       icon: <CertificateIcon />,
       path: '/security/certificates/new',
-      color: '#467fcf',
+      color: NAVIGATION_COLORS.info,
       resource: 'certificates'
     },
     {
       label: 'New Redirection',
       icon: <RedirectIcon />,
       path: '/hosts/redirection/new',
-      color: '#f1c40f',
+      color: NAVIGATION_COLORS.warning,
       resource: 'redirection_hosts'
     },
     {
       label: 'New Access List',
       icon: <AccessListIcon />,
       path: '/security/access-lists/new',
-      color: '#2bcbba',
+      color: NAVIGATION_COLORS.primary,
       resource: 'access_lists'
     }
-  ]
+  ], [])
 
   return (
     <Box>
@@ -259,7 +263,7 @@ const Dashboard = () => {
             }}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                  <Typography variant="h6" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                     {getGreeting()}, {user?.name || user?.email}!
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
@@ -284,9 +288,9 @@ const Dashboard = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', sm: 'flex-end' }, mt: { xs: 2, sm: 0 } }}>
-                  {quickActions.map((action, index) => (
+                  {quickActions.map((action) => (
                     <PermissionButton
-                      key={index}
+                      key={action.path}
                       resource={action.resource as Resource}
                       permissionAction="create"
                       variant="outlined"
@@ -308,10 +312,10 @@ const Dashboard = () => {
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.3 }}>
                         <AddIcon sx={{ fontSize: 16 }} />
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {React.cloneElement(action.icon as React.ReactElement<any>, {
+                          {React.cloneElement(action.icon as React.ReactElement<Record<string, unknown>>, {
                             sx: { fontSize: 16 }
                           })}
-                          <Typography variant="caption" sx={{ fontWeight: 500, letterSpacing: 0.3 }}>
+                          <Typography variant="caption" sx={{ fontWeight: FONT_WEIGHT.MEDIUM, letterSpacing: 0.3 }}>
                             {action.label.replace('New ', '')}
                           </Typography>
                         </Box>
@@ -325,8 +329,8 @@ const Dashboard = () => {
         </Grid>
 
         {/* Stats Cards */}
-        {statsCards.filter(card => card.show).map((card, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+        {statsCards.filter(card => card.show).map((card) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={card.path}>
             <StatCard 
               {...card} 
               loading={stats.loading}
@@ -341,7 +345,7 @@ const Dashboard = () => {
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
                   <WarningIcon sx={{ color: 'warning.main', mr: 1, fontSize: 20 }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                     Expiring Certificates
                   </Typography>
                 </Box>
@@ -350,7 +354,7 @@ const Dashboard = () => {
                   {stats.expiringCertificates.slice(0, 5).map((cert, index) => {
                     const days = getDaysUntilExpiry(cert.expires_on) || 0
                     const isExpired = days < 0
-                    const isCritical = days <= 7
+                    const isCritical = days <= CERTIFICATE_EXPIRY.CRITICAL_DAYS
                     
                     return (
                       <React.Fragment key={cert.id}>
@@ -408,7 +412,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: FONT_WEIGHT.MEDIUM }}>
                 System Overview
               </Typography>
               
@@ -416,7 +420,7 @@ const Dashboard = () => {
                 <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
                     <CheckIcon sx={{ fontSize: 32, color: 'success.main', mb: 0.5 }} />
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                       Nginx Status
                     </Typography>
                     <Typography variant="caption" sx={{
@@ -429,10 +433,10 @@ const Dashboard = () => {
                 
                 <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                    <Typography variant="h4" sx={{ fontWeight: FONT_WEIGHT.SEMI_BOLD, color: 'primary.main' }}>
                       {stats.certificates.valid}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                       Valid Certificates
                     </Typography>
                     <LinearProgress 
@@ -445,10 +449,10 @@ const Dashboard = () => {
                 
                 <Grid size={4}>
                   <Box sx={{ textAlign: 'center', py: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 600, color: 'success.main' }}>
+                    <Typography variant="h4" sx={{ fontWeight: FONT_WEIGHT.SEMI_BOLD, color: 'success.main' }}>
                       {stats.proxyHosts.active + stats.redirectionHosts.active + stats.deadHosts.active + stats.streams.active}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ fontWeight: FONT_WEIGHT.MEDIUM }}>
                       Active Services
                     </Typography>
                     <Typography variant="caption" sx={{

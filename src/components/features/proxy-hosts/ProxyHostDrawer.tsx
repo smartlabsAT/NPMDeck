@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material'
 import { ProxyHost, CreateProxyHost, UpdateProxyHost, proxyHostsApi } from '../../../api/proxyHosts'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import { LAYOUT } from '../../../constants/layout'
 import { AccessList, accessListsApi } from '../../../api/accessLists'
 import { Certificate, certificatesApi } from '../../../api/certificates'
 import BaseDrawer from '../../base/BaseDrawer'
@@ -182,6 +183,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
         advancedConfig: host?.advanced_config || '',
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- loadSelectorData is stable and only needs to run when drawer opens
   }, [open, host, resetForm])
 
   // Set selected certificate after certificates load
@@ -211,7 +213,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       })
       
       setCertificates(sortedCertificates)
-    } catch (err) {
+    } catch (err: unknown) {
       showError('proxy-host', 'load data', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoadingData(false)
@@ -265,7 +267,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
       saveDisabled={false}
       saveText={isEditMode ? 'Save Changes' : 'Create'}
       confirmClose={isDirty}
-      width={600}
+      width={LAYOUT.DRAWER_PANEL_WIDTH}
     >
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab
@@ -273,7 +275,6 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
           setFieldValue={setFieldValue}
           errors={errors}
           accessLists={accessLists}
-          _loadingData={loadingData}
         />
       </TabPanel>
 
@@ -283,7 +284,7 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
           setFieldValue={setFieldValue}
           errors={errors}
           certificates={certificates}
-          _loadingData={loadingData}
+          loadingData={loadingData}
         />
       </TabPanel>
 
@@ -291,7 +292,6 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
         <AdvancedTab
           data={data}
           setFieldValue={setFieldValue}
-          errors={errors}
         />
       </TabPanel>
     </BaseDrawer>
@@ -301,13 +301,12 @@ export default function ProxyHostDrawer({ open, onClose, host, onSave }: ProxyHo
 // Details Tab Component
 interface DetailsTabProps {
   data: ProxyHostFormData
-  setFieldValue: (field: keyof ProxyHostFormData, value: any) => void
-  errors: Record<string, string>
+  setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
+  errors: Partial<Record<keyof ProxyHostFormData, string>>
   accessLists: AccessList[]
-  _loadingData: boolean
 }
 
-const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists, _loadingData: __loadingData }: DetailsTabProps) => {
+const DetailsTab = React.memo(({ data, setFieldValue, errors, accessLists }: DetailsTabProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormSection title="Host Details" required>
@@ -424,13 +423,13 @@ DetailsTab.displayName = 'DetailsTab'
 // SSL Tab Component
 interface SSLTabProps {
   data: ProxyHostFormData
-  setFieldValue: (field: keyof ProxyHostFormData, value: any) => void
-  errors: Record<string, string>
+  setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
+  errors: Partial<Record<keyof ProxyHostFormData, string>>
   certificates: Certificate[]
-  _loadingData: boolean
+  loadingData: boolean
 }
 
-const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, _loadingData: __loadingData }: SSLTabProps) => {
+const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, loadingData }: SSLTabProps) => {
   const navigate = useNavigate()
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -453,7 +452,7 @@ const SSLTab = React.memo(({ data, setFieldValue, errors, certificates, _loading
               setFieldValue('certificateId', newValue?.id || 0)
             }}
             certificates={certificates}
-            loading={__loadingData}
+            loading={loadingData}
             error={errors.certificateId}
             showDomainInfo={true}
             showAddButton={true}
@@ -519,11 +518,10 @@ SSLTab.displayName = 'SSLTab'
 // Advanced Tab Component
 interface AdvancedTabProps {
   data: ProxyHostFormData
-  setFieldValue: (field: keyof ProxyHostFormData, value: any) => void
-  errors: Record<string, string>
+  setFieldValue: (field: keyof ProxyHostFormData, value: ProxyHostFormData[keyof ProxyHostFormData]) => void
 }
 
-const AdvancedTab = React.memo(({ data, setFieldValue, errors: _errors }: AdvancedTabProps) => {
+const AdvancedTab = React.memo(({ data, setFieldValue }: AdvancedTabProps) => {
   return (
     <FormSection title="Custom Configuration">
       <Alert severity="warning" sx={{ mb: 2 }}>

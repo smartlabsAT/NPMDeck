@@ -1,15 +1,17 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getErrorMessage } from '../types/common';
+import { TIMING } from '../constants/timing';
+import logger from '../utils/logger';
 
 /**
  * Validation function type
  */
-export type ValidationFunction<T> = (value: T, formData?: any) => string | null;
+type ValidationFunction<T> = (value: T, formData?: Record<string, unknown>) => string | null;
 
 /**
  * Field configuration for form management
  */
-export interface FieldConfig<T = any> {
+interface FieldConfig<T = unknown> {
   /** Initial value for the field */
   initialValue: T;
   /** Validation function */
@@ -27,11 +29,11 @@ export interface FieldConfig<T = any> {
 /**
  * Form configuration options
  */
-export interface UseDrawerFormOptions<T> {
+interface UseDrawerFormOptions<T> {
   /** Initial form data */
   initialData: T;
   /** Field configurations */
-  fields?: Partial<Record<keyof T, FieldConfig>>;
+  fields?: { [K in keyof T]?: FieldConfig<T[K]> };
   /** Global validation function */
   validate?: (data: T) => Partial<Record<keyof T, string>> | null;
   /** Submit handler */
@@ -58,7 +60,7 @@ export interface UseDrawerFormOptions<T> {
 /**
  * Form state interface
  */
-export interface FormState<T> {
+interface FormState<T> {
   /** Current form data */
   data: T;
   /** Field errors */
@@ -136,9 +138,9 @@ const defaultIsEqual = <T>(a: T, b: T): boolean => {
  * />
  * ```
  */
-export const useDrawerForm = <T extends Record<string, any>>({
+export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
   initialData,
-  fields = {} as Partial<Record<keyof T, FieldConfig>>,
+  fields = {} as { [K in keyof T]?: FieldConfig<T[K]> },
   validate,
   onSubmit,
   onSuccess,
@@ -164,25 +166,30 @@ export const useDrawerForm = <T extends Record<string, any>>({
   const initialDataRef = useRef(initialData);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isSubmittingRef = useRef(false);
+  // Ref for current form data — used in validateField to avoid unstable callback references.
+  // Without this, validateField would depend on formState.data, causing setFieldValue to be
+  // recreated on every state change and breaking any useEffect that has setFieldValue as a dependency.
+  const formDataRef = useRef(formState.data);
+  formDataRef.current = formState.data;
 
   /**
    * Validate a single field
    */
-  const validateField = useCallback((key: keyof T, value: any, data?: T): string | null => {
+  const validateField = useCallback((key: keyof T, value: T[keyof T], data?: T): string | null => {
     const fieldConfig = fields[key];
-    
+
     // Required validation
     if (fieldConfig?.required && (value === '' || value == null)) {
       return fieldConfig.requiredMessage || `${String(key)} is required`;
     }
-    
+
     // Custom validation
     if (fieldConfig?.validate) {
-      return fieldConfig.validate(value, data || formState.data);
+      return fieldConfig.validate(value, data || formDataRef.current);
     }
-    
+
     return null;
-  }, [fields, formState.data]);
+  }, [fields]);
 
   /**
    * Validate all fields
@@ -244,7 +251,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
   /**
    * Update a single field value
    */
-  const setFieldValue = useCallback((key: keyof T, value: any) => {
+  const setFieldValue = useCallback((key: keyof T, value: T[keyof T]) => {
     setFormState((prev) => {
       const newData = { ...prev.data, [key]: value };
       
@@ -341,7 +348,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
       }
       
       onSuccess?.(formState.data);
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       setFormState((prev) => ({ ...prev, globalError: errorMessage }));
       onError?.(error instanceof Error ? error : new Error(errorMessage));
@@ -374,15 +381,15 @@ export const useDrawerForm = <T extends Record<string, any>>({
         await autoSave.onAutoSave(formState.data);
         setFormState((prev) => ({ ...prev, autoSaveStatus: 'saved' }));
         
-        // Reset status after 2 seconds
+        // Reset status after auto-save completes
         setTimeout(() => {
           setFormState((prev) => ({ ...prev, autoSaveStatus: 'idle' }));
-        }, 2000);
-      } catch (error) {
+        }, TIMING.AUTOSAVE_RESET);
+      } catch (error: unknown) {
         setFormState((prev) => ({ ...prev, autoSaveStatus: 'error' }));
-        console.error('Auto-save failed:', error);
+        logger.error('Auto-save failed:', error);
       }
-    }, autoSave.delay || 2000);
+    }, autoSave.delay || TIMING.AUTOSAVE_RESET);
     
     return () => {
       if (autoSaveTimeoutRef.current) {
@@ -395,7 +402,6 @@ export const useDrawerForm = <T extends Record<string, any>>({
    * Get field props for easy binding to input components
    */
   const getFieldProps = useCallback((key: keyof T) => {
-    const _fieldConfig = fields[key];
     const hasError = Boolean(formState.errors[key] && formState.touched[key]);
     
     return {
@@ -405,7 +411,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
         const value = event.target.type === 'number' 
           ? Number(event.target.value)
           : event.target.value;
-        setFieldValue(key, value);
+        setFieldValue(key, value as T[keyof T]);
       },
       onBlur: () => {
         setFieldTouched(key, true);
@@ -415,7 +421,7 @@ export const useDrawerForm = <T extends Record<string, any>>({
       helperText: hasError ? formState.errors[key] : undefined,
       disabled: formState.loading,
     };
-  }, [fields, formState.data, formState.errors, formState.touched, formState.loading, setFieldValue, setFieldTouched, validateField]);
+  }, [formState.data, formState.errors, formState.touched, formState.loading, setFieldValue, setFieldTouched]);
 
 
   /**

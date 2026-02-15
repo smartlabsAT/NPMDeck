@@ -22,6 +22,7 @@ import { RedirectionHost } from '../../../api/redirectionHosts'
 interface ProxyHostConnectionsPanelProps {
   linkedRedirections: RedirectionHost[]
   loadingConnections: boolean
+  error?: string | null
   onNavigateToRedirection: (redirectionId: number) => void
   onEditRedirection: (redirectionId: number) => void
 }
@@ -29,11 +30,17 @@ interface ProxyHostConnectionsPanelProps {
 const ProxyHostConnectionsPanel = ({
   linkedRedirections,
   loadingConnections,
+  error,
   onNavigateToRedirection,
   onEditRedirection,
 }: ProxyHostConnectionsPanelProps) => {
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
       <Box
         sx={{
           display: "flex",
@@ -106,6 +113,7 @@ const ProxyHostConnectionsPanel = ({
                   />
                   <IconButton
                     edge="end"
+                    aria-label="Edit redirection"
                     onClick={(e) => {
                       e.stopPropagation()
                       onEditRedirection(redirect.id)

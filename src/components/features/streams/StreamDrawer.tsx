@@ -21,6 +21,8 @@ import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import { TIMING } from '../../../constants/timing'
+import { LAYOUT } from '../../../constants/layout'
 
 interface StreamDrawerProps {
   open: boolean
@@ -176,7 +178,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
     },
     autoSave: {
       enabled: true,
-      delay: 3000,
+      delay: TIMING.AUTOSAVE_DELAY,
       onAutoSave: async (_formData) => {
         if (isEditMode && isDirty) {
 
@@ -264,7 +266,7 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
       saveDisabled={false}
       saveText={isEditMode ? 'Save Changes' : 'Create Stream'}
       confirmClose={isDirty}
-      width={600}
+      width={LAYOUT.DRAWER_PANEL_WIDTH}
     >
       <TabPanel value={activeTab} index={0} keepMounted animation="none">
         <DetailsTab
@@ -291,9 +293,9 @@ export default function StreamDrawer({ open, onClose, stream, onSave }: StreamDr
 // Details Tab Component
 interface DetailsTabProps {
   data: StreamFormData
-  setFieldValue: (field: keyof StreamFormData, value: any) => void
+  setFieldValue: (field: keyof StreamFormData, value: StreamFormData[keyof StreamFormData]) => void
   errors: Partial<Record<keyof StreamFormData, string>>
-  getFieldProps: (field: keyof StreamFormData) => any
+  getFieldProps: (field: keyof StreamFormData) => Record<string, unknown>
 }
 
 function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabProps) {
@@ -377,7 +379,7 @@ function DetailsTab({ data, setFieldValue, errors, getFieldProps }: DetailsTabPr
 // SSL Tab Component
 interface SSLTabProps {
   data: StreamFormData
-  setFieldValue: (field: keyof StreamFormData, value: any) => void
+  setFieldValue: (field: keyof StreamFormData, value: StreamFormData[keyof StreamFormData]) => void
   certificates: Certificate[]
   loadingCertificates: boolean
   onCertificateChange: (cert: Certificate | null) => void

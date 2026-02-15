@@ -4,8 +4,9 @@ import { CircularProgress, Box } from '@mui/material'
 import ProtectedRoute from './components/ProtectedRoute'
 import PermissionRoute from './components/PermissionRoute'
 import LayoutWithSearch from './components/LayoutWithSearch'
+import PageErrorBoundary from './components/PageErrorBoundary'
 
-// Loading component
+// eslint-disable-next-line react-refresh/only-export-components -- PageLoader is a helper component used only within routes configuration
 const PageLoader = () => (
   <Box
     sx={{
@@ -18,14 +19,17 @@ const PageLoader = () => (
   </Box>
 )
 
-// Wrap lazy components in Suspense
-const withSuspense = (Component: React.LazyExoticComponent<any>) => (
-  <Suspense fallback={<PageLoader />}>
-    <Component />
-  </Suspense>
+// Wrap lazy components in ErrorBoundary + Suspense to catch chunk load failures
+const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) => (
+  <PageErrorBoundary>
+    <Suspense fallback={<PageLoader />}>
+      <Component />
+    </Suspense>
+  </PageErrorBoundary>
 )
 
 // Lazy load pages
+/* eslint-disable react-refresh/only-export-components -- Lazy-loaded page components are not directly exported */
 const Login = lazy(() => import('./pages/Login'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const ProxyHosts = lazy(() => import('./pages/ProxyHosts'))
@@ -37,9 +41,9 @@ const Certificates = lazy(() => import('./pages/Certificates'))
 const Users = lazy(() => import('./pages/Users'))
 const AuditLog = lazy(() => import('./pages/AuditLog'))
 const Settings = lazy(() => import('./pages/Settings'))
-// const ImportExport = lazy(() => import('./pages/ImportExport'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const Forbidden = lazy(() => import('./pages/Forbidden'))
+/* eslint-enable react-refresh/only-export-components */
 
 export const routes = [
   {
@@ -323,6 +327,14 @@ export const routes = [
         ),
       },
       {
+        path: 'users/:id/edit',
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            {withSuspense(Users)}
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'users/:id',
         element: (
           <ProtectedRoute requiredRole="admin">
@@ -354,14 +366,6 @@ export const routes = [
           </ProtectedRoute>
         ),
       },
-      /* {
-        path: 'tools/import-export',
-        element: (
-          <ProtectedRoute requiredRole="admin">
-            {withSuspense(ImportExport)}
-          </ProtectedRoute>
-        ),
-      }, */
       {
         path: '*',
         element: withSuspense(NotFound),

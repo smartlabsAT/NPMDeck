@@ -1,16 +1,16 @@
 import React, { ReactNode } from 'react'
-import { Box, Fade, Slide, Grow, Collapse } from '@mui/material'
+import { Box, Fade, Slide, Grow, Collapse, type SxProps, type Theme } from '@mui/material'
 import { TransitionProps } from '@mui/material/transitions'
 
 /**
  * Animation types for tab panel transitions
  */
-export type TabPanelAnimation = 'none' | 'fade' | 'slide' | 'grow' | 'collapse'
+type TabPanelAnimation = 'none' | 'fade' | 'slide' | 'grow' | 'collapse'
 
 /**
  * Direction for slide animations
  */
-export type SlideDirection = 'left' | 'right' | 'up' | 'down'
+type SlideDirection = 'left' | 'right' | 'up' | 'down'
 
 /**
  * Props for the TabPanel component
@@ -31,7 +31,7 @@ export interface TabPanelProps {
   /** Whether to keep the panel mounted when hidden */
   keepMounted?: boolean
   /** Custom styling */
-  sx?: any
+  sx?: SxProps<Theme>
   /** Padding inside the panel */
   padding?: number | string
   /** Whether panel is loading */
@@ -39,21 +39,21 @@ export interface TabPanelProps {
   /** Loading placeholder */
   loadingComponent?: ReactNode
   /** Custom transition component */
-  TransitionComponent?: React.ComponentType<TransitionProps & { children: React.ReactElement<any, any> }>
+  TransitionComponent?: React.ComponentType<TransitionProps & { children: React.ReactElement }>
   /** Additional props for the transition component */
-  transitionProps?: any
+  transitionProps?: Partial<TransitionProps>
   /** Role for accessibility */
   role?: string
   /** ARIA labelledby for accessibility */
   'aria-labelledby'?: string
   /** Additional ARIA props */
-  ariaProps?: Record<string, any>
+  ariaProps?: Record<string, string | boolean | number | undefined>
 }
 
 /**
  * Transition props type shared by all transition wrapper components
  */
-type TransitionWrapperProps = TransitionProps & { children: React.ReactElement<any, any>; ref?: React.Ref<unknown> }
+type TransitionWrapperProps = TransitionProps & { children: React.ReactElement; ref?: React.Ref<unknown> }
 
 /**
  * Slide transition component factory
@@ -89,7 +89,7 @@ function FadeTransition({ ref, ...props }: TransitionWrapperProps) {
  * No-op transition component (renders children directly)
  */
 function NoTransition({ ref, children }: TransitionWrapperProps) {
-  return React.cloneElement(children, { ref })
+  return React.cloneElement(children, { ref } as React.Attributes & { ref?: React.Ref<unknown> })
 }
 
 /**
@@ -246,106 +246,3 @@ export default function TabPanel({
   )
 }
 
-/**
- * Convenience components for common tab panel patterns
- */
-
-/**
- * FadeTabPanel - Pre-configured fade transition tab panel
- */
-export interface FadeTabPanelProps extends Omit<TabPanelProps, 'animation'> {
-  /** Fade timeout */
-  fadeTimeout?: number
-}
-
-export function FadeTabPanel({ fadeTimeout = 300, ...props }: FadeTabPanelProps) {
-  return (
-    <TabPanel
-      {...props}
-      animation="fade"
-      timeout={fadeTimeout}
-    />
-  )
-}
-
-/**
- * SlideTabPanel - Pre-configured slide transition tab panel
- */
-export interface SlideTabPanelProps extends Omit<TabPanelProps, 'animation'> {
-  /** Slide direction */
-  direction?: SlideDirection
-  /** Slide timeout */
-  slideTimeout?: number
-}
-
-export function SlideTabPanel({ 
-  direction = 'left', 
-  slideTimeout = 300, 
-  ...props 
-}: SlideTabPanelProps) {
-  return (
-    <TabPanel
-      {...props}
-      animation="slide"
-      slideDirection={direction}
-      timeout={slideTimeout}
-    />
-  )
-}
-
-/**
- * NoAnimationTabPanel - Tab panel without transitions
- */
-export type NoAnimationTabPanelProps = Omit<TabPanelProps, 'animation' | 'timeout'>
-
-export function NoAnimationTabPanel(props: NoAnimationTabPanelProps) {
-  return (
-    <TabPanel
-      {...props}
-      animation="none"
-    />
-  )
-}
-
-/**
- * LazyTabPanel - Tab panel that only renders content when first activated
- */
-export interface LazyTabPanelProps extends TabPanelProps {
-  /** Whether content has been loaded */
-  hasBeenActivated?: boolean
-  /** Callback when panel is first activated */
-  onFirstActivation?: () => void
-}
-
-export function LazyTabPanel({
-  hasBeenActivated: externalHasBeenActivated,
-  onFirstActivation,
-  value,
-  index,
-  children,
-  ...props
-}: LazyTabPanelProps) {
-  const [internalHasBeenActivated, setInternalHasBeenActivated] = React.useState(false)
-  const hasBeenActivated = externalHasBeenActivated ?? internalHasBeenActivated
-  const isActive = value === index
-
-  React.useEffect(() => {
-    if (isActive && !hasBeenActivated) {
-      setInternalHasBeenActivated(true)
-      if (onFirstActivation) {
-        onFirstActivation()
-      }
-    }
-  }, [isActive, hasBeenActivated, onFirstActivation])
-
-  return (
-    <TabPanel
-      {...props}
-      value={value}
-      index={index}
-      keepMounted={hasBeenActivated}
-    >
-      {(hasBeenActivated || isActive) ? children : null}
-    </TabPanel>
-  )
-}

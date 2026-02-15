@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Typography,
   Box,
@@ -19,36 +19,17 @@ import {
 import { ProxyHost } from '../api/proxyHosts'
 import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
 import { AccessList, accessListsApi } from '../api/accessLists'
-// import ExportDialog from './ExportDialog'
-import { usePermissions } from '../hooks/usePermissions'
+import logger from '../utils/logger'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import AdaptiveContainer from './AdaptiveContainer'
+import TabPanel from './shared/TabPanel'
 import ProxyHostInfoPanel from './features/proxy-hosts/ProxyHostInfoPanel'
 import ProxyHostSSLPanel from './features/proxy-hosts/ProxyHostSSLPanel'
 import ProxyHostAdvancedPanel from './features/proxy-hosts/ProxyHostAdvancedPanel'
 import ProxyHostConnectionsPanel from './features/proxy-hosts/ProxyHostConnectionsPanel'
 import ProxyHostAccessPanel from './features/proxy-hosts/ProxyHostAccessPanel'
 import ProxyHostActions from './features/proxy-hosts/ProxyHostActions'
-
-interface TabPanelProps {
-  children?: React.ReactNode
-  index: number
-  value: number
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`proxy-host-tabpanel-${index}`}
-      aria-labelledby={`proxy-host-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
-    </div>
-  )
-}
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface ProxyHostDetailsDialogProps {
   open: boolean
@@ -65,9 +46,8 @@ const ProxyHostDetailsDialog = ({
 }: ProxyHostDetailsDialogProps) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { } = usePermissions() // eslint-disable-line no-empty-pattern
   const [activeTab, setActiveTab] = useState(0)
-  const [copiedText, setCopiedText] = useState<string>('')
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     config: true,
     ssl: false,
@@ -75,9 +55,49 @@ const ProxyHostDetailsDialog = ({
   })
   const [linkedRedirections, setLinkedRedirections] = useState<RedirectionHost[]>([])
   const [loadingConnections, setLoadingConnections] = useState(false)
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [connectionsError, setConnectionsError] = useState<string | null>(null)
   const [fullAccessList, setFullAccessList] = useState<AccessList | null>(null)
   const [loadingAccessList, setLoadingAccessList] = useState(false)
+  const [accessListError, setAccessListError] = useState<string | null>(null)
+
+  const loadConnections = useCallback(async () => {
+    if (!host) return
+
+    setLoadingConnections(true)
+    setConnectionsError(null)
+    try {
+      const redirections = await redirectionHostsApi.getAll()
+
+      // Filter redirections that point to any of this host's domains
+      const linkedRedirects = redirections.filter(redirect => {
+        const targetDomain = redirect.forward_domain_name.toLowerCase()
+        return host.domain_names.some(domain => domain.toLowerCase() === targetDomain)
+      })
+
+      setLinkedRedirections(linkedRedirects)
+    } catch (error: unknown) {
+      logger.error('Failed to load connections:', error)
+      setConnectionsError('Failed to load connected redirections.')
+    } finally {
+      setLoadingConnections(false)
+    }
+  }, [host])
+
+  const loadAccessListDetails = useCallback(async () => {
+    if (!host?.access_list?.id) return
+
+    try {
+      setLoadingAccessList(true)
+      setAccessListError(null)
+      const data = await accessListsApi.getById(host.access_list.id, ['items', 'clients', 'owner'])
+      setFullAccessList(data)
+    } catch (error: unknown) {
+      logger.error('Failed to load access list details:', error)
+      setAccessListError('Failed to load access list details.')
+    } finally {
+      setLoadingAccessList(false)
+    }
+  }, [host?.access_list?.id])
 
   // Parse tab from URL
   useEffect(() => {
@@ -111,57 +131,16 @@ const ProxyHostDetailsDialog = ({
     if (open && host) {
       loadConnections()
     }
-  }, [open, host])
+  }, [open, host, loadConnections])
 
   // Load access list details when access tab is active
   useEffect(() => {
     if (activeTab === 4 && open && host?.access_list?.id) {
       loadAccessListDetails()
     }
-  }, [activeTab, open, host?.access_list?.id])
-
-  const loadConnections = async () => {
-    if (!host) return
-    
-    setLoadingConnections(true)
-    try {
-      const redirections = await redirectionHostsApi.getAll()
-      
-      // Filter redirections that point to any of this host's domains
-      const linkedRedirects = redirections.filter(redirect => {
-        const targetDomain = redirect.forward_domain_name.toLowerCase()
-        return host.domain_names.some(domain => domain.toLowerCase() === targetDomain)
-      })
-      
-      setLinkedRedirections(linkedRedirects)
-    } catch (error) {
-      console.error('Failed to load connections:', error)
-    } finally {
-      setLoadingConnections(false)
-    }
-  }
-
-  const loadAccessListDetails = async () => {
-    if (!host?.access_list?.id) return
-    
-    try {
-      setLoadingAccessList(true)
-      const data = await accessListsApi.getById(host.access_list.id, ['items', 'clients', 'owner'])
-      setFullAccessList(data)
-    } catch (error) {
-      console.error('Failed to load access list details:', error)
-    } finally {
-      setLoadingAccessList(false)
-    }
-  }
+  }, [activeTab, open, host?.access_list?.id, loadAccessListDetails])
 
   if (!host) return null
-
-  const copyToClipboard = (text: string, label?: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedText(label || text)
-    setTimeout(() => setCopiedText(''), 2000)
-  }
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
@@ -172,17 +151,17 @@ const ProxyHostDetailsDialog = ({
 
   const handleNavigateToAccess = () => {
     setActiveTab(4)
-    navigate(`/hosts/proxy/${host!.id}/view/access`, { replace: true })
+    navigate(`/hosts/proxy/${host?.id}/view/access`, { replace: true })
   }
 
   const handleNavigateToCertificate = () => {
     onClose()
-    navigate(`/security/certificates/${host!.certificate_id}/view`)
+    navigate(`/security/certificates/${host?.certificate_id}/view`)
   }
 
   const handleNavigateToFullAccessList = () => {
     onClose()
-    navigate(`/security/access-lists/${host!.access_list!.id}/view`)
+    navigate(`/security/access-lists/${host?.access_list?.id}/view`)
   }
 
   const handleNavigateToRedirection = (redirectionId: number) => {
@@ -215,7 +194,7 @@ const ProxyHostDetailsDialog = ({
       title={
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <SwapHorizIcon sx={{ color: '#5eba00' }} />
+            <SwapHorizIcon sx={{ color: NAVIGATION_COLORS.success }} />
             <Typography variant="h6">Proxy Host</Typography>
           </Box>
           <Typography variant="body2" sx={{
@@ -263,7 +242,7 @@ const ProxyHostDetailsDialog = ({
           </Alert>
         )}
 
-        <TabPanel value={activeTab} index={0}>
+        <TabPanel value={activeTab} index={0} animation="none" padding={0} sx={{ py: 2 }}>
           <ProxyHostInfoPanel
             host={host}
             expandedSections={expandedSections}
@@ -274,60 +253,39 @@ const ProxyHostDetailsDialog = ({
           />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={1} animation="none" padding={0} sx={{ py: 2 }}>
           <ProxyHostSSLPanel
             host={host}
             onNavigateToCertificate={handleNavigateToCertificate}
           />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={2}>
+        <TabPanel value={activeTab} index={2} animation="none" padding={0} sx={{ py: 2 }}>
           <ProxyHostAdvancedPanel host={host} />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={3}>
+        <TabPanel value={activeTab} index={3} animation="none" padding={0} sx={{ py: 2 }}>
           <ProxyHostConnectionsPanel
             linkedRedirections={linkedRedirections}
             loadingConnections={loadingConnections}
+            error={connectionsError}
             onNavigateToRedirection={handleNavigateToRedirection}
             onEditRedirection={handleEditRedirection}
           />
         </TabPanel>
 
         {host.access_list && (
-          <TabPanel value={activeTab} index={4}>
+          <TabPanel value={activeTab} index={4} animation="none" padding={0} sx={{ py: 2 }}>
             <ProxyHostAccessPanel
               host={host}
               fullAccessList={fullAccessList}
               loadingAccessList={loadingAccessList}
+              error={accessListError}
               onNavigateToFullAccessList={handleNavigateToFullAccessList}
             />
           </TabPanel>
         )}
       </Box>
-      {/* Export Button for Admin */}
-      {/* {isAdmin && (
-        <Box sx={{ mt: 2 }}>
-          <Button
-            onClick={() => setExportDialogOpen(true)}
-            startIcon={<DownloadIcon />}
-            variant="outlined"
-            fullWidth
-          >
-            Export
-          </Button>
-        </Box>
-      )} */}
-      {/* Export Dialog */}
-      {/* {host && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[host]}
-          type="proxy_host"
-          itemName="Proxy Host"
-        />
-      )} */}
     </AdaptiveContainer>
   );
 }

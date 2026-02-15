@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { 
-  Alert, 
-  AlertColor, 
-  Slide, 
-  SlideProps, 
-  Box, 
+import { TIMING } from '../constants/timing';
+import { Z_INDEX, FONT_WEIGHT } from '../constants/layout';
+import {
+  Alert,
+  AlertColor,
+  Slide,
+  SlideProps,
+  Box,
   Typography,
   useTheme,
   alpha
@@ -28,30 +30,22 @@ import {
   Settings as SettingsIcon,
   History as AuditLogIcon,
 } from '@mui/icons-material';
+import type { ToastEntityType } from '../types/entityTypes';
 
 /**
  * Entity types for toast messages
  */
-export type EntityType = 
-  | 'proxy-host'
-  | 'redirection-host'
-  | 'dead-host'
-  | 'stream'
-  | 'certificate'
-  | 'access-list'
-  | 'user'
-  | 'settings'
-  | 'audit-log';
+type EntityType = ToastEntityType;
 
 /**
  * Action types
  */
-export type ActionType = 'create' | 'update' | 'delete' | 'created' | 'updated' | 'deleted' | 'enable' | 'enabled' | 'disable' | 'disabled';
+type ActionType = 'create' | 'update' | 'delete' | 'created' | 'updated' | 'deleted' | 'enable' | 'enabled' | 'disable' | 'disabled';
 
 /**
  * Toast message configuration
  */
-export interface ToastMessage {
+interface ToastMessage {
   id: string;
   message: string;
   severity: AlertColor;
@@ -78,14 +72,14 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 /**
  * Slide transition for toast
  */
-function _SlideTransition(props: SlideProps) {
+function _SlideTransition(props: SlideProps): React.JSX.Element {
   return <Slide {...props} direction="down" />;
 }
 
 /**
  * Get entity icon
  */
-function getEntityIcon(entityType: EntityType) {
+function getEntityIcon(entityType: EntityType): React.ElementType {
   const icons: Record<EntityType, React.ElementType> = {
     'proxy-host': ProxyIcon,
     'redirection-host': RedirectionIcon,
@@ -103,7 +97,7 @@ function getEntityIcon(entityType: EntityType) {
 /**
  * Get action icon
  */
-function getActionIcon(action?: ActionType) {
+function getActionIcon(action?: ActionType): React.ElementType | null {
   if (!action) return null;
   
   const icons: Record<ActionType, React.ElementType> = {
@@ -140,14 +134,13 @@ function formatEntityType(entityType: EntityType): string {
 }
 
 /**
- * Custom Toast Component
+ * Shared Alert content used by both demo and non-demo toast modes
  */
-export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMessage; onClose: () => void; demo?: boolean }) {
+function ToastAlertContent({ toast }: { toast: ToastMessage }) {
   const theme = useTheme();
   const EntityIcon = toast.entityType ? getEntityIcon(toast.entityType) : InfoIcon;
   const ActionIcon = getActionIcon(toast.action);
-  
-  // Get severity icon
+
   const getSeverityIcon = () => {
     switch (toast.severity) {
       case 'success':
@@ -161,185 +154,117 @@ export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMess
         return InfoIcon;
     }
   };
-  
+
   const SeverityIcon = getSeverityIcon();
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+      {/* Icon section */}
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        flexShrink: 0,
+        mt: 0.25
+      }}>
+        {ActionIcon ? (
+          <Box sx={{ position: 'relative' }}>
+            <EntityIcon sx={{ fontSize: 24, opacity: 0.9 }} />
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: -4,
+                right: -4,
+                backgroundColor: theme.palette.mode === 'dark'
+                  ? theme.palette.background.paper
+                  : 'white',
+                borderRadius: '50%',
+                width: 16,
+                height: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ActionIcon sx={{ fontSize: 12, color: theme.palette[toast.severity].main }} />
+            </Box>
+          </Box>
+        ) : (
+          <SeverityIcon sx={{ fontSize: 24 }} />
+        )}
+      </Box>
+
+      {/* Content section */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        {toast.entityType && (
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              opacity: 0.9,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              fontSize: '0.65rem',
+              mb: 0.25
+            }}
+          >
+            {formatEntityType(toast.entityType)}
+          </Typography>
+        )}
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: FONT_WEIGHT.MEDIUM,
+            wordBreak: 'break-word'
+          }}
+        >
+          {toast.message}
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
+/**
+ * Custom Toast Component
+ */
+export function CustomToast({ toast, onClose, demo = false }: { toast: ToastMessage; onClose: () => void; demo?: boolean }) {
+  const theme = useTheme();
 
   // Set up auto-hide timer
   React.useEffect(() => {
     if (!toast.duration) return
-    
+
     const timer = setTimeout(() => {
       onClose();
     }, toast.duration);
     return () => clearTimeout(timer);
   }, [toast.duration, onClose]);
 
-  // For demo mode, just return the Alert without Snackbar wrapper
+  const alertSx = {
+    width: '100%',
+    maxWidth: 500,
+    backgroundColor: theme.palette.mode === 'dark'
+      ? alpha(theme.palette[toast.severity].main, 0.9)
+      : theme.palette[toast.severity].main,
+    '& .MuiAlert-icon': {
+      display: 'none'
+    },
+    ...(!demo && { boxShadow: 3 }),
+  };
+
+  // For demo mode, just return the Alert without Slide wrapper
   if (demo) {
     return (
-      <Alert
-        onClose={onClose}
-        severity={toast.severity}
-        variant="filled"
-        sx={{ 
-          width: '100%', 
-          maxWidth: 500,
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette[toast.severity].main, 0.9)
-            : theme.palette[toast.severity].main,
-          '& .MuiAlert-icon': {
-            display: 'none' // We'll use custom icon layout
-          }
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-          {/* Icon section */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            flexShrink: 0,
-            mt: 0.25
-          }}>
-            {ActionIcon ? (
-              <Box sx={{ position: 'relative' }}>
-                <EntityIcon sx={{ fontSize: 24, opacity: 0.9 }} />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: -4,
-                    right: -4,
-                    backgroundColor: theme.palette.mode === 'dark'
-                      ? theme.palette.background.paper
-                      : 'white',
-                    borderRadius: '50%',
-                    width: 16,
-                    height: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ActionIcon sx={{ fontSize: 12, color: theme.palette[toast.severity].main }} />
-                </Box>
-              </Box>
-            ) : (
-              <SeverityIcon sx={{ fontSize: 24 }} />
-            )}
-          </Box>
-          
-          {/* Content section */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            {toast.entityType && (
-              <Typography
-                variant="caption"
-                sx={{
-                  display: 'block',
-                  opacity: 0.9,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                  fontSize: '0.65rem',
-                  mb: 0.25
-                }}
-              >
-                {formatEntityType(toast.entityType)}
-              </Typography>
-            )}
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 500,
-                wordBreak: 'break-word'
-              }}
-            >
-              {toast.message}
-            </Typography>
-          </Box>
-        </Box>
+      <Alert onClose={onClose} severity={toast.severity} variant="filled" sx={alertSx}>
+        <ToastAlertContent toast={toast} />
       </Alert>
     );
   }
 
   return (
     <Slide direction="down" in={true} mountOnEnter unmountOnExit>
-      <Alert
-        onClose={onClose}
-        severity={toast.severity}
-        variant="filled"
-        sx={{ 
-          width: '100%', 
-          maxWidth: 500,
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette[toast.severity].main, 0.9)
-            : theme.palette[toast.severity].main,
-          '& .MuiAlert-icon': {
-            display: 'none' // We'll use custom icon layout
-          },
-          boxShadow: 3,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-          {/* Icon section */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            flexShrink: 0,
-            mt: 0.25
-          }}>
-            {ActionIcon ? (
-              <Box sx={{ position: 'relative' }}>
-                <EntityIcon sx={{ fontSize: 24, opacity: 0.9 }} />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: -4,
-                    right: -4,
-                    backgroundColor: theme.palette.mode === 'dark'
-                      ? theme.palette.background.paper
-                      : 'white',
-                    borderRadius: '50%',
-                    width: 16,
-                    height: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ActionIcon sx={{ fontSize: 12, color: theme.palette[toast.severity].main }} />
-                </Box>
-              </Box>
-            ) : (
-              <SeverityIcon sx={{ fontSize: 24 }} />
-            )}
-          </Box>
-          
-          {/* Content section */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            {toast.entityType && (
-              <Typography
-                variant="caption"
-                sx={{
-                  display: 'block',
-                  opacity: 0.9,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                  fontSize: '0.65rem',
-                  mb: 0.25
-                }}
-              >
-                {formatEntityType(toast.entityType)}
-              </Typography>
-            )}
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 500,
-                wordBreak: 'break-word'
-              }}
-            >
-              {toast.message}
-            </Typography>
-          </Box>
-        </Box>
+      <Alert onClose={onClose} severity={toast.severity} variant="filled" sx={alertSx}>
+        <ToastAlertContent toast={toast} />
       </Alert>
     </Slide>
   );
@@ -356,7 +281,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const toast: ToastMessage = {
       ...config,
       id: `${Date.now()}-${Math.random()}`,
-      duration: config.duration || 6000,
+      duration: config.duration || TIMING.TOAST_DEFAULT,
     };
 
     setToasts((prev) => [...prev, toast]);
@@ -412,7 +337,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       entityName,
       entityId,
       action: action as ActionType,
-      duration: 8000, // Longer duration for errors
+      duration: TIMING.TOAST_ERROR, // Longer duration for errors
     });
   }, [showToast]);
 
@@ -466,7 +391,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             position: 'fixed',
             top: index * 80 + 64, // Stack toasts with 80px spacing, starting below header
             right: 24,
-            zIndex: 1400 + index,
+            zIndex: Z_INDEX.TOAST + index,
           }}
         >
           <CustomToast 
@@ -482,7 +407,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 /**
  * Hook to use toast functionality
  */
-export function useToast() {
+// eslint-disable-next-line react-refresh/only-export-components
+export function useToast(): ToastContextValue {
   const context = useContext(ToastContext);
   if (!context) {
     throw new Error('useToast must be used within a ToastProvider');

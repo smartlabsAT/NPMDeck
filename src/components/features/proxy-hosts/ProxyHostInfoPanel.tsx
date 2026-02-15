@@ -31,6 +31,7 @@ import {
   Security as SecurityIcon,
 } from '@mui/icons-material'
 import { ProxyHost } from '../../../api/proxyHosts'
+import { formatDate } from '../../../utils/dateUtils'
 
 interface ProxyHostInfoPanelProps {
   host: ProxyHost
@@ -49,17 +50,6 @@ const ProxyHostInfoPanel = ({
   onCopyToClipboard,
   onNavigateToAccess,
 }: ProxyHostInfoPanelProps) => {
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
   return (
     <Grid container spacing={3}>
       {/* Status Overview */}
@@ -198,8 +188,9 @@ const ProxyHostInfoPanel = ({
               }}>
                 #{host.id}
               </Typography>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
+                aria-label="Copy to clipboard"
                 onClick={() => onCopyToClipboard(host.id.toString(), 'Host ID')}
               >
                 <CopyIcon fontSize="small" />
@@ -306,13 +297,14 @@ const ProxyHostInfoPanel = ({
         
         <Collapse in={expandedSections.domains} timeout="auto" unmountOnExit>
           <List dense sx={{ bgcolor: 'background.paper', borderRadius: 1, mt: 1 }}>
-            {host.domain_names.map((domain, index) => (
+            {host.domain_names.map((domain) => (
               <ListItem
-                key={index}
+                key={domain}
                 secondaryAction={
-                  <IconButton 
-                    edge="end" 
-                    size="small" 
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    aria-label="Copy to clipboard"
                     onClick={() => onCopyToClipboard(domain, domain)}
                   >
                     <CopyIcon fontSize="small" />

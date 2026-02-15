@@ -11,7 +11,7 @@ export type ColumnPriority = 'P1' | 'P2' | 'P3'
 /**
  * Extended column definition with responsive properties
  */
-export interface ResponsiveTableColumn<T = any> extends TableColumn<T> {
+export interface ResponsiveTableColumn<T = object> extends TableColumn<T> {
   /** Priority level for responsive display */
   priority?: ColumnPriority
   
@@ -22,7 +22,7 @@ export interface ResponsiveTableColumn<T = any> extends TableColumn<T> {
   showInCard?: boolean
   
   /** Custom card display component */
-  cardDisplay?: (value: any, row: T) => React.ReactNode
+  cardDisplay?: (value: unknown, row: T) => React.ReactNode
   
   /** Minimum width in pixels (for table view) */
   minWidth?: number
@@ -45,7 +45,7 @@ export interface ResponsiveTableConfig {
   compactBreakpoint?: 'sm' | 'md' | 'lg' | 'xl' | number
   
   /** Custom card renderer */
-  renderCard?: (row: any, columns: ResponsiveTableColumn[]) => React.ReactNode
+  renderCard?: (row: unknown, columns: ResponsiveTableColumn[]) => React.ReactNode
   
   /** Show column priority badges in header */
   showPriorityBadges?: boolean
@@ -60,12 +60,10 @@ export interface ResponsiveTableConfig {
 /**
  * Props for responsive table wrapper
  */
-export interface ResponsiveTableProps<T = any> {
+export interface ResponsiveTableProps<T = object> {
   columns: ResponsiveTableColumn<T>[]
   data: T[]
   config?: ResponsiveTableConfig
-  // ... other DataTable props
-  [key: string]: any
 }
 
 /**

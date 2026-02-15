@@ -44,10 +44,10 @@ jobs:
         id: eslint
         run: |
           pnpm run lint 2>&1 | tee lint-output.txt || true
-          ERRORS=$(grep -E "^\s+[0-9]+:[0-9]+\s+error" lint-output.txt | wc -l || echo "0")
-          WARNINGS=$(grep -c "warning" lint-output.txt || echo "0")
-          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
-          echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
+          ERRORS=$(grep -cE "^\s+[0-9]+:[0-9]+\s+error" lint-output.txt || true)
+          WARNINGS=$(grep -c "warning" lint-output.txt || true)
+          echo "errors=${ERRORS:-0}" >> $GITHUB_OUTPUT
+          echo "warnings=${WARNINGS:-0}" >> $GITHUB_OUTPUT
           
           if [ "$ERRORS" -gt "0" ]; then
             echo "❌ Found $ERRORS ESLint errors"

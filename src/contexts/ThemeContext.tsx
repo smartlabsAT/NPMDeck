@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { ThemeProvider as MUIThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { lightTheme, darkTheme } from '../theme/index'
+import { STORAGE_KEYS } from '../constants/storage'
 
 type ThemeMode = 'light' | 'dark'
 
@@ -12,8 +13,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
-const THEME_KEY = 'npm-theme-mode'
-
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const context = useContext(ThemeContext)
   if (!context) {
@@ -29,7 +29,7 @@ interface ThemeProviderProps {
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [mode, setMode] = useState<ThemeMode>(() => {
     // Check localStorage first
-    const saved = localStorage.getItem(THEME_KEY)
+    const saved = localStorage.getItem(STORAGE_KEYS.THEME_MODE)
     if (saved === 'light' || saved === 'dark') {
       return saved
     }
@@ -40,7 +40,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
   useEffect(() => {
     // Save to localStorage whenever mode changes
-    localStorage.setItem(THEME_KEY, mode)
+    localStorage.setItem(STORAGE_KEYS.THEME_MODE, mode)
   }, [mode])
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     const handleChange = (e: MediaQueryListEvent) => {
       // Only update if user hasn't manually set a preference
-      if (!localStorage.getItem(THEME_KEY)) {
+      if (!localStorage.getItem(STORAGE_KEYS.THEME_MODE)) {
         setMode(e.matches ? 'dark' : 'light')
       }
     }

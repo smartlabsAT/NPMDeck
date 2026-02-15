@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Button,
   Typography,
@@ -15,15 +14,15 @@ import {
   ContentCopy as CopyIcon,
   Edit as EditIcon,
   Stream as StreamIcon,
-  CheckCircle as CheckIcon,
-  Cancel as CancelIcon,
-  Error as ErrorIcon,
   OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material'
 import { Stream } from '../api/streams'
-// import ExportDialog from './ExportDialog'
+import { getStatusIcon, getStatusText, getStatusColor } from '../utils/statusUtils'
+import { formatDate } from '../utils/dateUtils'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import AdaptiveContainer from './AdaptiveContainer'
 import OwnerDisplay from './shared/OwnerDisplay'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface StreamDetailsDialogProps {
   open: boolean
@@ -38,42 +37,9 @@ const StreamDetailsDialog = ({
   stream,
   onEdit,
 }: StreamDetailsDialogProps) => {
-  const [copiedText, setCopiedText] = useState<string>('')
-  // const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
 
   if (!stream) return null
-
-  const copyToClipboard = (text: string, label?: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedText(label || text)
-    setTimeout(() => setCopiedText(''), 2000)
-  }
-
-  const getStatusIcon = () => {
-    if (!stream.enabled) {
-      return <CancelIcon color="disabled" />
-    }
-    if (stream.meta.nginx_online === false) {
-      return <ErrorIcon color="error" />
-    }
-    return <CheckIcon color="success" />
-  }
-
-  const getStatusText = () => {
-    if (!stream.enabled) return 'Disabled'
-    if (stream.meta.nginx_online === false) return 'Offline'
-    return 'Online'
-  }
-
-  const getStatusColor = () => {
-    if (!stream.enabled) return 'default'
-    if (stream.meta.nginx_online === false) return 'error'
-    return 'success'
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
-  }
 
   return (
     <>
@@ -85,7 +51,7 @@ const StreamDetailsDialog = ({
         title={
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <StreamIcon sx={{ color: '#467fcf' }} />
+              <StreamIcon sx={{ color: NAVIGATION_COLORS.info }} />
               <Typography variant="h6">Stream</Typography>
             </Box>
             <Typography variant="body2" sx={{
@@ -99,12 +65,6 @@ const StreamDetailsDialog = ({
         fullWidth
         actions={
           <>
-            {/* <Button
-              onClick={() => setExportDialogOpen(true)}
-              startIcon={<DownloadIcon />}
-            >
-              Export
-            </Button> */}
             {onEdit && (
               <Button 
                 onClick={() => {
@@ -123,14 +83,14 @@ const StreamDetailsDialog = ({
         }
       >
           {/* Status Alert */}
-          <Alert 
-            severity={getStatusColor() as any}
-            icon={getStatusIcon()}
+          <Alert
+            severity={({ default: 'info' as const, error: 'error' as const, success: 'success' as const })[getStatusColor(stream)]}
+            icon={getStatusIcon(stream)}
             sx={{ mb: 3 }}
           >
             <Box>
               <Typography variant="body2">
-                Status: <strong>{getStatusText()}</strong>
+                Status: <strong>{getStatusText(stream)}</strong>
               </Typography>
               {stream.meta.nginx_err && (
                 <Typography variant="body2" sx={{ mt: 1 }}>
@@ -163,8 +123,9 @@ const StreamDetailsDialog = ({
                   <Typography variant="body1">
                     {stream.incoming_port}
                   </Typography>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
+                    aria-label="Copy to clipboard"
                     onClick={() => copyToClipboard(stream.incoming_port.toString(), 'Port')}
                   >
                     <CopyIcon fontSize="small" />
@@ -193,20 +154,21 @@ const StreamDetailsDialog = ({
                   <Typography variant="body1">
                     {stream.forwarding_host}:{stream.forwarding_port}
                   </Typography>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
+                    aria-label="Copy to clipboard"
                     onClick={() => copyToClipboard(`${stream.forwarding_host}:${stream.forwarding_port}`, 'Destination')}
                   >
                     <CopyIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
+                    aria-label="Open in new tab"
                     onClick={() => {
                       const protocol = stream.certificate_id ? 'https' : 'http'
                       const url = `${protocol}://${stream.forwarding_host}:${stream.forwarding_port}`
                       window.open(url, '_blank', 'noopener,noreferrer')
                     }}
-                    title="Open in new tab"
                   >
                     <OpenInNewIcon fontSize="small" />
                   </IconButton>
@@ -381,16 +343,6 @@ const StreamDetailsDialog = ({
             </Grid>
           </Box>
       </AdaptiveContainer>
-      {/* Export Dialog */}
-      {/* {stream && (
-        <ExportDialog
-          open={exportDialogOpen}
-          onClose={() => setExportDialogOpen(false)}
-          items={[stream]}
-          type="stream"
-          itemName="Stream"
-        />
-      )} */}
     </>
   );
 }

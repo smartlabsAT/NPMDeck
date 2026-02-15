@@ -1,8 +1,26 @@
 import { useMemo } from 'react'
 import { useAuthStore } from '../stores/authStore'
+import { User } from '../api/users'
 import { Resource, PermissionLevel } from '../types/permissions'
 
-export const usePermissions = () => {
+interface UsePermissionsReturn {
+  user: User | null
+  hasPermission: (resource: Resource, level: PermissionLevel) => boolean
+  canView: (resource: Resource) => boolean
+  canManage: (resource: Resource) => boolean
+  canAccess: (resource: Resource, action: 'view' | 'create' | 'edit' | 'delete') => boolean
+  isAdmin: boolean
+  hasAnyPermission: (level?: PermissionLevel) => boolean
+  getVisibleResources: () => Resource[]
+  shouldFilterByUser: boolean
+  canCreateResource: (resource: Resource) => boolean
+  canEditResource: (resource: Resource) => boolean
+  canDeleteResource: (resource: Resource) => boolean
+  hasAnyOfPermissions: (checks: Array<{ resource: Resource; level: PermissionLevel }>) => boolean
+  hasAllOfPermissions: (checks: Array<{ resource: Resource; level: PermissionLevel }>) => boolean
+}
+
+export const usePermissions = (): UsePermissionsReturn => {
   const {
     user,
     hasPermission,
@@ -74,14 +92,3 @@ export const usePermissions = () => {
   ])
 }
 
-// Type-safe permission check helper
-export const usePermissionCheck = (resource: Resource, level: PermissionLevel = 'view') => {
-  const { hasPermission } = usePermissions()
-  return hasPermission(resource, level)
-}
-
-// Type-safe action permission check helper
-export const useActionPermission = (resource: Resource, action: 'view' | 'create' | 'edit' | 'delete') => {
-  const { canAccess } = usePermissions()
-  return canAccess(resource, action)
-}

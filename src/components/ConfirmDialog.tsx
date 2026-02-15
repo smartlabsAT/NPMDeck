@@ -35,7 +35,7 @@ export default function ConfirmDialog({
   confirmColor = 'primary',
   loading = false,
 }: ConfirmDialogProps) {
-  const handleConfirm = () => {
+  const handleConfirm = (): void => {
     onConfirm()
     // Don't close automatically when loading
     if (!loading) {

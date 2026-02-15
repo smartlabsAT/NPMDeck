@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import React, { useState, useMemo, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -26,10 +25,10 @@ import {
   Settings as SettingsIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
-import { getErrorMessage } from '../types/common'
 import { useAuthStore } from '../stores/authStore'
 import { useResponsive } from '../hooks/useResponsive'
-import UserDrawer from '../components/UserDrawer'
+import { useEntityCrud } from '../hooks/useEntityCrud'
+import UserDrawer from '../components/users/UserDrawer'
 import ConfirmDialog from '../components/ConfirmDialog'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
@@ -37,192 +36,136 @@ import { DataTable } from '../components/DataTable'
 import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
 import { Filter, BulkAction } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import { STORAGE_KEYS } from '../constants/storage'
+import { LAYOUT } from '../constants/layout'
+import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
 
 const Users = () => {
-  const { id } = useParams<{ id?: string }>()
-  const navigate = useNavigate()
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [usersToDelete, setUsersToDelete] = useState<User[]>([])
-  const [bulkProcessing, setBulkProcessing] = useState(false)
-  
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
   const { showSuccess, showError } = useToast()
   const { isMobileTable } = useResponsive()
   const isAdmin = currentUser?.roles?.includes('admin')
 
-  useEffect(() => {
-    loadUsers()
-  }, [])
+  // Standard CRUD via shared hook (drawerOnly: Users has no separate view/edit URL distinction)
+  const {
+    items: users,
+    loading,
+    error,
+    drawerOpen,
+    editingItem,
+    handleEdit,
+    handleAdd,
+    closeDrawer,
+    loadItems,
+  } = useEntityCrud<User>({
+    api: usersApi,
+    expand: ['permissions'],
+    basePath: '/users',
+    entityType: 'user',
+    getDisplayName: (user) => user.name || user.email,
+    entityLabel: 'user',
+    drawerOnly: true,
+  })
 
-  // Handle URL parameter for viewing/editing
-  useEffect(() => {
-    if (id && id !== 'new') {
-      const user = users.find(u => u.id === parseInt(id))
-      if (user) {
-        setSelectedUser(user)
-        setDrawerOpen(true)
-      }
-    } else if (id === 'new') {
-      setSelectedUser(null)
-      setDrawerOpen(true)
-    } else {
-      setDrawerOpen(false)
-      setSelectedUser(null)
-    }
-  }, [id, users])
+  // User-specific state: bulk-capable delete workflow
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [usersToDelete, setUsersToDelete] = useState<User[]>([])
+  const [bulkProcessing, setBulkProcessing] = useState(false)
 
-  const loadUsers = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await usersApi.getAll(['permissions'])
-      setUsers(data)
-    } catch (err: unknown) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Format relative time for last login
-  const _formatRelativeTime = (date: string | null | undefined) => {
-    if (!date) return 'Never'
-    
-    const now = new Date()
-    const then = new Date(date)
-    const seconds = Math.floor((now.getTime() - then.getTime()) / 1000)
-    
-    if (seconds < 60) return 'Just now'
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`
-    
-    return then.toLocaleDateString()
-  }
-
-  const handleRowClick = (user: User) => {
-    setSelectedUser(user)
-    setDrawerOpen(true)
-    navigate(`/users/${user.id}`)
-  }
-
-  const handleEdit = (user: User) => {
-    handleRowClick(user)
-  }
-
-  const handleAdd = () => {
-    setSelectedUser(null)
-    setDrawerOpen(true)
-    navigate('/users/new')
-  }
-
-  const handleDelete = (user: User) => {
+  const handleDeleteUser = useCallback((user: User) => {
     setUsersToDelete([user])
     setDeleteDialogOpen(true)
-    setDrawerOpen(false)
-  }
+  }, [])
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (usersToDelete.length === 0) return
-    
+
     setBulkProcessing(true)
     let successCount = 0
-    let _failCount = 0
-    
+
     for (const user of usersToDelete) {
       try {
         await usersApi.delete(user.id)
         successCount++
       } catch (err: unknown) {
-        _failCount++
         showError('user', 'delete', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
-    
+
     if (successCount > 0) {
       showSuccess('user', 'deleted', `${successCount} user${successCount > 1 ? 's' : ''}`)
-      await loadUsers()
+      await loadItems()
     }
-    
+
     setBulkProcessing(false)
     setDeleteDialogOpen(false)
     setUsersToDelete([])
-  }
+  }, [usersToDelete, showError, showSuccess, loadItems])
 
-  const handleBulkDisable = async (users: User[]) => {
-    const eligibleUsers = users.filter(u => !u.is_disabled && u.id !== currentUser?.id)
+  const handleBulkDisable = useCallback(async (selectedUsers: User[]) => {
+    const eligibleUsers = selectedUsers.filter(u => !u.is_disabled && u.id !== currentUser?.id)
     if (eligibleUsers.length === 0) return
-    
+
     let successCount = 0
-    let _failCount = 0
-    
+
     for (const user of eligibleUsers) {
       try {
         await usersApi.update(user.id, { is_disabled: true })
         successCount++
       } catch (err: unknown) {
-        _failCount++
         showError('user', 'disable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
-    
+
     if (successCount > 0) {
       showSuccess('user', 'disabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
-      await loadUsers()
+      await loadItems()
     }
-  }
+  }, [currentUser?.id, showError, showSuccess, loadItems])
 
-  const handleBulkEnable = async (users: User[]) => {
-    const eligibleUsers = users.filter(u => u.is_disabled && u.id !== currentUser?.id)
+  const handleBulkEnable = useCallback(async (selectedUsers: User[]) => {
+    const eligibleUsers = selectedUsers.filter(u => u.is_disabled && u.id !== currentUser?.id)
     if (eligibleUsers.length === 0) return
-    
+
     let successCount = 0
-    let _failCount = 0
-    
+
     for (const user of eligibleUsers) {
       try {
         await usersApi.update(user.id, { is_disabled: false })
         successCount++
       } catch (err: unknown) {
-        _failCount++
         showError('user', 'enable', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
       }
     }
-    
+
     if (successCount > 0) {
       showSuccess('user', 'enabled', `${successCount} user${successCount > 1 ? 's' : ''}`)
-      await loadUsers()
+      await loadItems()
     }
-  }
+  }, [currentUser?.id, showError, showSuccess, loadItems])
 
-
-  const handleLoginAs = async (user: User) => {
+  const handleLoginAs = useCallback(async (user: User) => {
     if (currentUser?.id === user.id) return
-    
+
     try {
       // Push current account to stack before switching
       pushCurrentToStack()
-      
+
       const response = await usersApi.loginAs(user.id)
       // Store the new token and reload
-      localStorage.setItem('npm_token', response.token)
-      localStorage.setItem('npm_user', JSON.stringify(response.user))
+      localStorage.setItem(STORAGE_KEYS.TOKEN, response.token)
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user))
       window.location.href = '/'
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      showError('user', 'login-as', err instanceof Error ? err.message : 'Unknown error', user.name || user.email, user.id)
     }
-  }
+  }, [currentUser?.id, pushCurrentToStack, showError])
 
   const getRoleDisplay = (roles: string[]) => {
     if (!roles || roles.length === 0) {
       return 'User'
     }
-    return roles.map(role => 
+    return roles.map(role =>
       role === 'admin' ? 'Administrator' : role.charAt(0).toUpperCase() + role.slice(1)
     ).join(', ')
   }
@@ -303,14 +246,17 @@ const Users = () => {
       sortable: true,
       priority: 'P1' as ColumnPriority, // Essential - always visible (important for permissions)
       showInCard: true,
-      render: (roles) => (
-        <Chip
-          size="small"
-          label={getRoleDisplay(roles)}
-          color={roles.includes('admin') ? 'primary' : 'default'}
-          icon={roles.includes('admin') ? <AdminIcon /> : <UserIcon />}
-        />
-      ),
+      render: (value) => {
+        const roles = value as string[]
+        return (
+          <Chip
+            size="small"
+            label={getRoleDisplay(roles)}
+            color={roles.includes('admin') ? 'primary' : 'default'}
+            icon={roles.includes('admin') ? <AdminIcon /> : <UserIcon />}
+          />
+        )
+      },
     },
     {
       id: 'status',
@@ -337,16 +283,8 @@ const Users = () => {
       sortable: true,
       priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
       showInCard: false,
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: (date) => new Date(date as string).toLocaleDateString(),
     },
-    // TODO: Enable when last_login is available in API
-    // {
-    //   id: 'last_login',
-    //   label: 'Last Login',
-    //   accessor: (user) => user.last_login,
-    //   sortable: true,
-    //   render: (date) => formatRelativeTime(date),
-    // },
     {
       id: 'actions',
       label: 'Actions',
@@ -367,6 +305,7 @@ const Users = () => {
             size="small"
             onClick={() => handleEdit(user)}
             title="Edit User"
+            aria-label="Edit User"
           >
             <EditIcon />
           </IconButton>
@@ -375,6 +314,7 @@ const Users = () => {
               size="small"
               onClick={() => handleLoginAs(user)}
               title="Sign in as User"
+              aria-label="Sign in as User"
             >
               <LoginIcon />
             </IconButton>
@@ -382,9 +322,10 @@ const Users = () => {
           {currentUser?.id !== user.id && (
             <IconButton
               size="small"
-              onClick={() => handleDelete(user)}
+              onClick={() => handleDeleteUser(user)}
               color="error"
               title="Delete User"
+              aria-label="Delete User"
             >
               <DeleteIcon />
             </IconButton>
@@ -392,7 +333,7 @@ const Users = () => {
         </Box>
       ),
     },
-  ], [currentUser])
+  ], [currentUser, handleEdit, handleLoginAs, handleDeleteUser])
 
   // Filter definitions
   const filters: Filter[] = useMemo(() => [
@@ -427,10 +368,10 @@ const Users = () => {
       label: 'Enable',
       icon: <CheckIcon />,
       color: 'success',
-      action: async (users) => {
-        await handleBulkEnable(users)
+      action: async (selectedUsers) => {
+        await handleBulkEnable(selectedUsers)
       },
-      disabled: (users) => users.every(u => !u.is_disabled || u.id === currentUser?.id),
+      disabled: (selectedUsers) => selectedUsers.every(u => !u.is_disabled || u.id === currentUser?.id),
       confirmMessage: 'Enable {count} users?',
     },
     {
@@ -438,10 +379,10 @@ const Users = () => {
       label: 'Disable',
       icon: <BlockIcon />,
       color: 'warning',
-      action: async (users) => {
-        await handleBulkDisable(users)
+      action: async (selectedUsers) => {
+        await handleBulkDisable(selectedUsers)
       },
-      disabled: (users) => users.every(u => u.is_disabled || u.id === currentUser?.id),
+      disabled: (selectedUsers) => selectedUsers.every(u => u.is_disabled || u.id === currentUser?.id),
       confirmMessage: 'Disable {count} users?',
     },
     {
@@ -449,14 +390,14 @@ const Users = () => {
       label: 'Delete',
       icon: <DeleteIcon />,
       color: 'error',
-      action: async (users) => {
-        setUsersToDelete(users.filter(u => u.id !== currentUser?.id))
+      action: async (selectedUsers) => {
+        setUsersToDelete(selectedUsers.filter(u => u.id !== currentUser?.id))
         setDeleteDialogOpen(true)
       },
-      disabled: (users) => users.every(u => u.id === currentUser?.id),
+      disabled: (selectedUsers) => selectedUsers.every(u => u.id === currentUser?.id),
       confirmMessage: 'Delete {count} users? This action cannot be undone.',
     },
-  ], [currentUser])
+  ], [currentUser, handleBulkDisable, handleBulkEnable])
 
   return (
     <Container maxWidth={false}>
@@ -492,7 +433,7 @@ const Users = () => {
           data={users}
           columns={columns}
           keyExtractor={(user) => user.id}
-          onRowClick={handleRowClick}
+          onRowClick={handleEdit}
           bulkActions={isAdmin ? bulkActions : []}
           filters={filters}
           searchPlaceholder="Search by name, nickname, or email..."
@@ -503,12 +444,12 @@ const Users = () => {
           defaultSortField="name"
           defaultSortDirection="asc"
           defaultRowsPerPage={100}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
           responsive={true}
-          cardBreakpoint={900}
-          compactBreakpoint={1250}
+          cardBreakpoint={LAYOUT.CARD_BREAKPOINT}
+          compactBreakpoint={LAYOUT.COMPACT_BREAKPOINT}
         />
-        
+
         {/* Mobile Add Button - shown at bottom */}
         {isAdmin && isMobileTable && (
           <Box
@@ -523,23 +464,19 @@ const Users = () => {
               startIcon={<AddIcon />}
               onClick={handleAdd}
               fullWidth
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: LAYOUT.MOBILE_BUTTON_MAX_WIDTH }}
             >
               Add User
             </Button>
           </Box>
         )}
 
-
       <UserDrawer
         open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false)
-          navigate('/users')
-        }}
-        user={selectedUser}
+        onClose={closeDrawer}
+        user={editingItem}
         onSave={() => {
-          loadUsers()
+          loadItems()
         }}
       />
 

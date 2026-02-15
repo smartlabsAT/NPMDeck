@@ -1,13 +1,9 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   TextField,
   FormControlLabel,
-  // FormControl,
   Switch,
   Box,
-  // RadioGroup,
-  // Radio,
   Alert,
   Button,
   Stack,
@@ -30,6 +26,8 @@ import FileDropzone from './components/FileDropzone'
 import DNSProviderSelector from './components/DNSProviderSelector'
 import { useToast } from '../../../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import { TIMING } from '../../../constants/timing'
+import { LAYOUT } from '../../../constants/layout'
 
 interface CertificateDrawerProps {
   open: boolean
@@ -62,7 +60,6 @@ export default function CertificateDrawer({
   initialProvider = 'letsencrypt' 
 }: CertificateDrawerProps) {
 
-  const navigate = useNavigate()
   const { showSuccess, showError } = useToast()
 
   const [testingDomains, setTestingDomains] = React.useState(false)
@@ -99,12 +96,12 @@ export default function CertificateDrawer({
     },
     fields: {
       provider: {
-        required: true, initialValue: undefined,
+        required: true, initialValue: 'letsencrypt',
       },
       niceName: {
         initialValue: '',
         required: false,
-        validate: (name: string, formData: any) => {
+        validate: (name: string, formData?: Record<string, unknown>) => {
           if (formData?.provider === 'other' && !name) {
             return 'Certificate name is required for custom certificates'
           }
@@ -114,7 +111,7 @@ export default function CertificateDrawer({
       domainNames: {
         initialValue: [],
         required: false,
-        validate: (domains: string[], formData: any) => {
+        validate: (domains: string[], formData?: Record<string, unknown>) => {
           if (formData?.provider === 'letsencrypt' && domains.length === 0) {
             return 'At least one domain name is required for Let\'s Encrypt certificates'
           }
@@ -123,7 +120,7 @@ export default function CertificateDrawer({
       },
       letsencryptEmail: {
         initialValue: '',
-        validate: (email: string, formData: any) => {
+        validate: (email: string, formData?: Record<string, unknown>) => {
           if (formData?.provider === 'letsencrypt' && !email) {
             return 'Email is required for Let\'s Encrypt certificates'
           }
@@ -135,7 +132,7 @@ export default function CertificateDrawer({
       },
       letsencryptAgree: {
         initialValue: false,
-        validate: (agree: boolean, formData: any) => {
+        validate: (agree: boolean, formData?: Record<string, unknown>) => {
           if (formData?.provider === 'letsencrypt' && !agree) {
             return 'You must agree to the Let\'s Encrypt Subscriber Agreement'
           }
@@ -148,21 +145,9 @@ export default function CertificateDrawer({
       },
       dnsProvider: {
         initialValue: '',
-        // validate: (provider: string, data: any) => {
-        //   if (data.provider === 'letsencrypt' && data.dnsChallenge && !provider) {
-        //     return 'DNS provider is required when DNS challenge is enabled'
-        //   }
-        //   return null
-        // }
       },
       dnsProviderCredentials: {
         initialValue: '',
-        // validate: (credentials: string, data: any) => {
-        //   if (data.provider === 'letsencrypt' && data.dnsChallenge && data.dnsProvider && !credentials) {
-        //     return 'DNS provider credentials are required'
-        //   }
-        //   return null
-        // }
       },
       propagationSeconds: {
         initialValue: 120,
@@ -170,8 +155,8 @@ export default function CertificateDrawer({
       },
       certificateFile: {
         initialValue: null as File | null,
-        validate: (file: File | null, data: any) => {
-          if (data.provider === 'other' && !isEditMode && !file) {
+        validate: (file: File | null, formData?: Record<string, unknown>) => {
+          if (formData?.provider === 'other' && !isEditMode && !file) {
             return 'Certificate file is required for custom certificates'
           }
           return null
@@ -179,8 +164,8 @@ export default function CertificateDrawer({
       },
       certificateKeyFile: {
         initialValue: null as File | null,
-        validate: (file: File | null, data: any) => {
-          if (data.provider === 'other' && !isEditMode && !file) {
+        validate: (file: File | null, formData?: Record<string, unknown>) => {
+          if (formData?.provider === 'other' && !isEditMode && !file) {
             return 'Private key file is required for custom certificates'
           }
           return null
@@ -248,10 +233,6 @@ export default function CertificateDrawer({
             await certificatesApi.create(payload)
           } else {
             // For custom certificates - validate and upload files
-            // if (!data.certificateFile || !data.certificateKeyFile) {
-            //   throw new Error('Certificate and key files are required')
-            // }
-
             // Only validate and upload if files are provided
             if (data.certificateFile && data.certificateKeyFile) {
               // Validate certificate files
@@ -283,13 +264,23 @@ export default function CertificateDrawer({
 
         onSave()
         onClose()
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const apiError = error as {
+          response?: {
+            status?: number
+            data?: {
+              debug?: {
+                stack?: string[]
+              }
+            }
+          }
+        }
         // Check if it's a 500 error with debug info
-        if (error.response?.status === 500 && error.response?.data?.debug?.stack) {
+        if (apiError.response?.status === 500 && apiError.response?.data?.debug?.stack) {
           // Extract all lines from stack and format them
-          const stack = error.response.data.debug.stack
+          const stack = apiError.response.data.debug.stack
           let errorMessage = 'Certificate creation failed:\n\n'
-          
+
           // Join all stack lines with line breaks, filtering out empty lines and stack traces
           const stackLines = stack
             .filter((line: string) => {
@@ -317,7 +308,7 @@ export default function CertificateDrawer({
     },
     autoSave: {
       enabled: true,
-      delay: 3000,
+      delay: TIMING.AUTOSAVE_DELAY,
       onAutoSave: async (data) => {
         if (isEditMode && isDirty && data.provider === 'letsencrypt') {
           // Auto-save Let's Encrypt configuration
@@ -358,10 +349,11 @@ export default function CertificateDrawer({
 
   // Update provider when initialProvider changes (e.g., switching between Let's Encrypt and Custom)
   React.useEffect(() => {
-    if (!certificate && open) {
+    if (!certificate && open && data.provider !== initialProvider) {
       setFieldValue('provider', initialProvider)
     }
-  }, [initialProvider, certificate, open, setFieldValue])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- data.provider is checked for guard only; setFieldValue is stable via ref-based validateField
+  }, [initialProvider, certificate, open])
 
   // Clear custom error when drawer closes
   React.useEffect(() => {
@@ -391,17 +383,6 @@ export default function CertificateDrawer({
     }
   }
 
-  // Handle provider change and update route
-  const _handleProviderChange = React.useCallback((newProvider: 'letsencrypt' | 'other') => {
-    setFieldValue('provider', newProvider)
-    
-    // Update the route when provider changes
-    if (!isEditMode) {
-      const newPath = `/security/certificates/new/${newProvider === 'letsencrypt' ? 'letsencrypt' : 'other'}`
-      navigate(newPath, { replace: true })
-    }
-  }, [setFieldValue, navigate, isEditMode])
-
   // Determine the current provider - use data if available, otherwise use initial values
   const currentProvider = data?.provider || certificate?.provider || initialProvider
 
@@ -419,7 +400,7 @@ export default function CertificateDrawer({
       saveDisabled={!isValid}
       saveText={isEditMode ? 'Save Changes' : 'Create Certificate'}
       confirmClose={isDirty}
-      width={600}
+      width={LAYOUT.DRAWER_PANEL_WIDTH}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {isEditMode && (

@@ -21,12 +21,30 @@ import {
   Info as InfoIcon,
   FileDownload as FileDownloadIcon,
 } from '@mui/icons-material'
-import { ImportExportService, ExportType } from '../services/importExport'
+import { ImportExportService, ExportType, ExportData } from '../services/importExport'
+import { NAVIGATION_COLORS } from '../constants/navigation'
+import logger from '../utils/logger'
+
+/**
+ * Helper type for items that may have domain_names for display
+ */
+interface HasDomainNames {
+  domain_names: string[]
+}
+
+/** Entity types that the ImportExportService can export */
+type ServiceEntity = Parameters<typeof ImportExportService.exportItem>[0]
+
+/**
+ * Items accepted by the ExportDialog. Allows ServiceEntity types
+ * as well as broader objects (e.g. export bundles) that share a common base.
+ */
+type ExportableItem = ServiceEntity | { [key: string]: unknown }
 
 interface ExportDialogProps {
   open: boolean
   onClose: () => void
-  items: any[]
+  items: ExportableItem[]
   type: ExportType
   itemName: string // e.g., "Proxy Host", "Certificate"
 }
@@ -52,18 +70,21 @@ export default function ExportDialog({
 
   const handleExport = () => {
     try {
+      const serviceItems = items as ServiceEntity[]
       const exportData = isSingleItem
-        ? ImportExportService.exportItem(items[0], type, { includeSensitiveData })
-        : ImportExportService.exportItems(items, type, { includeSensitiveData })
+        ? ImportExportService.exportItem(serviceItems[0], type, { includeSensitiveData })
+        : ImportExportService.exportItems(serviceItems, type, { includeSensitiveData })
 
-      const defaultFilename = isSingleItem && items[0].domain_names
-        ? `${type}-${items[0].domain_names[0].replace(/[^a-z0-9]/gi, '-')}.json`
+      const firstItem = items[0]
+      const domainNames = 'domain_names' in firstItem ? (firstItem as HasDomainNames).domain_names : undefined
+      const defaultFilename = isSingleItem && domainNames
+        ? `${type}-${domainNames[0].replace(/[^a-z0-9]/gi, '-')}.json`
         : `${type}-export-${itemCount}-items.json`
 
-      ImportExportService.downloadExport(exportData, filename || defaultFilename)
+      ImportExportService.downloadExport(exportData as ExportData, filename || defaultFilename)
       onClose()
     } catch (error) {
-      console.error('Export failed:', error)
+      logger.error('Export failed:', error)
     }
   }
 
@@ -91,7 +112,7 @@ export default function ExportDialog({
             alignItems: "center",
             gap: 1
           }}>
-          <FileDownloadIcon sx={{ color: '#467fcf' }} />
+          <FileDownloadIcon sx={{ color: NAVIGATION_COLORS.info }} />
           Export {itemName}{isSingleItem ? '' : `s (${itemCount} items)`}
         </Box>
       </DialogTitle>
@@ -104,13 +125,13 @@ export default function ExportDialog({
           </Alert>
 
           {/* Single item details */}
-          {isSingleItem && items[0].domain_names && (
+          {isSingleItem && 'domain_names' in items[0] && (items[0] as Partial<HasDomainNames>).domain_names && (
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 Exporting:
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {items[0].domain_names.map((domain: string) => (
+                {(items[0] as HasDomainNames).domain_names.map((domain: string) => (
                   <Chip key={domain} label={domain} size="small" />
                 ))}
               </Box>
@@ -191,8 +212,8 @@ export default function ExportDialog({
                   This will include:
                 </Typography>
                 <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {getSensitiveFields().map((field, index) => (
-                    <li key={index}><Typography variant="body2">{field}</Typography></li>
+                  {getSensitiveFields().map((field) => (
+                    <li key={field}><Typography variant="body2">{field}</Typography></li>
                   ))}
                 </ul>
               </Alert>

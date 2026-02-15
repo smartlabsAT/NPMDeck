@@ -1,11 +1,8 @@
 import api from './config'
-import { Owner } from '../types/common'
+import { buildExpandParams } from './utils'
+import type { OwnedEntity } from '../types/base'
 
-export interface Certificate {
-  id: number
-  created_on: string
-  modified_on: string
-  owner_user_id: number
+export interface Certificate extends OwnedEntity {
   provider: 'letsencrypt' | 'other'
   nice_name: string
   domain_names: string[]
@@ -19,8 +16,6 @@ export interface Certificate {
     propagation_seconds?: number
     certificate_id?: string
   }
-  // Relations
-  owner?: Owner
 }
 
 export interface CreateCertificate {
@@ -54,57 +49,55 @@ export interface RenewCertificate {
   id: number
 }
 
-class CertificatesApi {
+export const certificatesApi = {
   async getAll(expand?: string[]): Promise<Certificate[]> {
-    const params = expand?.length ? { expand: expand.join(',') } : undefined
-    const response = await api.get('/nginx/certificates', { params })
+    const params = buildExpandParams(expand)
+    const response = await api.get<Certificate[]>('/nginx/certificates', { params })
     return response.data
-  }
+  },
 
   async getById(id: number, expand?: string[]): Promise<Certificate> {
-    const params = expand?.length ? { expand: expand.join(',') } : undefined
-    const response = await api.get(`/nginx/certificates/${id}`, { params })
+    const params = buildExpandParams(expand)
+    const response = await api.get<Certificate>(`/nginx/certificates/${id}`, { params })
     return response.data
-  }
+  },
 
   async create(data: CreateCertificate): Promise<Certificate> {
-    const response = await api.post('/nginx/certificates', data)
+    const response = await api.post<Certificate>('/nginx/certificates', data)
     return response.data
-  }
+  },
 
   async update(id: number, data: UpdateCertificate): Promise<Certificate> {
-    const response = await api.put(`/nginx/certificates/${id}`, data)
+    const response = await api.put<Certificate>(`/nginx/certificates/${id}`, data)
     return response.data
-  }
+  },
 
-  async delete(id: number): Promise<boolean> {
-    await api.delete(`/nginx/certificates/${id}`)
-    return true
-  }
+  async delete(id: number): Promise<void> {
+    await api.delete<void>(`/nginx/certificates/${id}`)
+  },
 
-  async renew(id: number): Promise<boolean> {
-    await api.post(`/nginx/certificates/${id}/renew`)
-    return true
-  }
+  async renew(id: number): Promise<void> {
+    await api.post<void>(`/nginx/certificates/${id}/renew`)
+  },
 
   async testHttpReachability(domains: string[]): Promise<{ reachable: boolean; error?: string }> {
-    const response = await api.get('/nginx/certificates/test-http', {
-      params: { domains: JSON.stringify(domains) }
+    const response = await api.get<{ reachable: boolean; error?: string }>('/nginx/certificates/test-http', {
+      params: { domains: JSON.stringify(domains) },
     })
     return response.data
-  }
+  },
 
   async validate(data: CreateCertificate): Promise<{ valid: boolean; error?: string }> {
-    const response = await api.post('/nginx/certificates/validate', data)
+    const response = await api.post<{ valid: boolean; error?: string }>('/nginx/certificates/validate', data)
     return response.data
-  }
+  },
 
   async download(id: number): Promise<Blob> {
-    const response = await api.get(`/nginx/certificates/${id}/download`, {
-      responseType: 'blob'
+    const response = await api.get<Blob>(`/nginx/certificates/${id}/download`, {
+      responseType: 'blob',
     })
     return response.data
-  }
+  },
 
   async upload(id: number, files: { certificate: File; certificateKey: File; intermediateCertificate?: File }): Promise<Certificate> {
     const formData = new FormData()
@@ -113,22 +106,20 @@ class CertificatesApi {
     if (files.intermediateCertificate) {
       formData.append('intermediate_certificate', files.intermediateCertificate)
     }
-    
-    const response = await api.post(`/nginx/certificates/${id}/upload`, formData)
-    return response.data
-  }
 
-  async validateFiles(files: { certificate: File; certificateKey: File; intermediateCertificate?: File }): Promise<any> {
+    const response = await api.post<Certificate>(`/nginx/certificates/${id}/upload`, formData)
+    return response.data
+  },
+
+  async validateFiles(files: { certificate: File; certificateKey: File; intermediateCertificate?: File }): Promise<{ certificate?: string; certificate_key?: string; valid?: boolean; error?: string }> {
     const formData = new FormData()
     formData.append('certificate', files.certificate)
     formData.append('certificate_key', files.certificateKey)
     if (files.intermediateCertificate) {
       formData.append('intermediate_certificate', files.intermediateCertificate)
     }
-    
-    const response = await api.post('/nginx/certificates/validate', formData)
-    return response.data
-  }
-}
 
-export const certificatesApi = new CertificatesApi()
+    const response = await api.post<{ certificate?: string; certificate_key?: string; valid?: boolean; error?: string }>('/nginx/certificates/validate', formData)
+    return response.data
+  },
+}

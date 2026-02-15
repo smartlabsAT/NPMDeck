@@ -127,39 +127,16 @@ export const NAVIGATION_CONFIG: Record<string, NavigationItem> = {
   },
 } as const
 
-export type NavigationConfig = typeof NAVIGATION_CONFIG
-
 export const NAVIGATION_COLORS = {
   primary: '#2bcbba',
+  primaryLight: '#4dd4c5',
   success: '#5eba00',
   warning: '#f1c40f',
   danger: '#cd201f',
   info: '#467fcf',
   secondary: '#868e96',
   muted: '#6c757d',
+  edit: '#f59f00',
+  dark: '#495c68',
 } as const
 
-export function getNavigationItemByPath(path: string) {
-  for (const item of Object.values(NAVIGATION_CONFIG)) {
-    if (item.path === path) {
-      return item
-    }
-  }
-  return null
-}
-
-export function getNavigationChildren(parentKey: keyof typeof NAVIGATION_CONFIG) {
-  return Object.entries(NAVIGATION_CONFIG)
-    .filter(([_, item]) => item.parent === parentKey)
-    .map(([key, item]) => ({ key, ...item }))
-}
-
-export function getNavigationParents() {
-  return Object.entries(NAVIGATION_CONFIG)
-    .filter(([_, item]) => item.isParent)
-    .map(([key, item]) => ({ key, ...item }))
-}
-
-export function getMenuItemColor(key: keyof typeof NAVIGATION_CONFIG): string {
-  return NAVIGATION_CONFIG[key]?.color || NAVIGATION_COLORS.secondary
-}

@@ -21,17 +21,35 @@ import {
 } from '@mui/icons-material'
 import ImportDialog from '../components/ImportDialog'
 import ExportDialog from '../components/ExportDialog'
-import { proxyHostsApi } from '../api/proxyHosts'
-import { redirectionHostsApi } from '../api/redirectionHosts'
-import { deadHostsApi } from '../api/deadHosts'
-import { streamsApi } from '../api/streams'
-import { certificatesApi } from '../api/certificates'
-import { accessListsApi } from '../api/accessLists'
+import { proxyHostsApi, ProxyHost } from '../api/proxyHosts'
+import { redirectionHostsApi, RedirectionHost } from '../api/redirectionHosts'
+import { deadHostsApi, DeadHost } from '../api/deadHosts'
+import { streamsApi, Stream } from '../api/streams'
+import { certificatesApi, Certificate } from '../api/certificates'
+import { accessListsApi, AccessList } from '../api/accessLists'
+import logger from '../utils/logger'
+
+/** Exportable entity type matching the ImportExportService signature */
+type ExportableEntity = ProxyHost | RedirectionHost | DeadHost | Stream | Certificate | AccessList
+
+/** Bundle export shape produced by "Export All" */
+interface ExportBundle {
+  [key: string]: unknown
+  proxy_hosts: ProxyHost[]
+  redirection_hosts: RedirectionHost[]
+  dead_hosts: DeadHost[]
+  streams: Stream[]
+  certificates: Certificate[]
+  access_lists: AccessList[]
+}
+
+/** Items that the export dialog can display: individual entities OR a bundle wrapper */
+type ExportItem = ExportableEntity | ExportBundle
 
 export default function ImportExport() {
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
-  const [exportItems, setExportItems] = useState<any[]>([])
+  const [exportItems, setExportItems] = useState<ExportItem[]>([])
   const [exportItemType, setExportItemType] = useState('')
   const [exportTypeName, setExportTypeName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -39,8 +57,7 @@ export default function ImportExport() {
   const handleExportAll = async () => {
     setLoading(true)
     try {
-      // Fetch all data
-      const [proxyHosts, redirectionHosts, deadHosts, streams, certificates, accessLists] = await Promise.all([
+      const results = await Promise.allSettled([
         proxyHostsApi.getAll(),
         redirectionHostsApi.getAll(),
         deadHostsApi.getAll(),
@@ -49,22 +66,36 @@ export default function ImportExport() {
         accessListsApi.getAll(),
       ])
 
-      // Create bundle
-      const allItems = {
-        proxy_hosts: proxyHosts,
-        redirection_hosts: redirectionHosts,
-        dead_hosts: deadHosts,
-        streams: streams,
-        certificates: certificates,
-        access_lists: accessLists,
+      const failed = results.filter(r => r.status === 'rejected').length
+      if (failed === results.length) {
+        logger.error('Failed to fetch any data for export')
+        return
       }
 
+      if (failed > 0) {
+        logger.warn(`Export: ${failed} of ${results.length} data sources failed to load`)
+      }
+
+      const getValue = <T,>(result: PromiseSettledResult<T[]>): T[] =>
+        result.status === 'fulfilled' ? result.value : []
+
+      const allItems = {
+        proxy_hosts: getValue(results[0]),
+        redirection_hosts: getValue(results[1]),
+        dead_hosts: getValue(results[2]),
+        streams: getValue(results[3]),
+        certificates: getValue(results[4]),
+        access_lists: getValue(results[5]),
+      }
+
+      // Bundle export: wrapping the combined data object as a single-element array
+      // The ExportDialog handles 'bundle' type with this structure at runtime
       setExportItems([allItems])
       setExportItemType('bundle')
       setExportTypeName('All Configurations')
       setExportDialogOpen(true)
     } catch (error) {
-      console.error('Failed to fetch data for export:', error)
+      logger.error('Failed to fetch data for export:', error)
     } finally {
       setLoading(false)
     }
@@ -73,7 +104,7 @@ export default function ImportExport() {
   const handleExportByType = async (type: string) => {
     setLoading(true)
     try {
-      let items: any[] = []
+      let items: ExportableEntity[] = []
       let itemType = ''
       let typeName = ''
 
@@ -115,7 +146,7 @@ export default function ImportExport() {
       setExportTypeName(typeName)
       setExportDialogOpen(true)
     } catch (error) {
-      console.error('Failed to fetch data for export:', error)
+      logger.error('Failed to fetch data for export:', error)
     } finally {
       setLoading(false)
     }

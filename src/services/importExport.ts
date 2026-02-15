@@ -90,7 +90,7 @@ export class ImportExportService {
   }
 
   // Download export as file
-  static downloadExport(exportData: ExportData, filename?: string) {
+  static downloadExport(exportData: ExportData, filename?: string): void {
     const jsonString = JSON.stringify(exportData, null, 2)
     const blob = new Blob([jsonString], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -183,12 +183,16 @@ export class ImportExportService {
 
     // Type-specific cleaning
     switch (type) {
-      case 'certificate':
+      case 'certificate': {
         // Never export private keys
-        delete (cleaned as any).meta?.certificate_key
-        delete (cleaned as any).certificate_key
+        const certMeta = cleaned.meta as Record<string, unknown> | undefined
+        if (certMeta) {
+          delete certMeta.certificate_key
+        }
+        delete cleaned.certificate_key
         break
-        
+      }
+
       case 'access_list':
         // Optionally remove passwords
         if (cleaned.items && Array.isArray(cleaned.items)) {
@@ -198,15 +202,19 @@ export class ImportExportService {
           }))
         }
         break
-        
+
       case 'proxy_host':
       case 'redirection_host':
       case 'dead_host':
-      case 'stream':
+      case 'stream': {
         // Remove nginx status
-        delete (cleaned as any).meta?.nginx_online
-        delete (cleaned as any).meta?.nginx_err
+        const hostMeta = cleaned.meta as Record<string, unknown> | undefined
+        if (hostMeta) {
+          delete hostMeta.nginx_online
+          delete hostMeta.nginx_err
+        }
         break
+      }
     }
 
     return cleaned as T
@@ -230,8 +238,11 @@ export class ImportExportService {
     delete prepared.modified_on
     delete prepared.owner_user_id
     delete prepared.owner
-    delete (prepared as any).meta?.nginx_online
-    delete (prepared as any).meta?.nginx_err
+    const prepMeta = prepared.meta as Record<string, unknown> | undefined
+    if (prepMeta) {
+      delete prepMeta.nginx_online
+      delete prepMeta.nginx_err
+    }
 
     // Ensure required fields have default values if missing
     switch (type) {

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { authApi, LoginCredentials } from '../api/auth'
 import { User } from '../api/users'
 import { Resource, PermissionLevel } from '../types/permissions'
-import { AxiosErrorResponse } from '../types/common'
+import { getErrorMessage } from '../types/common'
 import logger from '../utils/logger'
 import { 
   hasPermission, 
@@ -15,8 +15,9 @@ import {
   canAccessResource
 } from '../utils/permissions'
 import { TOKEN_REFRESH_INTERVAL_MS, CONFIGURED_WARNING_MINUTES } from '../constants/auth'
+import { STORAGE_KEYS } from '../constants/storage'
 
-interface TokenInfo {
+export interface TokenInfo {
   token: string
   user: User
   expires: string
@@ -64,7 +65,7 @@ interface AuthState {
 // Helper to load token stack from localStorage
 const loadTokenStack = (): TokenInfo[] => {
   try {
-    const stack = localStorage.getItem('npm_token_stack')
+    const stack = localStorage.getItem(STORAGE_KEYS.TOKEN_STACK)
     return stack ? JSON.parse(stack) : []
   } catch {
     return []
@@ -72,8 +73,8 @@ const loadTokenStack = (): TokenInfo[] => {
 }
 
 // Helper to save token stack to localStorage
-const saveTokenStack = (stack: TokenInfo[]) => {
-  localStorage.setItem('npm_token_stack', JSON.stringify(stack))
+const saveTokenStack = (stack: TokenInfo[]): void => {
+  localStorage.setItem(STORAGE_KEYS.TOKEN_STACK, JSON.stringify(stack))
 }
 
 // Helper to validate JWT format
@@ -101,7 +102,7 @@ const getTokenExpiry = (token: string): Date | null => {
     }
     
     return new Date(payload.exp * 1000)
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Failed to parse JWT token:', error)
     return null
   }
@@ -109,9 +110,9 @@ const getTokenExpiry = (token: string): Date | null => {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: localStorage.getItem('npm_token'),
-  tokenExpiresAt: localStorage.getItem('npm_token') ? getTokenExpiry(localStorage.getItem('npm_token')!) : null,
-  isAuthenticated: !!localStorage.getItem('npm_token'),
+  token: localStorage.getItem(STORAGE_KEYS.TOKEN),
+  tokenExpiresAt: localStorage.getItem(STORAGE_KEYS.TOKEN) ? getTokenExpiry(localStorage.getItem(STORAGE_KEYS.TOKEN) ?? '') : null,
+  isAuthenticated: !!localStorage.getItem(STORAGE_KEYS.TOKEN),
   isLoading: false,
   error: null,
   tokenStack: loadTokenStack(),
@@ -125,11 +126,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       // Get token
       const tokenResponse = await authApi.login(credentials)
-      localStorage.setItem('npm_token', tokenResponse.token)
-      
+      localStorage.setItem(STORAGE_KEYS.TOKEN, tokenResponse.token)
+
       // Get user info
       const user = await authApi.getMe()
-      localStorage.setItem('npm_user', JSON.stringify(user))
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user))
       
       const tokenExpiresAt = getTokenExpiry(tokenResponse.token)
       
@@ -150,20 +151,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       // Return the login data for checking default admin
       return { token: tokenResponse.token, user }
-    } catch (error) {
-      let errorMessage = 'Login failed'
-      
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as AxiosErrorResponse
-        if (axiosError.response?.data?.error?.message) {
-          errorMessage = axiosError.response.data.error.message
-        } else if (axiosError.response?.data?.message) {
-          errorMessage = axiosError.response.data.message
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message
-      }
-      
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || 'Login failed'
+
       set({
         isLoading: false,
         error: errorMessage
@@ -185,7 +175,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     authApi.logout()
     
     // Clear token stack
-    localStorage.removeItem('npm_token_stack')
+    localStorage.removeItem(STORAGE_KEYS.TOKEN_STACK)
     
     set({
       user: null,
@@ -206,15 +196,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     
     try {
       // Try to get user from localStorage first
-      const storedUser = localStorage.getItem('npm_user')
+      const storedUser = localStorage.getItem(STORAGE_KEYS.USER)
       if (storedUser) {
         set({ user: JSON.parse(storedUser), isLoading: false })
       }
       
       // Then fetch fresh user data
       const user = await authApi.getMe()
-      localStorage.setItem('npm_user', JSON.stringify(user))
-      
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user))
+
       // Get token expiry
       const tokenExpiresAt = token ? getTokenExpiry(token) : null
       
@@ -251,7 +241,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearError: () => set({ error: null }),
   
   setUser: (user: User) => {
-    localStorage.setItem('npm_user', JSON.stringify(user))
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user))
     set({ user })
   },
 
@@ -265,8 +255,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     state.clearExpiryWarning()
     
     // Set new active token
-    localStorage.setItem('npm_token', tokenInfo.token)
-    localStorage.setItem('npm_user', JSON.stringify(tokenInfo.user))
+    localStorage.setItem(STORAGE_KEYS.TOKEN, tokenInfo.token)
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(tokenInfo.user))
     
     const tokenExpiresAt = getTokenExpiry(tokenInfo.token)
     
@@ -293,21 +283,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   pushCurrentToStack: () => {
     const state = get()
     if (!state.token || !state.user) return
-    
-    // Get current token expiry
-    const tokenData = JSON.parse(atob(state.token.split('.')[1]))
-    const expires = new Date(tokenData.exp * 1000).toISOString()
-    
-    const tokenInfo: TokenInfo = {
-      token: state.token,
-      user: state.user,
-      expires,
-      addedAt: new Date()
+
+    if (!isValidJWT(state.token)) {
+      logger.warn('Cannot push invalid JWT to stack')
+      return
     }
-    
-    const newStack = [...state.tokenStack, tokenInfo]
-    set({ tokenStack: newStack })
-    saveTokenStack(newStack)
+
+    try {
+      const tokenData = JSON.parse(atob(state.token.split('.')[1]))
+      const expires = new Date(tokenData.exp * 1000).toISOString()
+
+      const tokenInfo: TokenInfo = {
+        token: state.token,
+        user: state.user,
+        expires,
+        addedAt: new Date()
+      }
+
+      const newStack = [...state.tokenStack, tokenInfo]
+      set({ tokenStack: newStack })
+      saveTokenStack(newStack)
+    } catch (error: unknown) {
+      logger.error('Failed to parse JWT token in pushCurrentToStack:', error)
+    }
   },
 
   popFromStack: async () => {
@@ -359,7 +357,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     
     try {
       const response = await authApi.refreshToken()
-      localStorage.setItem('npm_token', response.token)
+      localStorage.setItem(STORAGE_KEYS.TOKEN, response.token)
       
       const tokenExpiresAt = getTokenExpiry(response.token)
       
@@ -374,7 +372,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       get().scheduleExpiryWarning()
       
       logger.log('Token refreshed successfully')
-    } catch (error) {
+    } catch (error: unknown) {
       set({ isRefreshing: false })
       logger.error('Token refresh failed:', error)
       // Don't logout on refresh failure - the interceptor will handle 401s

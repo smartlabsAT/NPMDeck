@@ -43,8 +43,13 @@ import { streamsApi } from '../api/streams'
 import { certificatesApi } from '../api/certificates'
 import { accessListsApi } from '../api/accessLists'
 import { getErrorMessage } from '../types/common'
-import { ProxyHost } from '../api/proxyHosts'
-import { RedirectionHost } from '../api/redirectionHosts'
+import { ProxyHost, CreateProxyHost } from '../api/proxyHosts'
+import { RedirectionHost, CreateRedirectionHost } from '../api/redirectionHosts'
+import { DeadHost, CreateDeadHost } from '../api/deadHosts'
+import { Stream, CreateStream } from '../api/streams'
+import { Certificate, CreateCertificate } from '../api/certificates'
+import { AccessList, CreateAccessList } from '../api/accessLists'
+import { NAVIGATION_COLORS } from '../constants/navigation'
 
 interface ImportDialogProps {
   open: boolean
@@ -118,22 +123,22 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
         
         switch (importData.type) {
           case 'proxy_host':
-            await proxyHostsApi.create(item as any)
+            await proxyHostsApi.create(item as CreateProxyHost)
             break
           case 'redirection_host':
-            await redirectionHostsApi.create(item as any)
+            await redirectionHostsApi.create(item as CreateRedirectionHost)
             break
           case 'dead_host':
-            await deadHostsApi.create(item as any)
+            await deadHostsApi.create(item as CreateDeadHost)
             break
           case 'stream':
-            await streamsApi.create(item as any)
+            await streamsApi.create(item as CreateStream)
             break
           case 'certificate':
-            await certificatesApi.create(item as any)
+            await certificatesApi.create(item as CreateCertificate)
             break
           case 'access_list':
-            await accessListsApi.create(item as any)
+            await accessListsApi.create(item as CreateAccessList)
             break
         }
         
@@ -162,14 +167,14 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
     onClose()
   }
 
-  const getItemDisplayName = (item: any, index: number) => {
-    if (item.domain_names?.length > 0) {
+  const getItemDisplayName = (item: ProxyHost | RedirectionHost | DeadHost | Stream | Certificate | AccessList, index: number) => {
+    if ('domain_names' in item && item.domain_names?.length > 0) {
       return item.domain_names.join(', ')
     }
-    if (item.name) {
+    if ('name' in item && item.name) {
       return item.name
     }
-    if (item.nice_name) {
+    if ('nice_name' in item && item.nice_name) {
       return item.nice_name
     }
     return `Item ${index + 1}`
@@ -203,7 +208,7 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
             alignItems: "center",
             gap: 1
           }}>
-          <FileUploadIcon sx={{ color: '#467fcf' }} />
+          <FileUploadIcon sx={{ color: NAVIGATION_COLORS.info }} />
           Import Configuration
         </Box>
       </DialogTitle>
@@ -221,8 +226,8 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
           <Box>
             {validationErrors.length > 0 && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                {validationErrors.map((error, index) => (
-                  <Typography key={index} variant="body2">{error}</Typography>
+                {validationErrors.map((error) => (
+                  <Typography key={error} variant="body2">{error}</Typography>
                 ))}
               </Alert>
             )}
@@ -293,7 +298,7 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
               />
               <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
                 {(Array.isArray(importData.data) ? importData.data : [importData.data]).map((item, index) => (
-                  <ListItem key={index}>
+                  <ListItem key={(item as { id?: number }).id ?? index}>
                     <ListItemIcon>
                       <Checkbox
                         edge="start"
@@ -374,8 +379,8 @@ export default function ImportDialog({ open, onClose, onImportComplete }: Import
                 {importResults.errors.length > 0 && (
                   <Alert severity="error">
                     <Typography variant="subtitle2" gutterBottom>Errors:</Typography>
-                    {importResults.errors.map((error, index) => (
-                      <Typography key={index} variant="body2">• {error}</Typography>
+                    {importResults.errors.map((error) => (
+                      <Typography key={error} variant="body2">• {error}</Typography>
                     ))}
                   </Alert>
                 )}

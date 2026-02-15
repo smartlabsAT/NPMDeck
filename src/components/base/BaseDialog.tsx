@@ -24,16 +24,17 @@ import {
   CheckCircle as SuccessIcon,
 } from '@mui/icons-material'
 import { TransitionProps } from '@mui/material/transitions'
+import { FONT_WEIGHT } from '../../constants/layout'
 
 /**
  * Dialog severity levels for styling and icons
  */
-export type DialogSeverity = 'info' | 'warning' | 'error' | 'success'
+type DialogSeverity = 'info' | 'warning' | 'error' | 'success'
 
 /**
  * Dialog size options
  */
-export type DialogSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+type DialogSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 /**
  * Props for the BaseDialog component
@@ -92,7 +93,7 @@ export interface BaseDialogProps {
   /** Whether secondary action is disabled */
   disableCancel?: boolean
   /** Animation transition component */
-  TransitionComponent?: React.ComponentType<TransitionProps & { children: React.ReactElement<any, any> }>
+  TransitionComponent?: React.ComponentType<TransitionProps & { children: React.ReactElement }>
   /** Whether to animate content */
   animateContent?: boolean
   /** Custom header icon */
@@ -104,7 +105,7 @@ export interface BaseDialogProps {
 /**
  * Slide up transition for dialogs
  */
-function SlideTransition({ ref, ...props }: TransitionProps & { children: React.ReactElement<any, any>; ref?: React.Ref<unknown> }) {
+function SlideTransition({ ref, ...props }: TransitionProps & { children: React.ReactElement; ref?: React.Ref<unknown> }) {
   return <Slide direction="up" ref={ref} {...props} />
 }
 
@@ -346,7 +347,7 @@ export default function BaseDialog({
               variant="h6" 
               component="h2"
               sx={{ 
-                fontWeight: 600,
+                fontWeight: FONT_WEIGHT.SEMI_BOLD,
                 ...(severity && { color: severityColors.text })
               }}
             >
@@ -503,59 +504,3 @@ export default function BaseDialog({
   );
 }
 
-/**
- * Convenience components for common dialog types
- */
-
-/**
- * ConfirmDialog - Pre-configured confirmation dialog
- */
-export interface ConfirmDialogProps extends Omit<BaseDialogProps, 'children' | 'showActions'> {
-  message: string
-}
-
-export function ConfirmDialog(props: ConfirmDialogProps) {
-  return (
-    <BaseDialog
-      {...props}
-      severity={props.severity || 'warning'}
-      showActions
-      confirmColor={props.confirmColor || 'primary'}
-    />
-  )
-}
-
-/**
- * ErrorDialog - Pre-configured error dialog
- */
-export interface ErrorDialogProps extends Omit<BaseDialogProps, 'severity' | 'confirmColor'> {
-  message: string
-}
-
-export function ErrorDialog(props: ErrorDialogProps) {
-  return (
-    <BaseDialog
-      {...props}
-      severity="error"
-      confirmColor="error"
-      showActions
-    />
-  )
-}
-
-/**
- * InfoDialog - Pre-configured info dialog
- */
-export interface InfoDialogProps extends Omit<BaseDialogProps, 'severity'> {
-  message: string
-}
-
-export function InfoDialog(props: InfoDialogProps) {
-  return (
-    <BaseDialog
-      {...props}
-      severity="info"
-      showActions
-    />
-  )
-}

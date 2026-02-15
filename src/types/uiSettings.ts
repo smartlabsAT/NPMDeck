@@ -1,9 +1,11 @@
+import type { EntityResource } from './entityTypes'
+
 export type ContainerType = 'drawer' | 'dialog'
 export type DrawerPosition = 'left' | 'right'
 export type Operation = 'create' | 'edit' | 'view'
-export type EntityType = 'proxy_hosts' | 'redirection_hosts' | 'dead_hosts' | 'streams' | 'access_lists' | 'certificates' | 'users'
+export type EntityType = EntityResource
 
-export interface EntityPreference {
+interface EntityPreference {
   create?: ContainerType
   edit?: ContainerType
   view?: ContainerType

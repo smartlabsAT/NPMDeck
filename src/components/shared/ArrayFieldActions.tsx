@@ -9,6 +9,7 @@ import {
   alpha,
 } from '@mui/material'
 import { Add as AddIcon } from '@mui/icons-material'
+import { FONT_WEIGHT } from '../../constants/layout'
 
 interface ArrayFieldActionsProps<T> {
   value: T[]
@@ -65,7 +66,7 @@ const ArrayFieldActions = <T,>({
             variant="subtitle1"
             component="label"
             sx={{
-              fontWeight: 500,
+              fontWeight: FONT_WEIGHT.MEDIUM,
               color: error ? 'error.main' : 'text.primary',
             }}
           >
