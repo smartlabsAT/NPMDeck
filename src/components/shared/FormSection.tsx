@@ -16,21 +16,14 @@ import {
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
 } from '@mui/icons-material'
 import { FONT_WEIGHT } from '../../constants/layout'
-
-/**
- * Severity levels for form sections
- */
-type FormSectionSeverity = 'info' | 'warning' | 'error' | 'success'
-
-/**
- * Variant styles for form sections
- */
-type FormSectionVariant = 'minimal' | 'compact' | 'default'
+import {
+  type FormSectionSeverity,
+  type FormSectionVariant,
+  getFormSectionSeverityColors,
+  getFormSectionSeverityIcon,
+} from './formSectionHelpers'
 
 /**
  * Props for the FormSection component
@@ -159,71 +152,8 @@ export default function FormSection({
     }
   }, [collapsible, disabled, loading, expanded, onToggle])
 
-  /**
-   * Get severity-based colors
-   */
-  const getSeverityColors = useCallback(() => {
-    const baseSeverity = error ? 'error' : severity
-    
-    switch (baseSeverity) {
-      case 'error':
-        return {
-          border: theme.palette.error.main,
-          background: alpha(theme.palette.error.light, 0.1),
-          text: theme.palette.error.dark,
-          icon: theme.palette.error.main,
-        }
-      case 'warning':
-        return {
-          border: theme.palette.warning.main,
-          background: alpha(theme.palette.warning.light, 0.1),
-          text: theme.palette.warning.dark,
-          icon: theme.palette.warning.main,
-        }
-      case 'success':
-        return {
-          border: theme.palette.success.main,
-          background: alpha(theme.palette.success.light, 0.1),
-          text: theme.palette.success.dark,
-          icon: theme.palette.success.main,
-        }
-      case 'info':
-        return {
-          border: theme.palette.info.main,
-          background: alpha(theme.palette.info.light, 0.1),
-          text: theme.palette.info.dark,
-          icon: theme.palette.info.main,
-        }
-      default:
-        return {
-          border: theme.palette.divider,
-          background: subtle ? alpha(theme.palette.primary.light, 0.02) : 'transparent',
-          text: theme.palette.text.primary,
-          icon: theme.palette.text.secondary,
-        }
-    }
-  }, [error, severity, theme, subtle])
-
-  /**
-   * Get severity icon
-   */
-  const getSeverityIcon = useCallback(() => {
-    if (error) return <ErrorIcon fontSize="small" />
-    
-    switch (severity) {
-      case 'error':
-        return <ErrorIcon fontSize="small" />
-      case 'warning':
-        return <WarningIcon fontSize="small" />
-      case 'info':
-        return <InfoIcon fontSize="small" />
-      default:
-        return null
-    }
-  }, [error, severity])
-
-  const colors = getSeverityColors()
-  const severityIcon = getSeverityIcon()
+  const colors = getFormSectionSeverityColors(error ? 'error' : severity, theme, subtle)
+  const severityIcon = getFormSectionSeverityIcon(severity, error)
 
   // Get spacing based on variant
   const getSpacing = () => {
