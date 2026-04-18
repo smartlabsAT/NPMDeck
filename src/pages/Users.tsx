@@ -2,27 +2,14 @@ import React, { useState, useMemo, useCallback } from 'react'
 import {
   Box,
   Button,
-  IconButton,
-  Typography,
-  Avatar,
-  Chip,
   Container,
 } from '@mui/material'
 import {
   Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Login as LoginIcon,
-  Person as PersonIcon,
   AdminPanelSettings as AdminIcon,
   PersonOutline as UserIcon,
   Block as BlockIcon,
   Check as CheckIcon,
-  Email as EmailIcon,
-  Shield as ShieldIcon,
-  ToggleOn as StatusIcon,
-  CalendarToday as CalendarIcon,
-  Settings as SettingsIcon,
 } from '@mui/icons-material'
 import { usersApi, User } from '../api/users'
 import { useAuthStore } from '../stores/authStore'
@@ -33,12 +20,13 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import PageHeader from '../components/PageHeader'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/DataTable'
-import { ResponsiveTableColumn, ColumnPriority } from '../components/DataTable/ResponsiveTypes'
-import { Filter, BulkAction } from '../components/DataTable/types'
+import { Filter } from '../components/DataTable/types'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { STORAGE_KEYS } from '../constants/storage'
 import { LAYOUT } from '../constants/layout'
 import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
+import { useUserTableColumns } from './Users/useUserTableColumns'
+import { useUserBulkActions } from './Users/useUserBulkActions'
 
 const Users = () => {
   const { user: currentUser, pushCurrentToStack } = useAuthStore()
@@ -161,179 +149,18 @@ const Users = () => {
     }
   }, [currentUser?.id, pushCurrentToStack, showError])
 
-  const getRoleDisplay = (roles: string[]) => {
-    if (!roles || roles.length === 0) {
-      return 'User'
-    }
-    return roles.map(role =>
-      role === 'admin' ? 'Administrator' : role.charAt(0).toUpperCase() + role.slice(1)
-    ).join(', ')
-  }
+  const handleBulkDelete = useCallback((selectedUsers: User[]) => {
+    setUsersToDelete(selectedUsers)
+    setDeleteDialogOpen(true)
+  }, [])
 
-  // Table column definitions with responsive priorities
-  const columns: ResponsiveTableColumn<User>[] = useMemo(() => [
-    {
-      id: 'avatar',
-      label: '',
-      width: 60,
-      accessor: (user) => user.avatar,
-      priority: 'P1' as ColumnPriority, // Essential - always visible
-      showInCard: true,
-      render: (_, user) => (
-        <Box
-          sx={{
-            position: "relative",
-            display: "inline-block"
-          }}>
-          <Avatar
-            src={user.avatar || '/images/default-avatar.jpg'}
-            alt={user.name}
-          >
-            <PersonIcon />
-          </Avatar>
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              right: 0,
-              width: 12,
-              height: 12,
-              borderRadius: "50%",
-              bgcolor: user.is_disabled ? 'error.main' : 'success.main',
-              border: "2px solid",
-              borderColor: "background.paper"
-            }} />
-        </Box>
-      ),
-    },
-    {
-      id: 'name',
-      label: 'User',
-      icon: <PersonIcon />,
-      accessor: (user) => user.name,
-      sortable: true,
-      priority: 'P1' as ColumnPriority, // Essential - always visible
-      showInCard: true,
-      render: (_, user) => (
-        <Box>
-          <Typography variant="body2" sx={{
-            fontWeight: "medium"
-          }}>
-            {user.name}
-          </Typography>
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>
-            {user.nickname || user.email}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      id: 'email',
-      label: 'Email',
-      icon: <EmailIcon />,
-      accessor: (user) => user.email,
-      sortable: true,
-      priority: 'P2' as ColumnPriority, // Important - hidden on mobile
-      showInCard: true,
-    },
-    {
-      id: 'roles',
-      label: 'Role',
-      icon: <ShieldIcon />,
-      accessor: (user) => user.roles,
-      sortable: true,
-      priority: 'P1' as ColumnPriority, // Essential - always visible (important for permissions)
-      showInCard: true,
-      render: (value) => {
-        const roles = value as string[]
-        return (
-          <Chip
-            size="small"
-            label={getRoleDisplay(roles)}
-            color={roles.includes('admin') ? 'primary' : 'default'}
-            icon={roles.includes('admin') ? <AdminIcon /> : <UserIcon />}
-          />
-        )
-      },
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      icon: <StatusIcon />,
-      accessor: (user) => user.is_disabled,
-      sortable: true,
-      priority: 'P1' as ColumnPriority, // Essential - always visible
-      showInCard: true,
-      render: (_, user) => (
-        <Chip
-          size="small"
-          label={user.is_disabled ? 'Disabled' : 'Active'}
-          color={user.is_disabled ? 'error' : 'success'}
-          icon={user.is_disabled ? <BlockIcon /> : <CheckIcon />}
-        />
-      ),
-    },
-    {
-      id: 'created_on',
-      label: 'Created',
-      icon: <CalendarIcon />,
-      accessor: (user) => user.created_on,
-      sortable: true,
-      priority: 'P3' as ColumnPriority, // Optional - hidden on tablet and mobile
-      showInCard: false,
-      render: (date) => new Date(date as string).toLocaleDateString(),
-    },
-    {
-      id: 'actions',
-      label: 'Actions',
-      icon: <SettingsIcon />,
-      align: 'right',
-      accessor: () => null,
-      priority: 'P1' as ColumnPriority, // Essential - always visible
-      showInCard: true,
-      render: (_, user) => (
-        <Box
-          onClick={(e) => e.stopPropagation()}
-          sx={{
-            display: "flex",
-            gap: 0.5,
-            justifyContent: "flex-end"
-          }}>
-          <IconButton
-            size="small"
-            onClick={() => handleEdit(user)}
-            title="Edit User"
-            aria-label="Edit User"
-          >
-            <EditIcon />
-          </IconButton>
-          {currentUser?.id !== user.id && !user.is_disabled && (
-            <IconButton
-              size="small"
-              onClick={() => handleLoginAs(user)}
-              title="Sign in as User"
-              aria-label="Sign in as User"
-            >
-              <LoginIcon />
-            </IconButton>
-          )}
-          {currentUser?.id !== user.id && (
-            <IconButton
-              size="small"
-              onClick={() => handleDeleteUser(user)}
-              color="error"
-              title="Delete User"
-              aria-label="Delete User"
-            >
-              <DeleteIcon />
-            </IconButton>
-          )}
-        </Box>
-      ),
-    },
-  ], [currentUser, handleEdit, handleLoginAs, handleDeleteUser])
+  // Column definitions extracted into hook
+  const columns = useUserTableColumns({
+    currentUserId: currentUser?.id ?? null,
+    onEdit: handleEdit,
+    onDelete: handleDeleteUser,
+    onLoginAs: handleLoginAs,
+  })
 
   // Filter definitions
   const filters: Filter[] = useMemo(() => [
@@ -361,43 +188,13 @@ const Users = () => {
     },
   ], [])
 
-  // Bulk action definitions
-  const bulkActions: BulkAction<User>[] = useMemo(() => [
-    {
-      id: 'enable',
-      label: 'Enable',
-      icon: <CheckIcon />,
-      color: 'success',
-      action: async (selectedUsers) => {
-        await handleBulkEnable(selectedUsers)
-      },
-      disabled: (selectedUsers) => selectedUsers.every(u => !u.is_disabled || u.id === currentUser?.id),
-      confirmMessage: 'Enable {count} users?',
-    },
-    {
-      id: 'disable',
-      label: 'Disable',
-      icon: <BlockIcon />,
-      color: 'warning',
-      action: async (selectedUsers) => {
-        await handleBulkDisable(selectedUsers)
-      },
-      disabled: (selectedUsers) => selectedUsers.every(u => u.is_disabled || u.id === currentUser?.id),
-      confirmMessage: 'Disable {count} users?',
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: <DeleteIcon />,
-      color: 'error',
-      action: async (selectedUsers) => {
-        setUsersToDelete(selectedUsers.filter(u => u.id !== currentUser?.id))
-        setDeleteDialogOpen(true)
-      },
-      disabled: (selectedUsers) => selectedUsers.every(u => u.id === currentUser?.id),
-      confirmMessage: 'Delete {count} users? This action cannot be undone.',
-    },
-  ], [currentUser, handleBulkDisable, handleBulkEnable])
+  // Bulk action definitions extracted into hook
+  const bulkActions = useUserBulkActions({
+    currentUserId: currentUser?.id ?? null,
+    onBulkEnable: handleBulkEnable,
+    onBulkDisable: handleBulkDisable,
+    onBulkDelete: handleBulkDelete,
+  })
 
   return (
     <Container maxWidth={false}>
