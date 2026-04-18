@@ -1,12 +1,10 @@
 import React, { ReactNode, useCallback } from 'react'
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
   Button,
-  IconButton,
   Box,
   Typography,
   Alert,
@@ -16,20 +14,8 @@ import {
   Slide,
   Fade,
 } from '@mui/material'
-import { 
-  Close as CloseIcon, 
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  Info as InfoIcon,
-  CheckCircle as SuccessIcon,
-} from '@mui/icons-material'
 import { TransitionProps } from '@mui/material/transitions'
-import { FONT_WEIGHT } from '../../constants/layout'
-
-/**
- * Dialog severity levels for styling and icons
- */
-type DialogSeverity = 'info' | 'warning' | 'error' | 'success'
+import DialogSeverityHeader, { DialogSeverity } from './DialogSeverityHeader'
 
 /**
  * Dialog size options
@@ -193,60 +179,6 @@ export default function BaseDialog({
   const shouldFullScreen = fullScreen || (isMobile && ['lg', 'xl'].includes(maxWidth))
 
   /**
-   * Get severity-based icon
-   */
-  const getSeverityIcon = useCallback(() => {
-    if (headerIcon) return headerIcon
-    
-    const iconProps = { fontSize: 'large' as const }
-    
-    switch (severity) {
-      case 'error':
-        return <ErrorIcon color="error" {...iconProps} />
-      case 'warning':
-        return <WarningIcon color="warning" {...iconProps} />
-      case 'success':
-        return <SuccessIcon color="success" {...iconProps} />
-      case 'info':
-      default:
-        return <InfoIcon color="info" {...iconProps} />
-    }
-  }, [severity, headerIcon])
-
-  /**
-   * Get severity-based color scheme
-   */
-  const getSeverityColors = useCallback(() => {
-    switch (severity) {
-      case 'error':
-        return { 
-          bg: 'error.light', 
-          border: 'error.main',
-          text: 'error.dark'
-        }
-      case 'warning':
-        return { 
-          bg: 'warning.light', 
-          border: 'warning.main',
-          text: 'warning.dark'
-        }
-      case 'success':
-        return { 
-          bg: 'success.light', 
-          border: 'success.main',
-          text: 'success.dark'
-        }
-      case 'info':
-      default:
-        return { 
-          bg: 'info.light', 
-          border: 'info.main',
-          text: 'info.dark'
-        }
-    }
-  }, [severity])
-
-  /**
    * Handle dialog close with persistence check
    */
   const handleClose = useCallback((event: object, reason: 'backdropClick' | 'escapeKeyDown') => {
@@ -286,8 +218,6 @@ export default function BaseDialog({
     }
   }, [onCancel, handleManualClose])
 
-  const severityColors = getSeverityColors()
-
   return (
     <Dialog
       open={open}
@@ -309,7 +239,7 @@ export default function BaseDialog({
             boxShadow: theme.shadows[8],
             ...(severity && {
               borderTop: `4px solid`,
-              borderTopColor: severityColors.border,
+              borderTopColor: `${severity}.main`,
             }),
             // Fixed height for non-fullscreen dialogs to prevent jumping
             ...(!shouldFullScreen && {
@@ -324,59 +254,16 @@ export default function BaseDialog({
         transition: TransitionComponent
       }}>
       {/* Header */}
-      <DialogTitle
-        sx={{
-          p: 3,
-          pb: subtitle ? 1 : 2,
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          ...(severity && {
-            bgcolor: `${severityColors.bg}20`,
-          })
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, pr: 2 }}>
-          {(severity || headerIcon) && (
-            <Box sx={{ mt: 0.5 }}>
-              {getSeverityIcon()}
-            </Box>
-          )}
-          <Box>
-            <Typography 
-              variant="h6" 
-              component="h2"
-              sx={{ 
-                fontWeight: FONT_WEIGHT.SEMI_BOLD,
-                ...(severity && { color: severityColors.text })
-              }}
-            >
-              {title}
-            </Typography>
-            {subtitle && (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  mt: 0.5
-                }}>
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
-        </Box>
-        
-        {showCloseButton && !persistent && (
-          <IconButton
-            aria-label="close"
-            onClick={handleManualClose}
-            disabled={loading}
-            sx={{ mt: -1, mr: -1 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        )}
-      </DialogTitle>
+      <DialogSeverityHeader
+        title={title}
+        subtitle={subtitle}
+        severity={severity}
+        headerIcon={headerIcon}
+        showCloseButton={showCloseButton}
+        persistent={persistent}
+        loading={loading}
+        onManualClose={handleManualClose}
+      />
       {/* Content */}
       <DialogContent sx={{ 
         p: 3, 
