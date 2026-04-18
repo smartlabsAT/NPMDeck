@@ -10,7 +10,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material'
-import type { ChangeEvent } from 'react'
+import type { EmailFieldProps } from './redirectionFormTypes'
 
 const DNS_PROVIDERS = [
   { value: 'cloudflare', label: 'Cloudflare' },
@@ -22,18 +22,6 @@ const DNS_PROVIDERS = [
   { value: 'linode', label: 'Linode' },
   { value: 'route53', label: 'AWS Route53' },
 ]
-
-/** Full shape returned by useDrawerForm.getFieldProps — passed through from parent to preserve
- *  onBlur (touch tracking), disabled (while submitting), and touch-gated error display. */
-export interface EmailFieldProps {
-  name: string
-  value: string | number | readonly string[]
-  onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
-  onBlur: () => void
-  error: boolean
-  helperText?: string
-  disabled: boolean
-}
 
 /** Subset of LetsEncrypt-related field keys handled by this component */
 export type LetsEncryptFieldKey =
