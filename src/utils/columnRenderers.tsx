@@ -56,7 +56,7 @@ export function renderDomainLinks(domains: string[]): React.ReactNode {
             }}
             onClick={(e) => {
               e.stopPropagation()
-              window.open(`https://${domain}`, '_blank')
+              window.open(`https://${domain}`, '_blank', 'noopener,noreferrer')
             }}
           >
             <LinkIcon sx={{ fontSize: '0.875rem' }} />

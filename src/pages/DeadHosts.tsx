@@ -99,9 +99,9 @@ export default function DeadHosts() {
       mobileLabel: 'Domains',
       render: (value, item) => (
         <Box>
-          {item.domain_names.map((domain, index) => (
+          {item.domain_names.map((domain) => (
             <Typography
-              key={index}
+              key={domain}
               variant="body2"
               role="link"
               aria-label={`Open ${domain} in new tab`}
