@@ -2,6 +2,7 @@ import { useMemo, useCallback } from 'react'
 import type { ProxyHost } from '../api/proxyHosts'
 import type { Filter, FilterValue } from '../components/DataTable/types'
 import { filterBySsl, filterByStatus } from '../utils/filterUtils'
+import { SSL_FILTER_OPTIONS, STATUS_FILTER_OPTIONS } from '../constants/table'
 
 interface UseProxyHostFiltersReturn {
   filters: Filter[]
@@ -19,12 +20,7 @@ const useProxyHostFilters = (): UseProxyHostFiltersReturn => {
       label: 'SSL',
       type: 'select',
       defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'forced', label: 'SSL Forced' },
-        { value: 'optional', label: 'SSL Optional' },
-        { value: 'disabled', label: 'No SSL' }
-      ]
+      options: [...SSL_FILTER_OPTIONS]
     },
     {
       id: 'access',
@@ -42,11 +38,7 @@ const useProxyHostFilters = (): UseProxyHostFiltersReturn => {
       label: 'Status',
       type: 'select',
       defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'enabled', label: 'Enabled' },
-        { value: 'disabled', label: 'Disabled' }
-      ]
+      options: [...STATUS_FILTER_OPTIONS]
     }
   ], [])
 

@@ -2,6 +2,7 @@ import { useMemo, useCallback } from 'react'
 import type { RedirectionHost } from '../api/redirectionHosts'
 import type { Filter, FilterValue } from '../components/DataTable/types'
 import { filterBySsl, filterByStatus } from '../utils/filterUtils'
+import { SSL_FILTER_OPTIONS, STATUS_FILTER_OPTIONS } from '../constants/table'
 
 interface UseRedirectionHostFiltersReturn {
   filters: Filter[]
@@ -32,23 +33,14 @@ const useRedirectionHostFilters = (): UseRedirectionHostFiltersReturn => {
       label: 'SSL',
       type: 'select',
       defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'forced', label: 'SSL Forced' },
-        { value: 'optional', label: 'SSL Optional' },
-        { value: 'disabled', label: 'No SSL' }
-      ]
+      options: [...SSL_FILTER_OPTIONS]
     },
     {
       id: 'status',
       label: 'Status',
       type: 'select',
       defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'enabled', label: 'Enabled' },
-        { value: 'disabled', label: 'Disabled' }
-      ]
+      options: [...STATUS_FILTER_OPTIONS]
     }
   ], [])
 

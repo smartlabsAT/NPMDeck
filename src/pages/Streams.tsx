@@ -39,7 +39,7 @@ import { NAVIGATION_CONFIG } from '../constants/navigation'
 import { getStatusIcon } from '../utils/statusUtils'
 import { createStandardBulkActions } from '../utils/bulkActionFactory'
 import { LAYOUT } from '../constants/layout'
-import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
+import { ROWS_PER_PAGE_OPTIONS, STATUS_FILTER_OPTIONS } from '../constants/table'
 
 /** Build a display name for a stream (e.g. "8080/TCP" or "53/TCPUDP"). */
 const getStreamDisplayName = (stream: Stream): string =>
@@ -301,11 +301,11 @@ export default function Streams() {
       label: 'Status',
       type: 'select',
       defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'enabled', label: 'Enabled', icon: <CheckIcon fontSize="small" /> },
-        { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
-      ]
+      options: STATUS_FILTER_OPTIONS.map(opt => ({
+        ...opt,
+        ...(opt.value === 'enabled' ? { icon: <CheckIcon fontSize="small" /> } : {}),
+        ...(opt.value === 'disabled' ? { icon: <CancelIcon fontSize="small" /> } : {}),
+      }))
     }
   ], [])
 
