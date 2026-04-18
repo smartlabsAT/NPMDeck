@@ -3,25 +3,16 @@ import {
   TextField,
   FormControlLabel,
   Switch,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Box,
-  Paper,
   Typography,
   Alert,
   useTheme,
-  IconButton,
 } from '@mui/material'
 import {
   Info as InfoIcon,
   Lock as LockIcon,
   Security as SecurityIcon,
   OpenInNew as OpenInNewIcon,
-  Delete as DeleteIcon,
-  ArrowUpward as ArrowUpwardIcon,
-  ArrowDownward as ArrowDownwardIcon,
 } from '@mui/icons-material'
 import { AccessList, CreateAccessList, UpdateAccessList, accessListsApi } from '../../../api/accessLists'
 import BaseDrawer from '../../base/BaseDrawer'
@@ -32,22 +23,17 @@ import type { ArrayItemProps } from '../../shared/ArrayItemComponent'
 import { useDrawerForm } from '../../../hooks/useDrawerForm'
 import { useToast } from '../../../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../../../constants/navigation'
+import AuthItemForm from './AuthItemForm'
+import AccessRuleForm from './AccessRuleForm'
+import type { AuthItem } from './AuthItemForm'
+import type { AccessRule } from './AccessRuleForm'
+import { validateIpCidr } from '../../../utils/ipValidation'
 
 interface AccessListDrawerProps {
   open: boolean
   onClose: () => void
   accessList?: AccessList | null
   onSave: () => void
-}
-
-interface AuthItem {
-  username: string
-  password: string
-}
-
-interface AccessRule {
-  address: string
-  directive: 'allow' | 'deny'
 }
 
 interface AccessListFormData {
@@ -58,175 +44,6 @@ interface AccessListFormData {
   accessRules: AccessRule[]
 }
 
-// Memoized components to prevent re-renders and focus loss
-interface AuthItemComponentProps extends ArrayItemProps<AuthItem> {
-  accessList?: AccessList | null
-}
-
-const AuthItemComponent = React.memo(({ value, onChange, accessList }: AuthItemComponentProps) => (
-  <Paper
-    variant="outlined"
-    sx={{
-      p: 2,
-      display: 'flex',
-      gap: 2,
-      alignItems: 'flex-start'
-    }}
-  >
-    <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
-      <TextField
-        label="Username"
-        value={value.username}
-        onChange={(e) => {
-          onChange({ ...value, username: e.target.value })
-        }}
-        error={false}
-        helperText={undefined}
-        fullWidth
-        required
-      />
-      <TextField
-        label="Password"
-        type="password"
-        value={value.password}
-        onChange={(e) => {
-          onChange({ ...value, password: e.target.value })
-        }}
-        error={false}
-        helperText={undefined}
-        fullWidth
-        required={!accessList}
-        placeholder={accessList ? 'Leave blank to keep current password' : 'Enter password'}
-      />
-    </Box>
-  </Paper>
-))
-
-AuthItemComponent.displayName = 'AuthItemComponent'
-
-// IP/CIDR validation function
-const validateIpCidr = (address: string): string | null => {
-    if (!address || address.trim() === '') {
-      return 'IP address is required'
-    }
-    
-    // Allow special keyword 'all'
-    if (address === 'all') {
-      return null
-    }
-    
-    // IPv4 with optional CIDR
-    const ipv4CidrRegex = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/
-    
-    // IPv6 with optional CIDR (simplified)
-    const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}(\/\d{1,3})?$/
-    
-    if (!ipv4CidrRegex.test(address) && !ipv6Regex.test(address)) {
-      return 'Please enter a valid IP address, CIDR range, or "all"'
-    }
-    
-    // Additional validation for IPv4
-    if (ipv4CidrRegex.test(address)) {
-      const parts = address.split('/')
-      const ip = parts[0]
-      const cidr = parts[1]
-      
-      // Validate IP octets
-      const octets = ip.split('.')
-      for (const octet of octets) {
-        const num = parseInt(octet, 10)
-        if (num < 0 || num > 255) {
-          return 'Invalid IP address: each octet must be between 0-255'
-        }
-      }
-      
-      // Validate CIDR if present
-      if (cidr) {
-        const cidrNum = parseInt(cidr, 10)
-        if (cidrNum < 0 || cidrNum > 32) {
-          return 'Invalid CIDR: must be between 0-32'
-        }
-      }
-    }
-    
-    return null
-}
-
-const AccessRuleComponent = React.memo(({ value, onChange, onDelete, onMoveUp, onMoveDown }: ArrayItemProps<AccessRule>) => {
-  const error = validateIpCidr(value.address)
-  
-  return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 2,
-        display: 'flex',
-        gap: 2,
-        alignItems: 'flex-start'
-      }}
-    >
-      <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
-        <TextField
-          label="IP Address or Range"
-          value={value.address}
-          onChange={(e) => {
-            onChange({ ...value, address: e.target.value })
-          }}
-          error={!!error}
-          helperText={error || "Examples: 192.168.1.0/24, 10.0.0.5, all"}
-          fullWidth
-          required
-        />
-      <FormControl sx={{ minWidth: 120 }}>
-        <InputLabel>Action</InputLabel>
-        <Select
-          value={value.directive}
-          onChange={(e) => {
-            onChange({ ...value, directive: e.target.value })
-          }}
-          label="Action"
-        >
-          <MenuItem value="allow">Allow</MenuItem>
-          <MenuItem value="deny">Deny</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-      {onMoveUp && (
-        <IconButton 
-          size="small" 
-          onClick={onMoveUp}
-          title="Move up"
-          disabled={!onMoveUp}
-        >
-          <ArrowUpwardIcon fontSize="small" />
-        </IconButton>
-      )}
-      {onMoveDown && (
-        <IconButton 
-          size="small" 
-          onClick={onMoveDown}
-          title="Move down"
-          disabled={!onMoveDown}
-        >
-          <ArrowDownwardIcon fontSize="small" />
-        </IconButton>
-      )}
-      <IconButton 
-        size="small" 
-        onClick={onDelete}
-        color="error"
-        title="Delete rule"
-      >
-        <DeleteIcon fontSize="small" />
-      </IconButton>
-    </Box>
-  </Paper>
-  )
-})
-
-AccessRuleComponent.displayName = 'AccessRuleComponent'
-
 export default function AccessListDrawer({ open, onClose, accessList, onSave }: AccessListDrawerProps) {
   const [activeTab, setActiveTab] = React.useState(0)
   const { showSuccess, showError } = useToast()
@@ -235,7 +52,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
   
   // Create memoized component with accessList in closure
   const AuthItemWithAccessList = React.useCallback(
-    (props: ArrayItemProps<AuthItem>) => <AuthItemComponent {...props} accessList={accessList} />,
+    (props: ArrayItemProps<AuthItem>) => <AuthItemForm {...props} accessList={accessList} />,
     [accessList]
   )
 
@@ -511,7 +328,7 @@ export default function AccessListDrawer({ open, onClose, accessList, onSave }: 
             defaultValue={{ address: '', directive: 'allow' }}
             addButtonText="Add Rule"
             emptyPlaceholder="No access rules defined. Add rules to control IP-based access."
-            ItemComponent={AccessRuleComponent}
+            ItemComponent={AccessRuleForm}
             error={!!errors.accessRules}
             allowReorder={true}
             showIndices={true}
