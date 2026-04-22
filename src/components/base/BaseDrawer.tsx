@@ -3,7 +3,6 @@ import {
   Drawer,
   Box,
   Typography,
-  IconButton,
   Tabs,
   Tab,
   Badge,
@@ -11,19 +10,15 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
 import {
-  Close as CloseIcon,
-  Warning as WarningIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
 } from '@mui/icons-material';
+import DrawerHeader from './DrawerHeader';
+import DrawerCloseConfirmDialog from './DrawerCloseConfirmDialog';
 
 /**
  * Tab configuration interface for BaseDrawer
@@ -332,57 +327,12 @@ export const BaseDrawer = ({
         }}
       >
         {/* Header */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            p: 2,
-            borderBottom: 1,
-            borderColor: 'divider',
-            position: 'sticky',
-            top: 0,
-            backgroundColor: 'background.paper',
-            zIndex: 1,
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {titleIcon}
-              <Typography
-                variant="h6"
-                component="h2"
-                sx={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {title}
-              </Typography>
-            </Box>
-            {subtitle && (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
-          <IconButton
-            onClick={handleClose}
-            size="small"
-            aria-label="Close drawer"
-            sx={{ ml: 1 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
+        <DrawerHeader
+          title={title}
+          titleIcon={titleIcon}
+          subtitle={subtitle}
+          onClose={handleClose}
+        />
 
         {/* Loading Overlay */}
         {loading && (
@@ -484,30 +434,12 @@ export const BaseDrawer = ({
         )}
       </Drawer>
       {/* Close Confirmation Dialog */}
-      <Dialog
+      <DrawerCloseConfirmDialog
         open={showConfirmClose}
-        onClose={() => setShowConfirmClose(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <WarningIcon color="warning" />
-          Unsaved Changes
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            {confirmCloseMessage}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowConfirmClose(false)}>
-            Continue Editing
-          </Button>
-          <Button onClick={handleConfirmClose} color="warning" variant="contained">
-            Close Without Saving
-          </Button>
-        </DialogActions>
-      </Dialog>
+        message={confirmCloseMessage}
+        onConfirm={handleConfirmClose}
+        onCancel={() => setShowConfirmClose(false)}
+      />
     </>
   );
 };

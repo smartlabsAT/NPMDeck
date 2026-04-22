@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Box,
   Typography,
   TextField,
   FormControl,
@@ -26,9 +25,9 @@ import CertificateDrawer from './features/certificates/CertificateDrawer'
 import DomainInput from './DomainInput'
 import FormSection from './shared/FormSection'
 import TabPanel from './shared/TabPanel'
-import CertificateSelector from './shared/CertificateSelector'
 import { useToast } from '../contexts/ToastContext'
 import { NAVIGATION_CONFIG } from '../constants/navigation'
+import RedirectionSslSection, { type RedirectionSslValues } from './features/redirection-hosts/RedirectionSslSection'
 
 interface RedirectionHostDrawerProps {
   open: boolean
@@ -217,17 +216,6 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
     { value: 308, label: '308 Permanent Redirect' },
   ]
 
-  const dnsProviders = [
-    { value: 'cloudflare', label: 'Cloudflare' },
-    { value: 'digitalocean', label: 'DigitalOcean' },
-    { value: 'duckdns', label: 'DuckDNS' },
-    { value: 'godaddy', label: 'GoDaddy' },
-    { value: 'google', label: 'Google' },
-    { value: 'hetzner', label: 'Hetzner' },
-    { value: 'linode', label: 'Linode' },
-    { value: 'route53', label: 'AWS Route53' },
-  ]
-
   const tabs: DrawerTab[] = [
     {
       id: 'details',
@@ -378,188 +366,13 @@ export default function RedirectionHostDrawer({ open, onClose, host, onSave }: R
         </TabPanel>
 
         <TabPanel value={activeTab} index={1} keepMounted animation="none">
-          <CertificateSelector
-            value={certificates.find(c => c.id === form.data.certificate_id) || null}
-            onChange={(newValue) => {
-              if (newValue) {
-                form.setFieldValue('certificate_id', newValue.id)
-                form.setFieldValue('use_lets_encrypt', false)
-              } else {
-                form.setFieldValue('certificate_id', 0)
-                form.setFieldValue('use_lets_encrypt', false)
-              }
-            }}
+          <RedirectionSslSection
+            values={form.data}
             certificates={certificates}
-            loading={false}
-            helperText="Choose an existing certificate or request a new one"
-            showDomainInfo={false}
-            showAddButton={true}
-            onAddClick={() => setCertificateDrawerOpen(true)}
-            includeNewOption={true}
-            onNewOptionSelect={() => {
-              form.setFieldValue('certificate_id', 'new')
-              form.setFieldValue('use_lets_encrypt', true)
-            }}
+            emailProps={form.getFieldProps('letsencrypt_email')}
+            onFieldChange={form.setFieldValue as (field: keyof RedirectionSslValues, value: RedirectionSslValues[keyof RedirectionSslValues]) => void}
+            onAddCertificateClick={() => setCertificateDrawerOpen(true)}
           />
-
-          {(form.data.certificate_id !== 0 && form.data.certificate_id !== 'new') && (
-            <Box sx={{ mt: 3 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.data.ssl_forced}
-                    onChange={(e) => form.setFieldValue('ssl_forced', e.target.checked)}
-                  />
-                }
-                label="Force SSL"
-              />
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "text.secondary",
-                  ml: 2,
-                  mb: 2,
-                  display: 'block'
-                }}>
-                Redirect all HTTP traffic to HTTPS
-              </Typography>
-
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.data.http2_support}
-                    onChange={(e) => form.setFieldValue('http2_support', e.target.checked)}
-                  />
-                }
-                label="HTTP/2 Support"
-              />
-
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.data.hsts_enabled}
-                    onChange={(e) => form.setFieldValue('hsts_enabled', e.target.checked)}
-                    disabled={!form.data.ssl_forced}
-                  />
-                }
-                label="HSTS Enabled"
-              />
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "text.secondary",
-                  ml: 2,
-                  mb: 2,
-                  display: 'block'
-                }}>
-                HTTP Strict Transport Security
-              </Typography>
-
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.data.hsts_subdomains}
-                    onChange={(e) => form.setFieldValue('hsts_subdomains', e.target.checked)}
-                    disabled={!form.data.hsts_enabled}
-                  />
-                }
-                label="HSTS Subdomains"
-                sx={{ ml: 4 }}
-              />
-            </Box>
-          )}
-
-          {form.data.use_lets_encrypt && form.data.certificate_id === 'new' && (
-            <Box sx={{ mt: 3 }}>
-              <Alert severity="info" sx={{ mb: 2 }}>
-                A new Let&apos;s Encrypt certificate will be requested when you save
-              </Alert>
-
-              <TextField
-                {...form.getFieldProps('letsencrypt_email')}
-                fullWidth
-                label="Email Address"
-                type="email"
-                margin="normal"
-                required
-                helperText="For Let's Encrypt notifications"
-              />
-
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.data.dns_challenge}
-                    onChange={(e) => form.setFieldValue('dns_challenge', e.target.checked)}
-                  />
-                }
-                label="Use DNS Challenge"
-                sx={{ mt: 2 }}
-              />
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "text.secondary",
-                  ml: 2,
-                  mb: 2,
-                  display: 'block'
-                }}>
-                Required for wildcard certificates
-              </Typography>
-
-              {form.data.dns_challenge && (
-                <>
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>DNS Provider</InputLabel>
-                    <Select
-                      value={form.data.dns_provider}
-                      onChange={(e) => form.setFieldValue('dns_provider', e.target.value)}
-                      label="DNS Provider"
-                      required
-                    >
-                      {dnsProviders.map(provider => (
-                        <MenuItem key={provider.value} value={provider.value}>
-                          {provider.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <TextField
-                    fullWidth
-                    label="DNS Provider Credentials"
-                    multiline
-                    rows={4}
-                    value={form.data.dns_provider_credentials}
-                    onChange={(e) => form.setFieldValue('dns_provider_credentials', e.target.value)}
-                    margin="normal"
-                    helperText="Provider-specific API credentials"
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Propagation Seconds"
-                    type="number"
-                    value={form.data.propagation_seconds}
-                    onChange={(e) => form.setFieldValue('propagation_seconds', e.target.value)}
-                    margin="normal"
-                    helperText="Time to wait for DNS propagation (default: provider-specific)"
-                  />
-                </>
-              )}
-
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.data.letsencrypt_agree}
-                    onChange={(e) => form.setFieldValue('letsencrypt_agree', e.target.checked)}
-                  />
-                }
-                label="I agree to the Let's Encrypt Terms of Service"
-                sx={{ mt: 2 }}
-                required
-              />
-            </Box>
-          )}
         </TabPanel>
 
         <TabPanel value={activeTab} index={2} keepMounted animation="none">
