@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { act, waitFor } from '@testing-library/react'
-import { renderHookWithProviders } from '../../test/utils'
+import { renderHookWithProviders, loginAs } from '../../test/utils'
 import { useEntityCrud } from '../useEntityCrud'
-import { useAuthStore } from '../../stores/authStore'
 import { mockUser, mockProxyHost } from '../../test/fixtures'
 import type { ProxyHost } from '../../api/proxyHosts'
 
@@ -49,24 +48,9 @@ function setup(apiOverrides?: Parameters<typeof makeApi>[0]) {
   return { api, result }
 }
 
-function resetAuthStore() {
-  useAuthStore.setState({
-    user: mockUser(),
-    token: 'test-token',
-    tokenExpiresAt: null,
-    isAuthenticated: true,
-    isLoading: false,
-    error: null,
-    tokenStack: [],
-    refreshInterval: null,
-    expiryWarningTimeout: null,
-    isRefreshing: false,
-  })
-}
-
 describe('useEntityCrud — initial load', () => {
   beforeEach(() => {
-    resetAuthStore()
+    loginAs(mockUser())
     mockNavigate.mockClear()
   })
 
@@ -103,7 +87,7 @@ describe('useEntityCrud — initial load', () => {
 
 describe('useEntityCrud — drawer state', () => {
   beforeEach(() => {
-    resetAuthStore()
+    loginAs(mockUser())
     mockNavigate.mockClear()
   })
 
@@ -154,7 +138,7 @@ describe('useEntityCrud — drawer state', () => {
 
 describe('useEntityCrud — delete flow', () => {
   beforeEach(() => {
-    resetAuthStore()
+    loginAs(mockUser())
     mockNavigate.mockClear()
   })
 
@@ -215,7 +199,7 @@ describe('useEntityCrud — delete flow', () => {
 
 describe('useEntityCrud — handleToggleEnabled', () => {
   beforeEach(() => {
-    resetAuthStore()
+    loginAs(mockUser())
     mockNavigate.mockClear()
   })
 

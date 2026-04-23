@@ -1,23 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { renderHookWithProviders } from '../../test/utils'
+import { renderHookWithProviders, resetAuthStore } from '../../test/utils'
 import { useFilteredData, useFilteredInfo } from '../useFilteredData'
 import { useAuthStore } from '../../stores/authStore'
 import { mockUser, mockNonAdminUser, mockProxyHost } from '../../test/fixtures'
-
-function resetAuthStore() {
-  useAuthStore.setState({
-    user: null,
-    token: null,
-    tokenExpiresAt: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
-    tokenStack: [],
-    refreshInterval: null,
-    expiryWarningTimeout: null,
-    isRefreshing: false,
-  })
-}
 
 describe('useFilteredData', () => {
   beforeEach(() => {

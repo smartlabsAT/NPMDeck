@@ -68,3 +68,4 @@ export function renderHookWithProviders<Result, Props = unknown>(
 
 export * from '@testing-library/react'
 export { default as userEvent } from '@testing-library/user-event'
+export { resetAuthStore, loginAs } from './authStoreHelpers'

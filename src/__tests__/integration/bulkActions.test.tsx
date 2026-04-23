@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderWithProviders, screen, waitFor, userEvent } from '../../test/utils'
+import { renderWithProviders, screen, waitFor, userEvent, loginAs } from '../../test/utils'
 import ProxyHosts from '../../pages/ProxyHosts'
-import { useAuthStore } from '../../stores/authStore'
 import { mockUser, mockProxyHost } from '../../test/fixtures'
 
 // --- API mocks -----------------------------------------------------------
@@ -41,28 +40,13 @@ import { redirectionHostsApi } from '../../api/redirectionHosts'
 
 // -------------------------------------------------------------------------
 
-function resetAuthStore() {
-  useAuthStore.setState({
-    user: mockUser(),
-    token: 'test-token',
-    tokenExpiresAt: null,
-    isAuthenticated: true,
-    isLoading: false,
-    error: null,
-    tokenStack: [],
-    refreshInterval: null,
-    expiryWarningTimeout: null,
-    isRefreshing: false,
-  })
-}
-
 const HOST_A = mockProxyHost({ id: 1, domain_names: ['a.test'], enabled: true })
 const HOST_B = mockProxyHost({ id: 2, domain_names: ['b.test'], enabled: true })
 
 describe('Bulk actions integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    resetAuthStore()
+    loginAs(mockUser())
     vi.mocked(redirectionHostsApi.getAll).mockResolvedValue([])
     vi.mocked(proxyHostsApi.getAll).mockResolvedValue([HOST_A, HOST_B])
     vi.mocked(proxyHostsApi.delete).mockResolvedValue(undefined)
@@ -111,18 +95,17 @@ describe('Bulk actions integration', () => {
    * interactions that are brittle in jsdom. The bulk-action *logic* is
    * covered by `src/utils/__tests__/bulkActionFactory.test.tsx`.
    */
-  it('clicking select-all checkbox checks it', async () => {
+  it('clicking a row checkbox checks it', async () => {
     renderWithProviders(<ProxyHosts />, { initialRoute: '/hosts/proxy' })
 
     await waitFor(() => expect(screen.getByText('a.test')).toBeInTheDocument())
 
     // Click on the first row checkbox (index 0 is select-all, index 1 is first row)
     const checkboxes = screen.getAllByRole('checkbox')
-    // Select at least one row — try select-all for simplicity
-    await userEvent.click(checkboxes[0])
+    await userEvent.click(checkboxes[1])
 
     await waitFor(() => {
-      expect(checkboxes[0]).toBeChecked()
+      expect(checkboxes[1]).toBeChecked()
     })
   })
 })

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderWithProviders, screen, userEvent, waitFor } from '../../test/utils'
+import { renderWithProviders, screen, userEvent, waitFor, resetAuthStore } from '../../test/utils'
 import Login from '../../pages/Login'
-import { useAuthStore } from '../../stores/authStore'
 import { authApi } from '../../api/auth'
 import { mockUser } from '../../test/fixtures'
 
@@ -18,21 +17,6 @@ vi.mock('../../api/auth', () => ({
 function makeMockToken(expiresInSeconds = 3600): string {
   const payload = { exp: Math.floor(Date.now() / 1000) + expiresInSeconds }
   return `header.${btoa(JSON.stringify(payload))}.sig`
-}
-
-function resetAuthStore() {
-  useAuthStore.setState({
-    user: null,
-    token: null,
-    tokenExpiresAt: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
-    tokenStack: [],
-    refreshInterval: null,
-    expiryWarningTimeout: null,
-    isRefreshing: false,
-  })
 }
 
 describe('Login integration', () => {

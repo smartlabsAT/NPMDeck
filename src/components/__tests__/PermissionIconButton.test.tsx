@@ -1,24 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { renderWithProviders, screen, userEvent } from '../../test/utils'
+import { renderWithProviders, screen, userEvent, resetAuthStore } from '../../test/utils'
 import EditIcon from '@mui/icons-material/Edit'
 import PermissionIconButton from '../PermissionIconButton'
 import { useAuthStore } from '../../stores/authStore'
 import { mockUser, mockNonAdminUser } from '../../test/fixtures'
-
-function resetAuthStore() {
-  useAuthStore.setState({
-    user: null,
-    token: null,
-    tokenExpiresAt: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
-    tokenStack: [],
-    refreshInterval: null,
-    expiryWarningTimeout: null,
-    isRefreshing: false,
-  })
-}
 
 describe('PermissionIconButton', () => {
   beforeEach(() => {

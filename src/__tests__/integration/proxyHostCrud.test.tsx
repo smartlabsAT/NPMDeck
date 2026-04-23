@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { within } from '@testing-library/react'
-import { renderWithProviders, screen, waitFor, userEvent } from '../../test/utils'
+import { renderWithProviders, screen, waitFor, userEvent, loginAs } from '../../test/utils'
 import ProxyHosts from '../../pages/ProxyHosts'
-import { useAuthStore } from '../../stores/authStore'
 import { mockUser, mockProxyHost } from '../../test/fixtures'
 
 // --- API mocks -----------------------------------------------------------
@@ -43,28 +42,13 @@ import { redirectionHostsApi } from '../../api/redirectionHosts'
 
 // -------------------------------------------------------------------------
 
-function resetAuthStore() {
-  useAuthStore.setState({
-    user: mockUser(),
-    token: 'test-token',
-    tokenExpiresAt: null,
-    isAuthenticated: true,
-    isLoading: false,
-    error: null,
-    tokenStack: [],
-    refreshInterval: null,
-    expiryWarningTimeout: null,
-    isRefreshing: false,
-  })
-}
-
 const HOST_A = mockProxyHost({ id: 1, domain_names: ['a.test'], enabled: true })
 const HOST_B = mockProxyHost({ id: 2, domain_names: ['b.test'], enabled: false })
 
 describe('ProxyHost CRUD integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    resetAuthStore()
+    loginAs(mockUser())
     vi.mocked(redirectionHostsApi.getAll).mockResolvedValue([])
     vi.mocked(proxyHostsApi.getAll).mockResolvedValue([HOST_A, HOST_B])
     vi.mocked(proxyHostsApi.delete).mockResolvedValue(undefined)
