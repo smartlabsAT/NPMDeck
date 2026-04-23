@@ -12,5 +12,5 @@ export function mockCertificate(overrides: Partial<Certificate> = {}): Certifica
     expires_on: '2027-01-01T00:00:00.000Z',
     meta: { letsencrypt_email: 'admin@example.com', dns_challenge: false },
     ...overrides,
-  } as Certificate
+  }
 }

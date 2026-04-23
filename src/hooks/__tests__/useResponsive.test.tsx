@@ -70,11 +70,18 @@ describe('useResponsive', () => {
     expect(result.current.isBelow('md')).toBe(false)
   })
 
-  it('isAbove("xs") always returns true regardless of viewport', () => {
-    // isAbove('xs') always returns true per implementation
+  it('isAbove returns true when the matching up-breakpoint query matches', () => {
+    // Simulate viewport matching up('md') and up('sm') → isMd=true, isSm=true
+    setMatchMedia((q) => q.includes('min-width:900px') || q.includes('min-width:600px'))
+    const { result } = renderHookWithProviders(() => useResponsive())
+    expect(result.current.isAbove('md')).toBe(true)
+    expect(result.current.isAbove('sm')).toBe(true)
+  })
+
+  it('isAbove returns false when the matching up-breakpoint query does not match', () => {
     setMatchMedia(() => false)
     const { result } = renderHookWithProviders(() => useResponsive())
-    expect(result.current.isAbove('xs')).toBe(true)
+    expect(result.current.isAbove('md')).toBe(false)
   })
 
   it('exposes stable BREAKPOINT_VALUES object with correct values', () => {

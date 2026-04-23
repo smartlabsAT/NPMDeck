@@ -16,5 +16,5 @@ export function mockDeadHost(overrides: Partial<DeadHost> = {}): DeadHost {
     enabled: true,
     meta: { nginx_online: true, nginx_err: null },
     ...overrides,
-  } as DeadHost
+  }
 }

@@ -15,5 +15,5 @@ export function mockStream(overrides: Partial<Stream> = {}): Stream {
     enabled: true,
     meta: { nginx_online: true, nginx_err: null },
     ...overrides,
-  } as Stream
+  }
 }

@@ -13,5 +13,5 @@ export function mockAccessList(overrides: Partial<AccessList> = {}): AccessList 
     clients: [],
     meta: {},
     ...overrides,
-  } as AccessList
+  }
 }

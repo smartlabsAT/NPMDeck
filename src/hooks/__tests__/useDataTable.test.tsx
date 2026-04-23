@@ -503,15 +503,17 @@ describe('useDataTable — built-in filter: roles', () => {
   it('filter value "admin" returns only admin users', () => {
     const { result } = renderHook(() => useDataTable(userData, userColumns, (u) => u.id))
     act(() => result.current.handleFilter('roles', 'admin'))
-    expect(result.current.processedData.length).toBeGreaterThan(0)
+    // user 1 (roles: ['admin']) and user 3 (roles: ['admin', 'user']) match
+    expect(result.current.processedData).toHaveLength(2)
     expect(result.current.processedData.every((u) => u.roles.includes('admin'))).toBe(true)
   })
 
   it('filter value "user" excludes admins', () => {
     const { result } = renderHook(() => useDataTable(userData, userColumns, (u) => u.id))
     act(() => result.current.handleFilter('roles', 'user'))
-    expect(result.current.processedData.length).toBeGreaterThan(0)
-    expect(result.current.processedData.every((u) => !u.roles.includes('admin'))).toBe(true)
+    // only user 2 (roles: ['user']) lacks admin role
+    expect(result.current.processedData).toHaveLength(1)
+    expect(result.current.processedData[0].id).toBe(2)
   })
 })
 

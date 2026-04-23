@@ -98,7 +98,7 @@ describe('PermissionButton', () => {
     expect(screen.getByRole('button', { name: 'View' })).toBeEnabled()
   })
 
-  it('defaults to level=manage when neither level nor permissionAction provided', () => {
+  it('defaults to manage-level check when neither level nor permissionAction is set (view-only user sees disabled button)', () => {
     useAuthStore.setState({
       user: mockNonAdminUser({
         permissions: {

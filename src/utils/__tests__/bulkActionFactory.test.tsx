@@ -141,9 +141,14 @@ describe('createStandardBulkActions', () => {
   it('every action has icon, label, and confirmMessage', () => {
     const { actions } = setup()
     for (const action of actions) {
-      expect(action.icon).toBeTruthy()
-      expect(action.label).toBeTruthy()
-      expect(action.confirmMessage).toBeTruthy()
+      // Icon must be defined (React element)
+      expect(action.icon).toBeDefined()
+      // Label must be a non-empty string
+      expect(typeof action.label).toBe('string')
+      expect((action.label as string).length).toBeGreaterThan(0)
+      // Confirm message must be a non-empty string
+      expect(typeof action.confirmMessage).toBe('string')
+      expect((action.confirmMessage as string).length).toBeGreaterThan(0)
     }
   })
 })

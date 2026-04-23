@@ -21,5 +21,5 @@ export function mockRedirectionHost(overrides: Partial<RedirectionHost> = {}): R
     enabled: true,
     meta: { nginx_online: true, nginx_err: null },
     ...overrides,
-  } as RedirectionHost
+  }
 }

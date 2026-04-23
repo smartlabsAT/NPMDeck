@@ -24,5 +24,5 @@ export function mockProxyHost(overrides: Partial<ProxyHost> = {}): ProxyHost {
     meta: { nginx_online: true, nginx_err: null },
     locations: [],
     ...overrides,
-  } as ProxyHost
+  }
 }
