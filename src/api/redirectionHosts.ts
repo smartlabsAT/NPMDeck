@@ -1,6 +1,6 @@
 import api from './config'
 import { buildExpandParams } from './utils'
-import type { HostEntity, NginxMeta, LetsEncryptMeta } from '../types/base'
+import type { HostEntity } from '../types/base'
 import type { Certificate } from './certificates'
 import type { AccessList } from './accessLists'
 
@@ -10,7 +10,6 @@ export interface RedirectionHost extends HostEntity {
   forward_domain_name: string
   preserve_path: boolean
   block_exploits: boolean
-  meta: NginxMeta & LetsEncryptMeta
   // Expanded relations
   certificate?: Certificate
   access_list?: AccessList

@@ -1,10 +1,9 @@
 import api from './config'
-import type { HostEntity, NginxMeta, LetsEncryptMeta } from '../types/base'
+import type { HostEntity } from '../types/base'
 import { buildExpandParams } from './utils'
 import type { Certificate } from './certificates'
 
 export interface DeadHost extends HostEntity {
-  meta: NginxMeta & LetsEncryptMeta
   // Expanded relations
   certificate?: Certificate
 }
