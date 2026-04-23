@@ -7,7 +7,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default tseslint.config(
   // Global ignores
-  { ignores: ['dist', 'server', 'node_modules', '*.config.js', '*.config.ts'] },
+  { ignores: ['dist', 'server', 'node_modules', 'coverage', '*.config.js', '*.config.ts'] },
 
   // Base config for all TS/TSX files
   {
@@ -70,9 +70,10 @@ export default tseslint.config(
 
   // Test file overrides
   {
-    files: ['src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}'],
+    files: ['src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}', 'src/test/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
       'no-console': 'off',
     },
   },
