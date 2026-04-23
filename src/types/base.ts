@@ -50,7 +50,8 @@ export interface HostEntity extends OwnedEntity {
   http2_support: boolean
   advanced_config: string
   enabled: boolean
-  meta: NginxMeta
+  /** NPM backend populates Let's Encrypt fields when certificate_id points to an LE cert */
+  meta: NginxMeta & LetsEncryptMeta
 }
 
 /** Toggleable entity (has enable/disable) */

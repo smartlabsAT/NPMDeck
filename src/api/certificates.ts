@@ -1,21 +1,14 @@
 import api from './config'
 import { buildExpandParams } from './utils'
-import type { OwnedEntity } from '../types/base'
+import type { OwnedEntity, LetsEncryptMeta } from '../types/base'
 
 export interface Certificate extends OwnedEntity {
   provider: 'letsencrypt' | 'other'
   nice_name: string
   domain_names: string[]
   expires_on: string
-  meta: {
-    letsencrypt_email?: string
-    letsencrypt_agree?: boolean
-    dns_challenge?: boolean
-    dns_provider?: string
-    dns_provider_credentials?: string
-    propagation_seconds?: number
-    certificate_id?: string
-  }
+  /** LE challenge configuration plus NPM-internal certificate identifier */
+  meta: LetsEncryptMeta & { certificate_id?: string }
 }
 
 export interface CreateCertificate {

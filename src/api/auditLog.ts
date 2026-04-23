@@ -1,4 +1,5 @@
 import api from './config'
+import type { BaseEntity } from '../types/base'
 
 export interface AuditLogUser {
   id: number
@@ -19,15 +20,12 @@ export interface AuditLogMeta {
   incoming_port?: number
 }
 
-export interface AuditLogEntry {
-  id: number
+export interface AuditLogEntry extends BaseEntity {
   user_id: number
   object_type: 'proxy-host' | 'redirection-host' | 'stream' | 'stream-host' | 'dead-host' | 'access-list' | 'user' | 'certificate'
   object_id: number
   action: 'created' | 'updated' | 'deleted' | 'enabled' | 'disabled' | 'renewed'
   meta: AuditLogMeta
-  created_on: string
-  modified_on: string
   user: AuditLogUser
 }
 
