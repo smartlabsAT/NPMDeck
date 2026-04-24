@@ -14,12 +14,14 @@ interface DomainEntity {
   domain_names: string[]
 }
 
+export type UseDomainGroupConfigReturn<T extends DomainEntity> = GroupConfig<T>
+
 /**
  * Custom hook that provides a shared GroupConfig for domain-based grouping.
  * Used by both ProxyHosts and RedirectionHosts DataTables to group items
  * by their base domain (e.g. "example.com" groups "api.example.com" and "www.example.com").
  */
-const useDomainGroupConfig = <T extends DomainEntity>(): GroupConfig<T> => {
+const useDomainGroupConfig = <T extends DomainEntity>(): UseDomainGroupConfigReturn<T> => {
   const groupConfig = useMemo<GroupConfig<T>>(() => ({
     groupBy: (item) => {
       const mainDomain = item.domain_names[0] || ''

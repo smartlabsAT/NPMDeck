@@ -82,6 +82,35 @@ interface FormState<T> {
 }
 
 /**
+ * Return type for useDrawerForm — exposes the FormState plus actions and helpers.
+ */
+export interface UseDrawerFormReturn<T> extends FormState<T> {
+  setFormData: (updates: Partial<T> | ((prev: T) => T)) => void;
+  setFieldValue: (key: keyof T, value: T[keyof T]) => void;
+  setFieldTouched: (key: keyof T, touched?: boolean) => void;
+  resetForm: (newInitialData?: T) => void;
+  handleSubmit: (event?: React.FormEvent) => Promise<void>;
+  markAsClean: () => void;
+  /**
+   * Note: `value` is typed `string` to match what TypeScript infers from the
+   * `formState.data[key] ?? ''` expression under the recursive generic constraint.
+   * At runtime, value can be boolean or number for non-string form fields —
+   * coerce explicitly when binding to typed input components.
+   */
+  getFieldProps: (key: keyof T) => {
+    name: string;
+    value: string;
+    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onBlur: () => void;
+    error: boolean;
+    helperText: string | undefined;
+    disabled: boolean;
+  };
+  validateField: (key: keyof T, value: T[keyof T], data?: T) => string | null;
+  validateAllFields: (data: T) => Record<keyof T, string>;
+}
+
+/**
  * Default equality function for dirty checking
  */
 const defaultIsEqual = <T>(a: T, b: T): boolean => {
@@ -148,7 +177,7 @@ export const useDrawerForm = <T extends { [K in keyof T]: T[K] }>({
   autoSave,
   isEqual = defaultIsEqual,
   resetOnSubmit = false,
-}: UseDrawerFormOptions<T>) => {
+}: UseDrawerFormOptions<T>): UseDrawerFormReturn<T> => {
   // Form state
   const [formState, setFormState] = useState<FormState<T>>(() => ({
     data: { ...initialData },

@@ -37,11 +37,13 @@ interface UseRedirectionHostColumnsParams {
   navigate: NavigateFunction
 }
 
+export type UseRedirectionHostColumnsReturn = ResponsiveTableColumn<RedirectionHost>[]
+
 /**
  * Custom hook that provides column definitions for the redirection hosts DataTable.
  * Extracts the column configuration including render functions, sorting, and responsive priorities.
  */
-const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): ResponsiveTableColumn<RedirectionHost>[] => {
+const useRedirectionHostColumns = (params: UseRedirectionHostColumnsParams): UseRedirectionHostColumnsReturn => {
   const { proxyHostsByDomain, onToggleEnabled, onEdit, onDelete, onViewProxyHost } = params
 
   const columns = useMemo<ResponsiveTableColumn<RedirectionHost>[]>(() => [
