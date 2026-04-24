@@ -6,9 +6,11 @@ interface HasOwnerId {
   owner?: { id: number }
 }
 
+export type UseFilteredDataReturn<T> = T[]
+
 export function useFilteredData<T>(
   data: T[]
-): T[] {
+): UseFilteredDataReturn<T> {
   const { user, shouldFilterByUser } = useAuthStore()
 
   return useMemo(() => {

@@ -6,13 +6,18 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { TIMING } from '../constants/timing'
 
+export interface UseCopyToClipboardReturn {
+  copiedText: string
+  copyToClipboard: (text: string, label?: string) => void
+}
+
 /**
  * Hook that provides clipboard copy functionality with a temporary feedback state.
  *
  * @param resetDelay - Time in ms before copiedText resets to empty (default: TIMING.CLIPBOARD_RESET)
  * @returns Object with copiedText state and copyToClipboard function
  */
-export function useCopyToClipboard(resetDelay = TIMING.CLIPBOARD_RESET) {
+export function useCopyToClipboard(resetDelay = TIMING.CLIPBOARD_RESET): UseCopyToClipboardReturn {
   const [copiedText, setCopiedText] = useState<string>('')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 

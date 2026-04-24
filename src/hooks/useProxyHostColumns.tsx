@@ -37,11 +37,13 @@ interface UseProxyHostColumnsParams {
   navigate: NavigateFunction
 }
 
+export type UseProxyHostColumnsReturn = ResponsiveTableColumn<ProxyHost>[]
+
 /**
  * Custom hook that provides column definitions for the proxy hosts DataTable.
  * Extracts the column configuration including render functions, sorting, and responsive priorities.
  */
-const useProxyHostColumns = (params: UseProxyHostColumnsParams): ResponsiveTableColumn<ProxyHost>[] => {
+const useProxyHostColumns = (params: UseProxyHostColumnsParams): UseProxyHostColumnsReturn => {
   const { redirectionsByTarget, onToggleEnabled, onEdit, onDelete, onViewConnections, onViewAccess, navigate } = params
 
   /** Get redirection hosts that point to any of the proxy host's domains */
