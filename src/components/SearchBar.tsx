@@ -13,7 +13,7 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material'
 import { useGlobalSearch } from '../contexts/GlobalSearchContext'
-import { Z_INDEX } from '../constants/layout'
+import { Z_INDEX, LAYOUT } from '../constants/layout'
 import { TIMING } from '../constants/timing'
 import { SearchResult } from '../types/search'
 import SearchResultItem from './features/search/SearchResultItem'
@@ -163,7 +163,7 @@ const SearchBar = () => {
       loading={isLoading}
       loadingText="Loading resources..."
       noOptionsText={inputValue ? "No results found" : "Start typing to search..."}
-      sx={{ width: '100%', maxWidth: 600 }}
+      sx={{ width: '100%', maxWidth: LAYOUT.DRAWER_PANEL_WIDTH }}
       disablePortal={false}
       slotProps={{
         popper: {

@@ -38,7 +38,7 @@ import { getStatusIcon } from '../utils/statusUtils'
 import { renderSslStatus } from '../utils/columnRenderers'
 import { filterBySsl, filterByStatus } from '../utils/filterUtils'
 import { LAYOUT } from '../constants/layout'
-import { ROWS_PER_PAGE_OPTIONS } from '../constants/table'
+import { ROWS_PER_PAGE_OPTIONS, SSL_FILTER_OPTIONS, STATUS_FILTER_OPTIONS } from '../constants/table'
 
 export default function DeadHosts() {
   const { showSuccess, showError, showWarning } = useToast()
@@ -99,9 +99,9 @@ export default function DeadHosts() {
       mobileLabel: 'Domains',
       render: (value, item) => (
         <Box>
-          {item.domain_names.map((domain, index) => (
+          {item.domain_names.map((domain) => (
             <Typography
-              key={index}
+              key={domain}
               variant="body2"
               role="link"
               aria-label={`Open ${domain} in new tab`}
@@ -225,23 +225,22 @@ export default function DeadHosts() {
       label: 'SSL',
       type: 'select',
       defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'forced', label: 'SSL Forced', icon: <LockIcon fontSize="small" /> },
-        { value: 'optional', label: 'SSL Optional', icon: <LockIcon fontSize="small" /> },
-        { value: 'disabled', label: 'No SSL', icon: <LockOpenIcon fontSize="small" /> }
-      ]
+      options: SSL_FILTER_OPTIONS.map(opt => ({
+        ...opt,
+        ...(opt.value === 'forced' || opt.value === 'optional' ? { icon: <LockIcon fontSize="small" /> } : {}),
+        ...(opt.value === 'disabled' ? { icon: <LockOpenIcon fontSize="small" /> } : {}),
+      }))
     },
     {
       id: 'status',
       label: 'Status',
       type: 'select',
       defaultValue: 'all',
-      options: [
-        { value: 'all', label: 'All' },
-        { value: 'enabled', label: 'Enabled', icon: <CheckCircleIcon fontSize="small" /> },
-        { value: 'disabled', label: 'Disabled', icon: <CancelIcon fontSize="small" /> }
-      ]
+      options: STATUS_FILTER_OPTIONS.map(opt => ({
+        ...opt,
+        ...(opt.value === 'enabled' ? { icon: <CheckCircleIcon fontSize="small" /> } : {}),
+        ...(opt.value === 'disabled' ? { icon: <CancelIcon fontSize="small" /> } : {}),
+      }))
     }
   ], [])
 
